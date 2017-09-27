@@ -1,0 +1,24 @@
+{
+    [
+        '../src/*',
+        '../src/api/*',
+        '../src/gen/*',
+        '../src/gen/api_out/*',
+        '../src/gen/code_db/*',
+        '../src/kernel/*',
+        '../src/lib/*',
+        '../src/mod/*',
+        '../src/process/*',
+        '../src/process/test/*',
+        '../src/system/*'
+    ],
+    [
+        debug_info,
+        {d, debug},
+        {outdir, "./"},
+        {i, "../include"}
+    ]
+}.
+
+
+
