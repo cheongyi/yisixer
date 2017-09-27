@@ -71,7 +71,7 @@ cd ./server
         cd ./gen
             mkdir -p api_out
             cd ./api_out
-                touch api_tets_out.erl
+                touch api_test_out.erl
                 cd ..
 			mkdir -p code_db
             cd ..

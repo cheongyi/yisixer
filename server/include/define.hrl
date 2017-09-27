@@ -13,6 +13,9 @@
 -define(DATA_DIR, "./data/").
 -define(WAR_REPORT_DIR, ?DATA_DIR ++ "war_report/").
 
+-define (SHUTDOWN_WORKER,       16#ABCDEF0).        % 一个工作进程将怎样被终止
+-define (SHUTDOWN_SUPERVISOR,   infinity).          % 一个监督进程将怎样被终止
+
 
 %% 日志写入
 -define(INFO(Msg, Args),    game_log:write(info,    Msg, Args)).

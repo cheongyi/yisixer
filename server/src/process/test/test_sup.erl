@@ -17,7 +17,7 @@ start_link () ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 init ([]) ->
-    ChildSpecs = [],
+    ChildSpecs = [{test_srv, {test_srv, start_link, []}, permanent, brutal_kill, worker, [test_srv]}],
     {ok, {{one_for_one, 10, 10}, ChildSpecs}}.
 
 % {ok, {{Restart Strategy, Intensity, Period}, ChildSpecs}}.
