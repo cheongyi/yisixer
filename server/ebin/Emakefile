@@ -5,7 +5,6 @@
         '../src/gen/*',
         '../src/gen/api_out/*',
         '../src/gen/code_db/*',
-        '../src/kernel/*',
         '../src/lib/*',
         '../src/mod/*',
         '../src/process/*',
