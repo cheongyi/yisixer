@@ -1,6 +1,9 @@
 -module (test_sup).
 
--author ("WhoAreYou").
+-author     ("WhoAreYou").
+-date       ({2017, 11, 09}).
+-vsn        ("1.0.0").
+-copyright  ("Copyright © 2017 YiSiXEr").
 
 -behaviour (supervisor).
 
@@ -12,14 +15,28 @@
 -define (SERVER, ?MODULE).
 
 
-%% ======================================================================
+%%% ========== ======================================== ====================
+%%% External   API
+%%% ========== ======================================== ====================
+%%% @doc    Start the process and link.
 start_link () ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
+%%% ========== ======================================== ====================
+%%% callback
+%%% ========== ======================================== ====================
+%%% @doc    Process start callback.
 init ([]) ->
-    ChildSpecs = [{test_srv, {test_srv, start_link, []}, permanent, brutal_kill, worker, [test_srv]}],
+    ChildSpecs = [
+        {test_srv,  {test_srv,  start_link, []}, permanent, brutal_kill, worker, [test_srv]},
+        {test_proc, {test_proc, start_link, []}, permanent, brutal_kill, worker, [test_proc]}
+    ],
     {ok, {{one_for_one, 10, 10}, ChildSpecs}}.
 
+
+
+
+%%% ========== ======================================== ====================
 % {ok, {{Restart Strategy, Intensity, Period}, ChildSpecs}}.
 % 1.重启策略（Restart Strategy） 
     % a. one_for_one 
@@ -29,7 +46,7 @@ init ([]) ->
     % c.rest_for_one 
     %   当一个child process挂掉时，它的监控者（supervisor）只会terminate在该child process之后启动的process，然后再将这些process 通通重启 
     % d.simple_one_for_one 
-    %   重启策略与one_for_one相同，唯一的区别是：所有的child process都是动态添加的并且执行同样一份代码（稍后详述） 
+    %   与one_for_one相同，唯一的区别是：所有的child process都是动态添加的并且执行同样一份代码（稍后详述） 
     %   并不会真正的去启动一个child process，
     %   而必须通过调用 supervisor:start_child(Sup, List) 动态添加child process，
     %   其中第一个参数Sup是表示你要往哪个supervisor下添加child process，

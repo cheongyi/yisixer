@@ -104,7 +104,7 @@ cd ./server
 
 
 # 创建站点文件夹目录
-mkdir -p server_web
+mkdir -p web
 cd ./server_web
     touch .README_web.txt
     cd ..

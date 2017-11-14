@@ -1,8 +1,9 @@
 -module (game).
 
--author ("CHEONGYI").
-
--copyright ("Copyright © 2017 YiSiXEr").
+-author     ("CHEONGYI").
+-date       ({2017, 11, 09}).
+-vsn        ("1.0.0").
+-copyright  ("Copyright © 2017 YiSiXEr").
 
 -behaviour (application).
 -behaviour (supervisor).
@@ -16,9 +17,10 @@
 -define (SERVER, ?MODULE).
 
 
-%% ========== ======================================== ====================
-%% External   API
-%% ========== ======================================== ====================
+%%% ========== ======================================== ====================
+%%% External   API
+%%% ========== ======================================== ====================
+%%% @doc    erl -s game start
 start () ->
     application:start(?SERVER).
 
@@ -30,9 +32,9 @@ restart () ->
     stop().
 
 
-%% ========== ======================================== ====================
-%% callbacks  function
-%% ========== ======================================== ====================
+%%% ========== ======================================== ====================
+%%% callbacks  function
+%%% ========== ======================================== ====================
 start (_Type, _Args) ->
     Result = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
 
@@ -46,15 +48,17 @@ start (_Type, _Args) ->
     start_child(game_log,           worker),        % 启动进程 --- 日志
     start_child(game_ets,           worker),        % 启动进程 --- 游戏内ets
 
-    start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端
-    start_child(reloader,           worker),        % 启动进程 --- 代码自动载入
+    % start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端
 
     % 启动玩法功能相关进程
     start_child(test_sup,           supervisor),    % 启动督程 --- 测试
     start_child(four_color_sup,     supervisor),    % 启动督程 --- 四色牌
 
-    start_child(socket_server_sup,  supervisor),    % 启动督程 --- 套接字服务器
+    % start_child(socket_server_sup,  supervisor),    % 启动督程 --- 套接字服务器
 
+    start_child(reloader,           worker),        % 启动进程 --- 代码自动载入
+
+    ?INFO("game start!~n", []),
     Result.
 
 stop (_State) ->
@@ -64,9 +68,9 @@ init ([]) ->
     {ok, {{one_for_one, 10, 10}, []}}.
 
 
-%% ========== ======================================== ====================
-%% Internal   API
-%% ========== ======================================== ====================
+%%% ========== ======================================== ====================
+%%% Internal   API
+%%% ========== ======================================== ====================
 stop (TimeOut1, TimeOut2) ->
     % 中断socket链接
     supervisor:terminate_child(?SERVER, socket_server_sup),
@@ -78,7 +82,7 @@ stop (TimeOut1, TimeOut2) ->
     % 关闭应用game
     application:stop(?SERVER).
 
-%% @todo   动态启动game的子进程
+%%% @doc    动态启动game的子进程
 start_child (Module, Type) ->
     Shutdown = case Type of
         worker      -> ?SHUTDOWN_WORKER;

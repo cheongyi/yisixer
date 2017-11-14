@@ -9,7 +9,9 @@
         '../src/mod/*',
         '../src/process/*',
         '../src/process/test/*',
-        '../src/system/*'
+        '../src/process/four_color/*',
+        '../src/system/*',
+        '../src/release_check/*'
     ],
     [
         debug_info,

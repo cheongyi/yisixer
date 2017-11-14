@@ -1,0 +1,272 @@
+出牌规则:
+	手牌,玩家发手中的牌
+	边牌,玩家令吃好的牌
+	暗牌,系统未摸出的牌
+	摸牌,玩家摸出的暗牌
+	弃牌,亮出没人要的牌
+	玩家手牌令吃别家出牌或各家摸牌后成边牌
+	玩家手牌或系统暗牌亮出没玩家要则成弃牌,
+	4张同色同样手牌不能出、3张同色同样手牌不能出、帥牌不能出,
+令吃规则:
+	4张一坎、3张一开、2张一双、1张一点
+	
+胡牌规则:
+	手牌边牌总计21张,组合后不能剩有单张或两才缺一,手牌加边牌加底合数大于等于10合
+合数规则:
+	底自算1合
+	4张同色同样牌_eg:红帥|红帥|红帥|红帥	- 手牌8合、边牌6合
+	4张四种颜色兵_eg:黄兵|红兵|青卒|白卒	- 手牌4合、边牌4合
+	3张同色同样牌_eg:红兵|红兵|红兵|		- 手牌3合、边牌1合
+	3张同色帥仕相_eg:红帥|红仕|红相|		- 手牌2合、边牌2合
+	3张同色俥傌炮_eg:红俥|红傌|红炮|		- 手牌1合、边牌1合
+	3张四种颜色兵_eg:黄兵|红兵|青卒|		- 手牌1合、边牌1合
+	2张同种颜色帥_eg:红帥|红帥|    		- 手牌2合
+	2张其它同色牌_eg:红兵|红兵|			- 手牌0合、边牌0合
+	1张任意颜色帥_eg:红帥|        		- 手牌1合、边牌1合
+	1张任意其它牌_eg:红兵|				- 手牌0合
+
+
+1.随机发牌：四色*四张*七种=112
+出生不出熟
+前吃后令
+成军见卒
+
+player_hand_card        玩家手里面的牌
+player_side_card        玩家手边上的牌
+
+decree_pump_card        令开摸出来的牌（三张杠开，两张碰对）
+eating_pump_card        吃摸出来的牌
+single_pump_card        点吃摸出来的牌
+decree_away_card        令牌（三张杠开，两张碰对）
+eating_away_card        吃牌
+single_away_card        点牌
+pump_card               摸牌
+away_card               出牌
+
+noneed_ming_card        玩家打出去和系统摸出来，玩家不需要的牌
+
+system_dark_card        系统暗牌
+system_pump_card        系统摸出来的牌
+player_pump_card        玩家摸出来的牌
+player_away_card        玩家打出去的牌
+
+
+_4ColorJiangCard01
+_4Color__ShiCard01
+_4ColorXiangCard01
+
+_4Color__CheCard01
+_4Color___MaCard01
+_4Color__PaoCard01
+
+__Green_BingCard01
+____Red_BingCard01
+__White_BingCard01
+_Yellow_BingCard01
+
+
+
+
+打乱所有牌
+发牌
+四家家判断是否可以胡牌 -> 是，胡牌，本局结束
+否
+|
+v
+庄家出牌
+三家判断是否可以胡牌 -> 是，胡牌，本局结束
+否
+|
+v
+三家判断是否可以碰牌 -> 是，碰牌，该玩家出牌
+否
+|
+v
+下家判断是否可以吃牌 -> 是，吃牌，该玩家出牌
+否
+|
+v
+判断是否还可以摸牌   -> 否，本局结束
+是
+|
+v
+下家摸牌
+四家判断是否可以胡牌 -> 是，胡牌，本局结束
+否
+|
+v
+四家判断是否可以碰牌 -> 是，碰牌，该玩家出牌
+否
+|
+v
+四家判断是否可以吃牌 -> 是，吃牌，该玩家出牌
+
+
+出牌规则
+	1.若有单张先出单张，明牌有的优先出
+	2.三张，（两张一样），余一张；
+	  四张，（三张都一样或三张都不一样），余一张；
+	  五张，（四张都一样或四色卒），余一张；
+	  六张，（三张一样，两张另一样），余一张；
+	  七张，（两个三张一样、四张一样和两张一样），余一张；
+	  八张，（四张一样和三张一样）；
+	  九张，（两个三张一样卒和两张一样卒，两个四张一样卒），余一张；
+	  十张，（三个三张一样卒，一个四张一样卒和一个三张一样卒和一个两张一样卒），余一张；
+	  十一张，（两个四张一样卒和一个两张一样卒，一个四张一样卒和两个三张一样卒），余一张；
+	  十二张，（两个四张一样卒和一个三张一样卒），余一张；
+	  十三张，（三个四张一样卒），余一张；
+	3.两张，类型都不一样的。先车马炮、再士相、再将士或将相或俩卒
+	4.三张一样和四张一样的不能拆不能出
+	5.有单张手牌则不考虑成对手牌
+
+
+
+
+
+
+
+{{decree_thrice, {_Color, jiang}}, [_4ColorJiangCard01, _4ColorJiangCard02, _4ColorJiangCard03]},
+{{eating_double, {_Color, jiang}}, [_4Color__ShiCard01, _4ColorXiangCard01]},
+{{onlyone_jiang, {_Color, jiang}}, []},
+
+% {{finish_hucard, {_Color, jiang}}, [_4ColorJiangCard01, _4ColorJiangCard02, _4ColorJiangCard03]},
+% {{finish_hucard, {_Color, jiang}}, [_4Color__ShiCard01, _4ColorXiangCard01]},
+% {{finish_hucard, {_Color, jiang}}, []},
+
+
+
+{{decree_thrice, {_Color,   shi}}, [_4Color__ShiCard01, _4Color__ShiCard02, _4Color__ShiCard03]},
+{{decree_double, {_Color,   shi}}, [_4Color__ShiCard01, _4Color__ShiCard02]},
+{{eating_double, {_Color,   shi}}, [_4ColorJiangCard01, _4ColorXiangCard01]},
+{{eating_single, {_Color,   shi}}, [_4Color__ShiCard01]},
+
+% {{finish_hucard, {_Color,   shi}}, [_4Color__ShiCard01, _4Color__ShiCard02, _4Color__ShiCard03]},
+% {{finish_hucard, {_Color,   shi}}, [_4Color__ShiCard01, _4Color__ShiCard02]},
+% {{finish_hucard, {_Color,   shi}}, [_4ColorJiangCard01, _4ColorXiangCard01]},
+% {{finish_hucard, {_Color,   shi}}, [_4Color__ShiCard01]},
+
+
+
+{{decree_thrice, {_Color, xiang}}, [_4ColorXiangCard01, _4ColorXiangCard02, _4ColorXiangCard03]},
+{{decree_double, {_Color, xiang}}, [_4ColorXiangCard01, _4ColorXiangCard02]},
+{{eating_double, {_Color, xiang}}, [_4ColorJiangCard01, _4Color__ShiCard01]},
+{{eating_single, {_Color, xiang}}, [_4ColorXiangCard01]},
+
+% {{finish_hucard, {_Color, xiang}}, [_4ColorXiangCard01, _4ColorXiangCard02, _4ColorXiangCard03]},
+% {{finish_hucard, {_Color, xiang}}, [_4ColorXiangCard01, _4ColorXiangCard02]},
+% {{finish_hucard, {_Color, xiang}}, [_4ColorJiangCard01, _4Color__ShiCard01]},
+% {{finish_hucard, {_Color, xiang}}, [_4ColorXiangCard01]},
+
+
+
+{{decree_thrice, {_Color,   che}}, [_4Color__CheCard01, _4Color__CheCard02, _4Color__CheCard03]},
+{{decree_double, {_Color,   che}}, [_4Color__CheCard01, _4Color__CheCard02]},
+{{eating_double, {_Color,   che}}, [_4Color___MaCard01, _4Color__PaoCard01]},
+{{eating_single, {_Color,   che}}, [_4Color__CheCard01]},
+
+% {{finish_hucard, {_Color,   che}}, [_4Color__CheCard01, _4Color__CheCard02, _4Color__CheCard03]},
+% {{finish_hucard, {_Color,   che}}, [_4Color__CheCard01, _4Color__CheCard02]},
+% {{finish_hucard, {_Color,   che}}, [_4Color___MaCard01, _4Color__PaoCard01]},
+% {{finish_hucard, {_Color,   che}}, [_4Color__CheCard01]},
+
+
+{{decree_thrice, {_Color,    ma}}, [_4Color___MaCard01, _4Color___MaCard02, _4Color___MaCard03]},
+{{decree_double, {_Color,    ma}}, [_4Color___MaCard01, _4Color___MaCard02]},
+{{eating_double, {_Color,    ma}}, [_4Color__CheCard01, _4Color__PaoCard01]},
+{{eating_single, {_Color,    ma}}, [_4Color___MaCard01]},
+
+% {{finish_hucard, {_Color,    ma}}, [_4Color___MaCard01, _4Color___MaCard02, _4Color___MaCard03]},
+% {{finish_hucard, {_Color,    ma}}, [_4Color___MaCard01, _4Color___MaCard02]},
+% {{finish_hucard, {_Color,    ma}}, [_4Color__CheCard01, _4Color__PaoCard01]},
+% {{finish_hucard, {_Color,    ma}}, [_4Color___MaCard01]},
+
+
+{{decree_thrice, {_Color,   pao}}, [_4Color__PaoCard01, _4Color__PaoCard02, _4Color__PaoCard03]},
+{{decree_double, {_Color,   pao}}, [_4Color__PaoCard01, _4Color__PaoCard02]},
+{{eating_double, {_Color,   pao}}, [_4Color__CheCard01, _4Color___MaCard01]},
+{{eating_single, {_Color,   pao}}, [_4Color__PaoCard01]},
+
+% {{finish_hucard, {_Color,   pao}}, [_4Color__PaoCard01, _4Color__PaoCard02, _4Color__PaoCard03]},
+% {{finish_hucard, {_Color,   pao}}, [_4Color__PaoCard01, _4Color__PaoCard02]},
+% {{finish_hucard, {_Color,   pao}}, [_4Color__CheCard01, _4Color___MaCard01]},
+% {{finish_hucard, {_Color,   pao}}, [_4Color__PaoCard01]},
+
+
+
+
+{{decree_thrice, { green,  bing}}, [__Green_BingCard01, __Green_BingCard02, __Green_BingCard03]},
+{{decree_double, { green,  bing}}, [__Green_BingCard01, __Green_BingCard02]},
+{{eating_thrice, { green,  bing}}, [____Red_BingCard01, __White_BingCard01, _Yellow_BingCard01]},
+{{eating_double, { green,  bing}}, [____Red_BingCard01, __White_BingCard01]},
+{{eating_double, { green,  bing}}, [____Red_BingCard01, _Yellow_BingCard01]},
+{{eating_double, { green,  bing}}, [__White_BingCard01, _Yellow_BingCard01]},
+{{eating_single, { green,  bing}}, [__Green_BingCard01]},
+
+% {{finish_hucard, { green,  bing}}, [__Green_BingCard01, __Green_BingCard02, __Green_BingCard03]},
+% {{finish_hucard, { green,  bing}}, [__Green_BingCard01, __Green_BingCard02]},
+% {{finish_hucard, { green,  bing}}, [____Red_BingCard01, __White_BingCard01, _Yellow_BingCard01]},
+% {{finish_hucard, { green,  bing}}, [____Red_BingCard01, __White_BingCard01]},
+% {{finish_hucard, { green,  bing}}, [____Red_BingCard01, _Yellow_BingCard01]},
+% {{finish_hucard, { green,  bing}}, [__White_BingCard01, _Yellow_BingCard01]},
+% {{finish_hucard, { green,  bing}}, [__Green_BingCard01]},
+
+
+{{decree_thrice, {   red,  bing}}, [____Red_BingCard01, ____Red_BingCard02, ____Red_BingCard03]},
+{{decree_double, {   red,  bing}}, [____Red_BingCard01, ____Red_BingCard02]},
+{{eating_thrice, {   red,  bing}}, [__Green_BingCard01, __White_BingCard01, _Yellow_BingCard01]},
+{{eating_double, {   red,  bing}}, [__Green_BingCard01, __White_BingCard01]},
+{{eating_double, {   red,  bing}}, [__Green_BingCard01, _Yellow_BingCard01]},
+{{eating_double, {   red,  bing}}, [__White_BingCard01, _Yellow_BingCard01]},
+{{eating_single, {   red,  bing}}, [____Red_BingCard01]},
+
+{{finish_hucard, {   red,  bing}}, [____Red_BingCard01, ____Red_BingCard02, ____Red_BingCard03]},
+{{finish_hucard, {   red,  bing}}, [____Red_BingCard01, ____Red_BingCard02]},
+{{finish_hucard, {   red,  bing}}, [__Green_BingCard01, __White_BingCard01, _Yellow_BingCard01]},
+{{finish_hucard, {   red,  bing}}, [__Green_BingCard01, __White_BingCard01]},
+{{finish_hucard, {   red,  bing}}, [__Green_BingCard01, _Yellow_BingCard01]},
+{{finish_hucard, {   red,  bing}}, [__White_BingCard01, _Yellow_BingCard01]},
+{{finish_hucard, {   red,  bing}}, [____Red_BingCard01]},
+
+
+{{decree_thrice, { white,  bing}}, [__White_BingCard01, __White_BingCard02, __White_BingCard03]},
+{{decree_double, { white,  bing}}, [__White_BingCard01, __White_BingCard02]},
+{{eating_thrice, { white,  bing}}, [__Green_BingCard01, ____Red_BingCard01, _Yellow_BingCard01]},
+{{eating_double, { white,  bing}}, [__Green_BingCard01, ____Red_BingCard01]},
+{{eating_double, { white,  bing}}, [__Green_BingCard01, _Yellow_BingCard01]},
+{{eating_double, { white,  bing}}, [____Red_BingCard01, _Yellow_BingCard01]},
+{{eating_single, { white,  bing}}, [__White_BingCard01]},
+
+{{finish_hucard, { white,  bing}}, [__White_BingCard01, __White_BingCard02, __White_BingCard03]},
+{{finish_hucard, { white,  bing}}, [__White_BingCard01, __White_BingCard02]},
+{{finish_hucard, { white,  bing}}, [__Green_BingCard01, ____Red_BingCard01, _Yellow_BingCard01]},
+{{finish_hucard, { white,  bing}}, [__Green_BingCard01, ____Red_BingCard01]},
+{{finish_hucard, { white,  bing}}, [__Green_BingCard01, _Yellow_BingCard01]},
+{{finish_hucard, { white,  bing}}, [____Red_BingCard01, _Yellow_BingCard01]},
+{{finish_hucard, { white,  bing}}, [__White_BingCard01]},
+
+
+{{decree_thrice, {yellow,  bing}}, [_Yellow_BingCard01, _Yellow_BingCard02, _Yellow_BingCard03]},
+{{decree_double, {yellow,  bing}}, [_Yellow_BingCard01, _Yellow_BingCard02]},
+{{eating_thrice, {yellow,  bing}}, [__Green_BingCard01, ____Red_BingCard01, __White_BingCard01]},
+{{eating_double, {yellow,  bing}}, [__Green_BingCard01, ____Red_BingCard01]},
+{{eating_double, {yellow,  bing}}, [__Green_BingCard01, __White_BingCard01]},
+{{eating_double, {yellow,  bing}}, [____Red_BingCard01, __White_BingCard01]},
+{{eating_single, {yellow,  bing}}, [_Yellow_BingCard01]},
+
+{{finish_hucard, {yellow,  bing}}, [_Yellow_BingCard01, _Yellow_BingCard02, _Yellow_BingCard03]},
+{{finish_hucard, {yellow,  bing}}, [_Yellow_BingCard01, _Yellow_BingCard02]},
+{{finish_hucard, {yellow,  bing}}, [__Green_BingCard01, ____Red_BingCard01, __White_BingCard01]},
+{{finish_hucard, {yellow,  bing}}, [__Green_BingCard01, ____Red_BingCard01]},
+{{finish_hucard, {yellow,  bing}}, [__Green_BingCard01, __White_BingCard01]},
+{{finish_hucard, {yellow,  bing}}, [____Red_BingCard01, __White_BingCard01]},
+{{finish_hucard, {yellow,  bing}}, [_Yellow_BingCard01]},
+
+
+
+
+
+
+
+
+
+

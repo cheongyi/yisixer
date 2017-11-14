@@ -1,6 +1,9 @@
 -module (game_log).
 
--author ("CHEONGYI").
+-author     ("CHEONGYI").
+-date       ({2017, 11, 09}).
+-vsn        ("1.0.0").
+-copyright  ("Copyright © 2017 YiSiXEr").
 
 -behaviour (gen_server).
 
@@ -11,39 +14,53 @@
 
 -include ("define.hrl").
 
+-define (SERVER, ?MODULE).
+
 -record (state, {date, file}).
 
 
-%% ======================================================================
-%% @todo   启动进程
+%%% ========== ======================================== ====================
+%%% External   API
+%%% ========== ======================================== ====================
+%%% @doc    启动进程
 start_link () ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-%% @todo   停止进程
+%%% @doc    停止进程
 stop () ->
-    gen_server:call(?MODULE, stop). 
+    gen_server:call(?SERVER, stop). 
 
-%% ++++++++++++++++++++ gen_server 6 callbacks ++++++++++++++++++++
-%% @todo   初始化
+%%% @doc    写日志
+write (LogType, Message, ArgumentList) ->
+    case get(the_player_id) of
+        undefined -> ?SERVER ! {log, {LogType, Message, ArgumentList}};
+        PlayerId  -> ?SERVER ! {log, {LogType, PlayerId, Message, ArgumentList}}
+    end.
+
+
+%%% ========== ======================================== ====================
+%%% ++++++++++++++++++++ gen_server 6 callbacks ++++++++++++++++++++
+%%% ========== ======================================== ====================
+%%% @doc    初始化
 init ([]) ->
     filelib:ensure_dir(?GAME_LOG_DIR),
     Date        = date(),
     {ok, File}  = open_log_file(Date),
     {ok, #state{date = Date, file = File}}.
 
-%% @todo   gen_server:call callback
+%%% @doc    gen_server:call callback
 handle_call (stop, _From, State) ->
     {stop, shutdown, stopped, State};
 handle_call (Request, From, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {call, Request, From}]),
     {reply, ok, State}.
 
-%% @todo   gen_server:cast callback
+%%% @doc    gen_server:cast callback
 handle_cast (Request, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {cast, Request}]),
     {noreply, State}.
 
-%% @todo   ?MODULE ! Msg callback
+%%% @doc    ?MODULE ! Msg callback
 handle_info ({log, Log}, State = #state{date = Date, file = File}) ->
     NowDate  = date(),
     NewState = case NowDate of
@@ -64,25 +81,27 @@ handle_info (Info, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),
     {noreply, State}.
 
-%% @todo   stop or terminate callback
+%%% @doc    stop or terminate callback
 terminate (Reason, _State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {terminate, Reason}]),
     ok.
 
-%% @doc gen_server code_change callback (trivial).
+%%% @doc    gen_server code_change callback (trivial).
 code_change (_Vsn, State, _Extra) ->
     {ok, State}.
 
 
-%% ----------------------------------------------------------------------
-%% @todo   打开对应日志文件
+%%% ========== ======================================== ====================
+%%% Internal   API
+%%% ========== ======================================== ====================
+%%% @doc    打开对应日志文件
 open_log_file (Date) ->
     FileName = ?GAME_LOG_DIR ++ lib_time:ymd_tuple_to_cover0str(Date, "_") ++ ".error.log",
     file:open(FileName, [append, raw, {delayed_write, 1024 * 100, 2000}]).
 
-%% @todo   打印log信息或写入日志文件
+%%% @doc    打印log信息或写入日志文件
 write_log ({info, PlayerId, Message, ArgumentList}, _) ->
-    io:format("[info] from player " ++ integer_to_list(PlayerId) ++ " : " ++ Message, ArgumentList);
+    io:format("[Info] from player " ++ integer_to_list(PlayerId) ++ " : " ++ Message, ArgumentList);
 write_log ({LogType, PlayerId, Message, ArgumentList}, File) ->
     write_log_to_file (File, get_log_title(PlayerId), Message, ArgumentList),
     ?FORMAT(
@@ -91,7 +110,7 @@ write_log ({LogType, PlayerId, Message, ArgumentList}, File) ->
         [LogType, PlayerId | ArgumentList]
     );
 write_log ({info, Message, ArgumentList}, _) ->
-    io:format("[info] : " ++ Message, ArgumentList);
+    io:format("[Info] : " ++ Message, ArgumentList);
 write_log ({LogType, Message, ArgumentList}, File) ->
     write_log_to_file (File, get_log_title(), Message, ArgumentList),
     ?FORMAT(
@@ -100,7 +119,6 @@ write_log ({LogType, Message, ArgumentList}, File) ->
         [LogType | ArgumentList]
     ).
 write_log_to_file (File, LogTitle, Message, ArgumentList) ->
-    LogTitle    = get_log_title(),
     LogContent  = io_lib:format(LogTitle ++ Message ++ "~n~n", ArgumentList),
     LogBin      = list_to_binary(LogContent),
     ok          = file:write(File, LogBin).
@@ -111,14 +129,6 @@ get_log_title(PlayerId) ->
     
 get_log_title() ->
     lib_time:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ "~n".
-
-
-%% @todo   写日志
-write (LogType, Message, ArgumentList) ->
-    case get(the_player_id) of
-        undefined -> ?MODULE ! {log, {LogType, Message, ArgumentList}};
-        PlayerId  -> ?MODULE ! {log, {LogType, PlayerId, Message, ArgumentList}}
-    end.
 
 
 
