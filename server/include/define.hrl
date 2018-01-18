@@ -60,6 +60,11 @@
     end
 )).
 
+%%% 时间相关
+-define (DAY_SECONDS, 86400).           % 一天的秒数
+-define (WEEK_DAY_NUMBER, 7).           % 一周的天数
+-define (WEEK_SECONDS, ?WEEK_DAY_NUMBER * ?DAY_SECONDS).    % 一周的秒数
+
 
 
 
