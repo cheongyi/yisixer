@@ -53,6 +53,10 @@ timestamp_to_datetime (TimeStamp) ->
         calendar:gregorian_seconds_to_datetime(TimeStamp + 62167219200)
     ).
 
+%%% @doc    获取今天零点的时间戳
+get_today_zero_timestamp () ->
+    datetime_to_timestamp({date(), {00, 00, 00}}).
+
 %%% @spec   ymdhms_integer_to_cover0str(integer()) -> string().
 %%% @doc    年、月、日、时、分、秒数字转补零字符串
 ymdhms_integer_to_cover0str (Integer) when Integer < 10->
