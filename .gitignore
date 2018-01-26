@@ -1,1 +1,2 @@
-server-new/ebin/*.beam
+.DS_Store
+server/ebin/*.beam
