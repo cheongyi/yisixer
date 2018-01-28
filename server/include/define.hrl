@@ -2,8 +2,8 @@
     -define (IS_DEBUG,          true).
     -define (DEBUG(Msg, Args), 
         io:format(
-            "[Debug]=T=~w=P=~-12w=L=~-4w=M=~-32.32. w~n" ++ Msg, 
-            [?MODULE, ?LINE, get(the_player_id), erlang:localtime() | Args]
+            "==DEBUG ==~s== P:~-12w M:~-32.32..w~-4w~n" ++ Msg, 
+            [lib_time:ymdhms_tuple_to_cover0str(erlang:localtime()), get(the_player_id), ?MODULE, ?LINE | Args]
         )
     ).
     -define (FORMAT(Msg, Args), io:format(Msg, Args)).

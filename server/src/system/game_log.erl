@@ -5,14 +5,14 @@
 -vsn        ("1.0.0").
 -copyright  ("Copyright © 2017 YiSiXEr").
 
--behaviour (gen_server).
+-behaviour  (gen_server).
 
 -export ([start_link/0]).
 -export ([stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([write/3]).
 
--include ("define.hrl").
+-include("define.hrl").
 
 -define (SERVER, ?MODULE).
 
@@ -101,7 +101,7 @@ open_log_file (Date) ->
 
 %%% @doc    打印log信息或写入日志文件
 write_log ({info, PlayerId, Message, ArgumentList}, _) ->
-    io:format("[Info] from player " ++ integer_to_list(PlayerId) ++ " : " ++ Message, ArgumentList);
+    io:format("==INFO== from player " ++ integer_to_list(PlayerId) ++ " : " ++ Message, ArgumentList);
 write_log ({LogType, PlayerId, Message, ArgumentList}, File) ->
     write_log_to_file (File, get_log_title(PlayerId), Message, ArgumentList),
     ?FORMAT(
@@ -110,7 +110,7 @@ write_log ({LogType, PlayerId, Message, ArgumentList}, File) ->
         [LogType, PlayerId | ArgumentList]
     );
 write_log ({info, Message, ArgumentList}, _) ->
-    io:format("[Info] : " ++ Message, ArgumentList);
+    io:format("==INFO== : " ++ Message, ArgumentList);
 write_log ({LogType, Message, ArgumentList}, File) ->
     write_log_to_file (File, get_log_title(), Message, ArgumentList),
     ?FORMAT(

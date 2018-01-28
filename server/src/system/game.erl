@@ -5,8 +5,8 @@
 -vsn        ("1.0.0").
 -copyright  ("Copyright © 2017 YiSiXEr").
 
--behaviour (application).
--behaviour (supervisor).
+-behaviour  (application).
+-behaviour  (supervisor).
 
 -export ([start/0, stop/0, restart/0]).
 -export ([start/2, stop/1]).
