@@ -1,2 +1,6 @@
 .DS_Store
+server/date/*
 server/ebin/*.beam
+server/include/api/*
+server/include/gen/*
+server/log/*
