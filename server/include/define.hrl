@@ -2,15 +2,18 @@
     -define (IS_DEBUG,          true).
     -define (DEBUG(Msg, Args), 
         io:format(
-            "==DEBUG ==~s== P:~-12w M:~-32.32..w~-4w~n" ++ Msg, 
-            [lib_time:ymdhms_tuple_to_cover0str(erlang:localtime()), get(the_player_id), ?MODULE, ?LINE | Args]
+            "<<<DEBUG>>>LINE:~-4w>>>MODULE:~-20w>>>PLAYER:~-12w>>>TIME:~w~n>>> " ++ Msg, 
+            [?LINE, ?MODULE, get(the_player_id), erlang:localtime() | Args]
         )
     ).
     -define (FORMAT(Msg, Args), io:format(Msg, Args)).
+    % -define (CATCH(Fun), catch Fun()).
+    -define (CATCH(Fun), Fun()).
 -else.
     -define (IS_DEBUG,          false).
     -define (DEBUG(Msg,  Args), ok).
     -define (FORMAT(Msg, Args), ok).
+    -define (CATCH(Fun), catch Fun()).
 -endif.
 
 

@@ -1,4 +1,7 @@
 .DS_Store
+*.beam
+*.log
+*.sql
 server/date/*
 server/ebin/*.beam
 server/include/api/*

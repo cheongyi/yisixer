@@ -45,7 +45,7 @@ stop () ->
 init ([]) ->
     if
         ?IS_DEBUG ->
-            {ok, TRef} = timer:send_interval(timer:seconds(1), doit),
+            {ok, TRef} = timer:send_interval(timer:seconds(2), doit),
             {ok, #state{last = erlang:localtime(), tref = TRef}};
         true ->
             {ok, #state{last = erlang:localtime()}}
@@ -122,24 +122,39 @@ module_vsn (AttrList) when is_list(AttrList) ->
 
 %%% @doc    载入新编译文件
 doit (Last, Now) ->
-    [
-        case file:read_file_info(FileName) of
-            {ok, #file_info{mtime = MTime}} when MTime >= Last andalso MTime < Now ->
-                reload(Module);
-            {ok, _} ->
-                unmodified;
-            {error, enoent} ->
-                %%% The Erlang compiler deletes existing .beam files if
-                %%% recompiling fails.  Maybe it's worth spitting out a
-                %%% warning here, but I'd want to limit it to just once.
-                gone;
-            {error, Reason} ->
-                ?ERROR("Error reading ~s's file info: ~p~n", [FileName, Reason]),
-                error
-        end 
-        || 
-        {Module, FileName} <- code:all_loaded(), is_list(FileName)
-    ].
+    doit_4(Last, Now, code:all_loaded(), false).
+doit_4 (_Last, _Now, [], IsReload) ->
+    if
+        IsReload ->
+            io:format("~nReloading done!~n", []);
+        true ->
+            ok
+    end;
+doit_4 (Last, Now, [{Module, FileName} | AllLoadedList], IsReload) when is_list(FileName) ->
+    Result = case file:read_file_info(FileName) of
+        {ok, #file_info{mtime = MTime}} when MTime >= Last andalso MTime < Now ->
+            reload(Module);
+        {ok, _} ->
+            unmodified;
+        {error, enoent} ->
+            %%% The Erlang compiler deletes existing .beam files if
+            %%% recompiling fails.  Maybe it's worth spitting out a
+            %%% warning here, but I'd want to limit it to just once.
+            gone;
+        {error, Reason} ->
+            ?ERROR("Error reading ~s's file info: ~p~n", [FileName, Reason]),
+            error
+    end,
+    NewIsReload = if
+        Result == reload orelse
+        Result == reload_but_test_failed ->
+            true;
+        true ->
+            IsReload
+    end,
+    doit_4(Last, Now, AllLoadedList, NewIsReload);
+doit_4 (Last, Now, [_| AllLoadedList], IsReload) ->
+    doit_4(Last, Now, AllLoadedList, IsReload).
 
 %%% @doc    重新载入模块
 reload (Module) ->
