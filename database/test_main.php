@@ -2,6 +2,8 @@
 print_r($_SERVER);
 echo $_SERVER ."\n";
 
+echo shell_exec("date");
+
 $link = mysqli_connect("127.0.0.1", "root", "wlwlwl", "gamedb", 3306);
 
 if (mysqli_connect_errno()) {
