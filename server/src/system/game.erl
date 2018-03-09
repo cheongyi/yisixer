@@ -38,7 +38,7 @@ restart () ->
 start (_Type, _Args) ->
     Result = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
 
-    filelib:ensure_dir(?DATA_DIR),
+    filelib:ensure_dir(?GAME_DATA_DIR),
     filelib:ensure_dir(?WAR_REPORT_DIR),
 
     % 启动inets服务
@@ -46,7 +46,9 @@ start (_Type, _Args) ->
 
     % 启动game系统相关进程
     start_child(game_log,           worker),        % 启动进程 --- 日志
+    start_child(game_perf,          worker),        % 启动进程 --- 性能分析
     start_child(game_ets,           worker),        % 启动进程 --- 游戏内ets
+    start_child(mysql,              worker),        % 启动进程 --- 游戏内mysql
 
     % start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端
 
