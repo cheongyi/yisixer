@@ -110,9 +110,9 @@ get_rows(PoolId, Table, Condition, Fields) ->
     BinTableName = list_to_binary(Table),
     BinWhere = list_to_binary(Condition),
     Sql = <<
-        "SELECT ", BinFields/binary,
-        " FROM ", BinTableName/binary,
-        " WHERE ", BinWhere/binary
+        "SELECT `", BinFields/binary,
+        "` FROM `", BinTableName/binary,
+        "` WHERE ", BinWhere/binary
         >>,
     case mysql:fetch(PoolId, [Sql]) of
         {data, Result} ->
@@ -132,7 +132,7 @@ get_rows(PoolId, Table, Condition, Fields) ->
 %%           "id = 5 AND type = 2" = condition_string([{"id", 1}, {"type", 2}])
 %%--------------------------------------------------------------------
 condition_string(Condition) ->
-    List = [ [" AND " , Field , " = " , integer_to_list(Value) ] || {Field, Value} <- Condition ],
+    List = [ [" AND `" , Field , "` = " , integer_to_list(Value) ] || {Field, Value} <- Condition ],
     lists:nthtail(5, lists:flatten(List)).
 
 %%--------------------------------------------------------------------
@@ -153,8 +153,8 @@ update_row(PoolId, Table, Key, Values) ->
     BinUpdateFields = list_to_binary(mysql_update_string(Values)),
     BinWhere        = list_to_binary(Key),
     Sql = <<
-        "UPDATE ",  BinTableName/binary,
-        " SET ",    BinUpdateFields/binary,
+        "UPDATE `",  BinTableName/binary,
+        "` SET ",    BinUpdateFields/binary,
         " WHERE ",  BinWhere/binary
         >>,
     io:format("~p~n", [Sql]),
@@ -167,7 +167,7 @@ update_row(PoolId, Table, Key, Values) ->
 
 mysql_update_string(Values) ->
     List = [
-        [" , " , Field , " = " , value_to_list(Value), "" ]
+        [" , `" , Field , "` = " , value_to_list(Value), "" ]
         || {Field, Value} <- Values],
     lists:nthtail(3, lists:flatten(List)).
 

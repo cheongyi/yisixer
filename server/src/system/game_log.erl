@@ -101,7 +101,7 @@ open_log_file (Date) ->
 
 %%% @doc    打印log信息或写入日志文件
 write_log ({info, PlayerId, Message, ArgumentList}, _) ->
-    io:format("==INFO== from player " ++ integer_to_list(PlayerId) ++ " : " ++ Message, ArgumentList);
+    io:format("~n==INFO == from player " ++ integer_to_list(PlayerId) ++ " : " ++ Message, ArgumentList);
 write_log ({LogType, PlayerId, Message, ArgumentList}, File) ->
     write_log_to_file (File, get_log_title(PlayerId), Message, ArgumentList),
     ?FORMAT(
@@ -110,7 +110,7 @@ write_log ({LogType, PlayerId, Message, ArgumentList}, File) ->
         [LogType, PlayerId | ArgumentList]
     );
 write_log ({info, Message, ArgumentList}, _) ->
-    io:format("==INFO== : " ++ Message, ArgumentList);
+    io:format("~n==INFO == " ++ Message, ArgumentList);
 write_log ({LogType, Message, ArgumentList}, File) ->
     write_log_to_file (File, get_log_title(), Message, ArgumentList),
     ?FORMAT(
@@ -123,6 +123,7 @@ write_log_to_file (File, LogTitle, Message, ArgumentList) ->
     LogBin      = list_to_binary(LogContent),
     ok          = file:write(File, LogBin).
     
+%%% @doc    获取日志标题
 get_log_title(PlayerId) ->
     lib_time:ymdhms_tuple_to_cover0str(erlang:localtime())
         ++ " from player " ++ integer_to_list(PlayerId) ++ "~n".

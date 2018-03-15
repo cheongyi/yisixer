@@ -56,21 +56,17 @@
 %%% mysql_conn.erl.
 %%%
 %%%-------------------------------------------------------------------
--module(mysql).
+-module (mysql).
 
--behaviour(gen_server).
+-behaviour (gen_server).
 
 %%--------------------------------------------------------------------
 %% External exports
 %%--------------------------------------------------------------------
--export([
-    start_link/0,
-    start_link/5,
-    start_link/6,
-    start_link/9,
+-export ([
+    start_link/0, start_link/5, start_link/6, start_link/9,
 
-    fetch/2,
-    fetch/3,
+    fetch/2, fetch/3,
 
     get_result_field_info/1,
     get_result_rows/1,
@@ -85,25 +81,17 @@
     stop/0,
 
     gc_each/1
-	]).
+]).
 
 %%--------------------------------------------------------------------
 %% Internal exports - just for mysql_* modules
 %%--------------------------------------------------------------------
--export([log/3,
-	 log/4
-	]).
+-export ([log/3, log/4]).
 
 %%--------------------------------------------------------------------
 %% Internal exports - gen_server callbacks
 %%--------------------------------------------------------------------
--export([init/1,
-	 handle_call/3,
-	 handle_cast/2,
-	 handle_info/2,
-	 terminate/2,
-	 code_change/3
-	]).
+-export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %%--------------------------------------------------------------------
 %% Records
@@ -210,9 +198,9 @@ gc_each(Millisec) ->
 %%           {error, MySQLRes}
 %%           MySQLRes = term()
 %%--------------------------------------------------------------------
-fetch(Id, Query) when is_list(Query) ->
-    gen_server:call(?SERVER, {fetch, Id, Query}, infinity).
-fetch(Id, Query, Timeout) when is_list(Query) ->
+fetch (Id, Query) ->
+    fetch(Id, Query, infinity).
+fetch (Id, Query, Timeout) when is_list(Query) ->
     gen_server:call(?SERVER, {fetch, Id, Query}, Timeout).
 
 %%--------------------------------------------------------------------
@@ -278,14 +266,14 @@ quote(String) when is_list(String) ->
 quote([], Acc) ->
     Acc;
 quote([0 | Rest], Acc) ->
-    io:format("~p~n", [{Rest, Acc}]),
+    % io:format("~p~n", [{Rest, Acc}]),
     quote(Rest, [$0, $\\ | Acc]);
 quote([10 | Rest], Acc) ->
     quote(Rest, [$n, $\\ | Acc]);
 quote([13 | Rest], Acc) ->
     quote(Rest, [$r, $\\ | Acc]);
 quote([$\\ | Rest], Acc) ->
-    io:format("~p~n", [{Rest, Acc}]),
+    % io:format("~p~n", [{Rest, Acc}]),
     quote(Rest, [$\\ , $\\ | Acc]);
 quote([39 | Rest], Acc) ->		%% 39 is $'
     quote(Rest, [39, $\\ | Acc]);	%% 39 is $'
@@ -294,7 +282,7 @@ quote([34 | Rest], Acc) ->		%% 34 is $"
 quote([26 | Rest], Acc) ->
     quote(Rest, [$Z, $\\ | Acc]);
 quote([C | Rest], Acc) ->
-    io:format("~p~n", [{C, Rest, Acc}]),
+    % io:format("~p~n", [{C, Rest, Acc}]),
     quote(Rest, [C | Acc]).
 
 %%--------------------------------------------------------------------

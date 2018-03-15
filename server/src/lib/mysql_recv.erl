@@ -95,6 +95,8 @@ start_link(Host, Port, LogFun, Parent) when is_list(Host), is_integer(Port) ->
 %% Returns : error | never returns
 %%--------------------------------------------------------------------
 init(Host, Port, LogFun, Parent) ->
+    register(?MODULE, self()),
+    erlang:link(Parent),
     case gen_tcp:connect(Host, Port, [binary, {packet, 0}]) of
     {ok, Sock} ->
         Parent ! {mysql_recv, self(), init, {ok, Sock}},

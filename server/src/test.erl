@@ -12,19 +12,20 @@ debug_catch () ->
     ?CATCH(fun() -> ?DEBUG("debug_catch~n", []), exit(debug_catch) end),
     ok.
 
-
-test () ->
-    Time = time(),
-    case 1 of
-        1 ->
-            noop;
-        _ ->
-            X = a
-    end,
-    try io:format("~p~n", [a]) of
-        _ ->
-            X
-    catch
-        _ : _ ->
-            ok
-    end.
+test() ->  
+    P = spawn(fun() -> receive ok -> ok end end),  
+    MonitorRef = erlang:monitor(process, P),  
+      
+    P ! test,  
+    io:format("send test~n"),  
+    timer:sleep(1000),  
+    receive Msg -> io:format("~p~n", [Msg])  
+    after 0 -> io:format("timeout~n")  
+    end,  
+      
+    P ! ok,  
+    io:format("send ok~n~p~n", [{MonitorRef, P}]),  
+    timer:sleep(1000),  
+    receive Msg1 -> io:format("~p~n", [Msg1])  
+    after 0 -> io:format("timeout~n")  
+    end.  

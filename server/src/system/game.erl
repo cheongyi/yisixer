@@ -49,6 +49,7 @@ start (_Type, _Args) ->
     start_child(game_perf,          worker),        % 启动进程 --- 性能分析
     start_child(game_ets,           worker),        % 启动进程 --- 游戏内ets
     start_child(mysql,              worker),        % 启动进程 --- 游戏内mysql
+    start_child(game_mysql,         worker),        % 启动进程 --- 游戏内mysql
 
     % start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端
 
@@ -60,7 +61,7 @@ start (_Type, _Args) ->
 
     start_child(reloader,           worker),        % 启动进程 --- 代码自动载入
 
-    ?INFO("game start!~n", []),
+    ?INFO("========== Game start! ==========~n", []),
     Result.
 
 stop (_State) ->
@@ -98,7 +99,7 @@ start_child (ChildId, Module, Shutdown, Type) ->
     Restart     = permanent,
     Modules     = [Module],
     ChildSpecification  = {ChildId, StartFunc, Restart, Shutdown, Type, Modules},
-    SupervisorName      = ?MODULE,
+    SupervisorName      = ?SERVER,
     {ok, _}     = supervisor:start_child(SupervisorName, ChildSpecification).
 
 

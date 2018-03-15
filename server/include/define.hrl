@@ -2,7 +2,7 @@
     -define (IS_DEBUG,          true).
     -define (DEBUG(Msg, Args), 
         io:format(
-            "<<<DEBUG>>>LINE:~-4w>>>MODULE:~-20w>>>PLAYER:~-12w>>>TIME:~w~n>>> " ++ Msg, 
+            "~n==DEBUG== LINE:~-4wMODULE:~-20wPLAYER:~-12wTIME:~w~n========= " ++ Msg, 
             [?LINE, ?MODULE, get(the_player_id), erlang:localtime() | Args]
         )
     ).

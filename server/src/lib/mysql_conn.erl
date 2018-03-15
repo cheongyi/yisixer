@@ -269,6 +269,8 @@ do_recv(LogFun, RecvPid, SeqNum) when is_function(LogFun); LogFun == undefined, 
 %% Returns : void() | does not return
 %%--------------------------------------------------------------------
 init(Host, Port, User, Password, Database, LogFun, Parent) ->
+    register(?MODULE, self()),
+    erlang:link(Parent),
     case mysql_recv:start_link(Host, Port, LogFun, self()) of
 	{ok, RecvPid, Sock} ->
 	    case mysql_init(Sock, RecvPid, User, Password, LogFun) of

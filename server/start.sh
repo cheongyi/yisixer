@@ -12,7 +12,7 @@ erl \
  policy_server          '"false"' \
  server_port            '"1428"' \
  mysql_host             '"127.0.0.1"' \
- mysql_port             '"3306"' \
+ mysql_port             '3306' \
  mysql_username         '"root"' \
  mysql_password         '"wlwlwl"' \
  mysql_database         '"yisixer"' \

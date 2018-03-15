@@ -1,14 +1,13 @@
--module (test_srv).
+-module (game_mysql_recv).
 
--author     ("WhoAreYou").
--date       ({2017, 11, 09}).
+-author     ("CHEONGYI").
+-date       ({2018, 03, 13}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
+-copyright  ("Copyright © 2018 YiSiXEr").
 
 -behaviour (gen_server).
 
--export ([start_link/0]).
--export ([start/0]).
+-export ([start_link/4]).
 -export ([stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
@@ -20,7 +19,12 @@
 
 -define (SERVER, ?MODULE).
 
--record (state, {}).
+-record (state, {
+    conn_pid,
+    socket,
+    log_fun,
+    data    = <<>>
+}).
 
 
 %%% ========== ======================================== ====================
@@ -28,13 +32,8 @@
 %%% ========== ======================================== ====================
 %%% @spec   start_link() -> ServerRet.
 %%% @doc    Start the process and link gen_server.
-start_link () ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
-
-%%% @spec   start() -> ServerRet.
-%%% @doc    Start the process.
-start () ->
-    gen_server:start({local, ?SERVER}, ?MODULE, [], []).
+start_link (Host, Port, LogFun, ConnPid) ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [Host, Port, LogFun, ConnPid], []).
 
 %%% @spec   stop() -> ok.
 %%% @doc    Stop the process.
@@ -47,8 +46,15 @@ stop () ->
 %%% ========== ======================================== ====================
 %%% @spec   init([]) -> {ok, State}.
 %%% @doc    gen_server init, opens the server in an initial state.
-init ([]) ->
-    {ok, #state{}}.
+init ([Host, Port, LogFun, ConnPid]) ->
+    {ok, Sock} = gen_tcp:connect(Host, Port, [binary, {packet, 0}]),
+    ConnPid ! {mysql_recv, self(), socket, Sock},
+    State = #state{
+        conn_pid  = ConnPid,
+        socket  = Sock,
+        log_fun = LogFun
+    },
+    {ok, State}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple().
 %%% @doc    gen_server callback.
@@ -66,6 +72,16 @@ handle_cast (Request, State) ->
 
 %%% @spec   handle_info(Info, State) -> tuple().
 %%% @doc    gen_server callback.
+handle_info ({tcp,        Sock, InData}, State = #state{socket = Sock}) ->
+    Data    = list_to_binary([State #state.data, InData]),
+    NewData = send_packet(State #state.conn_pid, Data),
+    {noreply, State #state{data = NewData}};
+handle_info ({tcp_error,  Sock, Reason}, State = #state{socket = Sock}) ->
+    mysql:log(State #state.log_fun, info, "mysql_recv: Socket ~p tcp_error.~n", [Sock]),
+    {stop, {tcp_error, Reason}, State};
+handle_info ({tcp_closed, Sock},         State = #state{socket = Sock}) ->
+    mysql:log(State #state.log_fun, info, "mysql_recv: Socket ~p tcp_closed.~n", [Sock]),
+    {stop, normal, State};
 handle_info (Info, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),
     {noreply, State}.
@@ -85,6 +101,15 @@ code_change (_Vsn, State, _Extra) ->
 %%% ========== ======================================== ====================
 %%% Internal   API
 %%% ========== ======================================== ====================
+%%% @doc    Send data to conn_pid if we have enough data
+send_packet (ConnPid, <<Len:24/little, Num:8, D/binary>>) when
+    Len =< size(D)
+->
+    {Packet, Rest} = split_binary(D, Len),
+    ConnPid ! {mysql_recv, self(), data, Packet, Num},
+    send_packet(ConnPid, Rest);
+send_packet (_Parent, Date) ->
+    Date.
 
 
 

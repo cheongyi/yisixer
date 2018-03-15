@@ -19,6 +19,8 @@
 -include ("define.hrl").
 -include_lib ("kernel/include/file.hrl").
 
+-define (FORMAT_DOT_NUMBER, 43).
+
 -record (state, {last, tref}).
 
 
@@ -104,7 +106,7 @@ all_changed () ->
 is_changed (Module) ->
     try module_vsn(Module:module_info(attributes)) =/= module_vsn(code:get_object_code(Module))
     catch 
-        _:_ ->
+        _ : _ ->
             false
     end.
 
@@ -126,7 +128,7 @@ doit (Last, Now) ->
 doit_4 (_Last, _Now, [], IsReload) ->
     if
         IsReload ->
-            io:format("~nReloading done!~n", []);
+            io:format("~nReloading done!~n");
         true ->
             ok
     end;
@@ -159,7 +161,7 @@ doit_4 (Last, Now, [_| AllLoadedList], IsReload) ->
 %%% @doc    重新载入模块
 reload (Module) ->
     io:format("~nReloading ~p ", [Module]),
-    io:format(string:copies(".", 43 - length(atom_to_list(Module)))),
+    io:format(string:copies(".", ?FORMAT_DOT_NUMBER - length(atom_to_list(Module)))),
     code:purge(Module),
     case code:load_file(Module) of
         {module, Module} ->
