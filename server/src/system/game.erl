@@ -48,7 +48,7 @@ start (_Type, _Args) ->
     start_child(game_log,           worker),        % 启动进程 --- 日志
     start_child(game_perf,          worker),        % 启动进程 --- 性能分析
     start_child(game_ets,           worker),        % 启动进程 --- 游戏内ets
-    % start_child(mysql,              worker),        % 启动进程 --- 游戏内mysql
+    start_child(mysql,              worker),        % 启动进程 --- 游戏内mysql
     start_child(game_mysql,         worker),        % 启动进程 --- 游戏内mysql
 
     % start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端

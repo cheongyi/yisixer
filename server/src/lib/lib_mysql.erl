@@ -16,7 +16,7 @@
 
 insert(PoolId, Sql) ->
     case mysql:fetch(PoolId, Sql) of
-        {updated,Result} ->
+        {updated, Result} ->
             Result #mysql_result.insert_id;
         _ ->
             0
@@ -37,7 +37,7 @@ insert(PoolId, Sql) ->
 %% Usage    :
 %%
 %%--------------------------------------------------------------------
-get_rows(#mysql_result{fieldinfo = FieldInfo, rows=AllRows}) ->
+get_rows(#mysql_result{field_info = FieldInfo, rows=AllRows}) ->
     case AllRows of
         [] ->
             [];

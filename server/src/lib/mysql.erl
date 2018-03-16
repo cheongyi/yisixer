@@ -210,7 +210,7 @@ fetch (Id, Query, Timeout) when is_list(Query) ->
 %% Returns : FieldInfo
 %%           FieldInfo = list() of {Table, Field, Length, Name}
 %%--------------------------------------------------------------------
-get_result_field_info(#mysql_result{fieldinfo = FieldInfo}) ->
+get_result_field_info(#mysql_result{field_info = FieldInfo}) ->
     FieldInfo.
 
 %%--------------------------------------------------------------------
@@ -230,7 +230,7 @@ get_result_rows(#mysql_result{rows=AllRows}) ->
 %% Returns : AffectedRows
 %%           AffectedRows = integer()
 %%--------------------------------------------------------------------
-get_result_affected_rows(#mysql_result{affectedrows=AffectedRows}) ->
+get_result_affected_rows(#mysql_result{affect_rows=AffectedRows}) ->
     AffectedRows.
 
 %%--------------------------------------------------------------------

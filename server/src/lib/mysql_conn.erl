@@ -426,7 +426,7 @@ get_query_response(LogFun, RecvPid, Version, Options) ->
 		    %% No Tabular data
             {AffectedRows, Rest1} = get_with_length_2(Rest),
             {InsertId, _Rest2} = get_with_length_2(Rest1),
-		    {updated, #mysql_result{affectedrows=AffectedRows, insert_id=InsertId}};
+		    {updated, #mysql_result{affect_rows=AffectedRows, insert_id=InsertId}};
 		255 ->
 		    <<_Code:16/little, Message/binary>>  = Rest,
 		    {error, #mysql_result{error=binary_to_list(Message)}};
@@ -437,7 +437,7 @@ get_query_response(LogFun, RecvPid, Version, Options) ->
 			    ResultType = get_option(result_type, Options, ?DEFAULT_RESULT_TYPE),
 			    case get_rows(Fieldcount, LogFun, RecvPid, ResultType, []) of
 				{ok, Rows} ->
-				    {data, #mysql_result{fieldinfo=Fields, rows=Rows}};
+				    {data, #mysql_result{field_info=Fields, rows=Rows}};
 				{error, Reason} ->
 				    {error, #mysql_result{error=Reason}}
 			    end;

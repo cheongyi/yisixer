@@ -7,16 +7,17 @@
 
 -behaviour (gen_server).
 
--compile (export_all).
+% -compile (export_all).
 -export ([start_link/0, start/0, stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
+    %% 启动进程
     start_link/5, start_link/6, start_link/9,
-
+    fetch/2, fetch/3,                           % 发送一个Query并等待其结果
     %% 打印日志消息
     log/3, log/4,
-
-    spiltbin_first_zero/2                       % 分割字节中遇到的第一个0
+    spiltbin_first_zero/2,                      % 分割字节中遇到的第一个0
+    get_state/0                                 % 获取进程状态数据
 ]).
 
 -include("define.hrl").
@@ -34,7 +35,7 @@
     fun(Level, Message, Arguments) ->
         case Level of
             error -> ?ERROR(Message, Arguments);
-            _     -> ?DEBUG(Message, Arguments);
+            _     -> ?INFO(Message, Arguments);
             _     -> ok
         end
     end
@@ -71,6 +72,22 @@ start_link () ->
     % end,
     start_link(?MYSQL_ID, ?MYSQL_HOST, ?MYSQL_PORT, ?MYSQL_USER, ?MYSQL_PASSWORD, ?MYSQL_DATABASE, ?MYSQL_POOLSIZE, ?MYSQL_RECONNECT, ?MYSQL_LOG_FUN()).
 
+%%% @spec   start() -> ServerRet.
+%%% @doc    Start the process.
+start () ->
+    gen_server:start({local, ?SERVER}, ?MODULE, [], []).
+
+%%% @spec   stop() -> ok.
+%%% @doc    Stop the process.
+stop () ->
+    gen_server:call(?SERVER, stop).
+
+%%% @doc    获取进程状态数据
+get_state () ->
+    gen_server:call(?SERVER, get_state).
+
+
+%%% @doc    启动进程
 start_link (Id, Host,       User, Password, Database) ->
     start_link(Id, Host, ?MYSQL_PORT, User, Password, Database, ?MYSQL_POOLSIZE, ?MYSQL_RECONNECT, ?MYSQL_LOG_FUN()).
 
@@ -86,19 +103,15 @@ start_link (Id, Host, Port, User, Password, Database, PoolSize, Reconnect, LogFu
 ->
     crypto:start(),
     Result = gen_server:start_link({local, ?SERVER}, ?MODULE, [Id, Host, Port, User, Password, Database, PoolSize, Reconnect, LogFun], []),
-    ?INFO("Mysql: driver start with '~p' on ~s:~p use ~s~n", [Id, Host, Port, Database]),
+    ?INFO("Mysql: driver started with '~p' on ~s:~p use ~s~n", [Id, Host, Port, Database]),
     Result.
 
-%%% @spec   start() -> ServerRet.
-%%% @doc    Start the process.
-start () ->
-    gen_server:start({local, ?SERVER}, ?MODULE, [], []).
-
-%%% @spec   stop() -> ok.
-%%% @doc    Stop the process.
-stop () ->
-    gen_server:call(?SERVER, stop).
-
+%%% @doc    发送一个Query并等待其结果
+%%% @descrip    Send a query and wait for the result
+fetch (Id, Query) when is_list(Query) ->
+    fetch(Id, Query, infinity).
+fetch (Id, Query, Timeout) when is_list(Query) ->
+    gen_server:call(?SERVER, {fetch, Id, Query}, Timeout).
 
 %%% @doc    打印日志消息
 log (LogFun, Level, Message) ->
@@ -128,12 +141,20 @@ init ([Id, Host, Port, User, Password, Database, PoolSize, Reconnect, LogFun]) -
         {ok, ConnList}  ->
             {ok, #state{conn_list = ConnList, log_fun = LogFun}};
         {error, InitReason} ->
-            log(LogFun, error, "Mysql(1): ~p~nfailed start first MySQL connection handler, exit!~n", [InitReason]),
+            log(LogFun, error, "Mysql: init ~p~nfailed start first MySQL connection handler, exit!~n", [InitReason]),
             {stop, {error, InitReason}}
     end.
 
 %%% @spec   handle_call(Args, From, State) -> tuple().
 %%% @doc    gen_server callback.
+handle_call({fetch, Id, Query}, From, State) ->
+    log(State #state.log_fun, debug, "Mysql: fetch (~p): ~p~n", [Id, Query]),
+    {ok, MysqlConn, RestOfConnList} = get_next_mysql_connection_for_id(Id, State #state.conn_list, []),
+    game_mysql_conn:fetch(MysqlConn #mysql_connection.conn_pid, Query, From),
+    NewConnList = RestOfConnList ++ [MysqlConn],
+    {noreply, State #state{conn_list = NewConnList}};
+handle_call (get_state, _From, State) ->
+    {reply, State, State};
 handle_call (stop, _From, State) ->
     {stop, shutdown, stopped, State};
 handle_call (Request, From, State) ->
@@ -201,5 +222,12 @@ add_conn_monit (Conn, ConnList) when
     monitor(process, Conn #mysql_connection.conn_pid),
     {ok, [Conn | ConnList]}.
 
+%%% @doc    获取对应ID的数据库连接
+get_next_mysql_connection_for_id (Id, [#mysql_connection{id = Id} = MysqlConn | List], Res) ->
+    {ok, MysqlConn, lists:reverse(Res) ++ List};
+get_next_mysql_connection_for_id (Id, [MysqlConn | List], Res) when is_record(MysqlConn, mysql_connection) ->
+    get_next_mysql_connection_for_id(Id, List, [MysqlConn | Res]);
+get_next_mysql_connection_for_id (_Id, [], _Res) ->
+    nomatch.
 
 

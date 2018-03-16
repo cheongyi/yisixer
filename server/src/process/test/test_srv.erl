@@ -10,7 +10,7 @@
 -export ([start_link/0, start/0, stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
-
+    get_state/0
 ]).
 
 -include ("define.hrl").
@@ -39,6 +39,9 @@ start () ->
 stop () ->
     gen_server:call(?SERVER, stop).
 
+get_state () ->
+    gen_server:call(?SERVER, get_state).
+
 
 %%% ========== ======================================== ====================
 %%% gen_server 6 callbacks
@@ -50,6 +53,8 @@ init ([]) ->
 
 %%% @spec   handle_call(Args, From, State) -> tuple().
 %%% @doc    gen_server callback.
+handle_call (get_state, _From, State) ->
+    {reply, State, State};
 handle_call (stop, _From, State) ->
     {stop, shutdown, stopped, State};
 handle_call (Request, From, State) ->

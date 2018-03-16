@@ -1,8 +1,8 @@
 %% MySQL result record:
 -record(mysql_result, {
-    fieldinfo   = [],
+    field_info  = [],
     rows        = [],
-    affectedrows= 0,
+    affect_rows = 0,
     insert_id   = 0,
     error       = ""
 }).

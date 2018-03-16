@@ -5,7 +5,7 @@
 -date       ({2018, 03, 15}).
 -vsn        ("1.0.0").
 
--compile (export_all).
+% -compile (export_all).
 -export ([
     do_new_auth/8,                              % 执行MySQL认证
     do_old_auth/7                               % 执行旧式MySQL认证
@@ -32,14 +32,12 @@
 -define (CLIENT_MULTI_RESULTS,      131072).
 -define (MAX_PACKET_SIZE, 1000000).
 
--record (state, {}).
-
 
 %%% ========== ======================================== ====================
 %%% External   API
 %%% ========== ======================================== ====================
 %%% @doc    执行MySQL认证
-%%% descrip Perform MySQL authentication.
+%%% @descrip    Perform MySQL authentication.
 do_new_auth (RecvPid, Socket, SequenceNum, User, Password, Salt1, Salt2, LogFun) ->
     Auth    = password_new(Password, Salt1 ++ Salt2),
     Data    = make_new_auth(User, Auth, ""),
@@ -51,12 +49,12 @@ do_new_auth (RecvPid, Socket, SequenceNum, User, Password, Salt1, Salt2, LogFun)
             game_mysql_conn:do_recv(RecvPid, SequenceNum + 1, LogFun);
         {ok, Packet, ResponseNum} ->
             {ok, Packet, ResponseNum};
-        {error, Format, Reason} ->
-            {error, Format, Reason}
+        {error, Reason} ->
+            {error, Reason}
     end.
 
 %%% @doc    执行旧式MySQL认证
-%%% descrip Perform old-style MySQL authentication.
+%%% @descrip    Perform old-style MySQL authentication.
 do_old_auth (RecvPid, Socket, SequenceNum, User, Password, Salt1, LogFun) ->
     Auth    = password_old(Password, Salt1),
     Data    = make_old_auth(User, Auth),
@@ -67,6 +65,7 @@ do_old_auth (RecvPid, Socket, SequenceNum, User, Password, Salt1, LogFun) ->
 %%% ========== ======================================== ====================
 %%% Internal   API
 %%% ========== ======================================== ====================
+%%% @doc    新式加密密码
 password_new (Password, Salt) ->
     Digest1 = ?HASH_SHA(Password),
     Digest2 = ?HASH_SHA(Digest1),
@@ -93,6 +92,7 @@ dual_map (Fun, [Element3 | Digest3], [Element1 | Digest1], List) ->
 dual_map (_Fun, [], [], List) ->
     lists:reverse(List).
 
+%%% @doc    生成新式认证
 make_new_auth (User, Password, Database) ->
     DbCaps = case Database of
         "" -> 0;
@@ -119,6 +119,7 @@ make_new_auth (User, Password, Database) ->
     >>.
 
 
+%%% @doc    生成旧式认证
 make_old_auth (User, Password) ->
     %% 1 bor 4 bor 8192 bor 512 bor 32768 bor 65536 bor 131072 bor 0|8 bor 2.
     Caps  = ?LONG_PASSWORD 
@@ -134,6 +135,7 @@ make_old_auth (User, Password) ->
         PasswordBin/binary
     >>.
 
+%%% @doc    旧式加密密码
 password_old (Password, Salt) ->
     {Password1, Password2} = hash(Password),
     {Salt1,     Salt2}     = hash(Salt),
