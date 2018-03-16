@@ -7,8 +7,8 @@
 
 -behaviour (gen_server).
 
--export ([start_link/4]).
--export ([stop/0]).
+-compile (export_all).
+-export ([start_link/4, start/0, stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
 
@@ -34,6 +34,11 @@
 %%% @doc    Start the process and link gen_server.
 start_link (Host, Port, LogFun, ConnPid) ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [Host, Port, LogFun, ConnPid], []).
+
+%%% @spec   start() -> ServerRet.
+%%% @doc    Start the process.
+start () ->
+    gen_server:start({local, ?SERVER}, ?MODULE, [], []).
 
 %%% @spec   stop() -> ok.
 %%% @doc    Stop the process.
@@ -102,10 +107,10 @@ code_change (_Vsn, State, _Extra) ->
 %%% Internal   API
 %%% ========== ======================================== ====================
 %%% @doc    Send data to conn_pid if we have enough data
-send_packet (ConnPid, <<Len:24/little, Num:8, D/binary>>) when
-    Len =< size(D)
+send_packet (ConnPid, <<Len:24/little, Num:8, Data/binary>>) when
+    Len =< size(Data)
 ->
-    {Packet, Rest} = split_binary(D, Len),
+    {Packet, Rest} = split_binary(Data, Len),
     ConnPid ! {mysql_recv, self(), data, Packet, Num},
     send_packet(ConnPid, Rest);
 send_packet (_Parent, Date) ->

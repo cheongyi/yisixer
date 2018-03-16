@@ -17,7 +17,7 @@
     async_do_work/3,                            % 异步工作
     count_work/0,                               % 统计工作消息数
     peek_work/0,                                % 查看工作消息头
-    get_status/0                                % 获取工作状态数据
+    get_state/0                                 % 获取工作状态数据
 ]).
 
 -include ("define.hrl").
@@ -91,8 +91,8 @@ peek_work () ->
     end.
     
 %%% @doc    获取工作状态数据
-get_status () ->
-    gen_server:call(?MODULE, get_status).
+get_state () ->
+    gen_server:call(?MODULE, get_state).
 
 
 %%% ========== ======================================== ====================
@@ -117,7 +117,7 @@ handle_call ({put_work, {From, M, F, A, Time}}, From, State) ->
     erase(), 
     put(is_game_worker, true), 
     {reply, Reply, State #state{count = State #state.count + 1}};
-handle_call (get_status, _From, State) ->
+handle_call (get_state, _From, State) ->
     {reply, State, State};
 handle_call (stop, _From, State) ->
     {stop, shutdown, stopped, State};
@@ -141,10 +141,11 @@ handle_cast (Request, State) ->
 %%% @doc    gen_server callback.
 handle_info (status, State) ->
     lib_misc:send_after(4000, self(), status),
-    {noreply, State #state{count = 0, rate = State #state.count / 4}};
-handle_info (Info, State) ->
-    ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),
-    {noreply, State}.
+    % {noreply, State #state{count = 0, rate = State #state.count / 4}};
+    {noreply, State #state{count = 0, rate = State #state.count / 4}}.
+% handle_info (Info, State) ->
+%     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),
+%     {noreply, State}.
 
 %%% @spec   terminate(Reason, State) -> ok
 %%% @doc    gen_server termination callback.

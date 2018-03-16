@@ -1,15 +1,13 @@
 -module (test_srv).
 
+-copyright  ("Copyright © 2017 YiSiXEr").
 -author     ("WhoAreYou").
 -date       ({2017, 11, 09}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
--behaviour (gen_server).
+-behaviour  (gen_server).
 
--export ([start_link/0]).
--export ([start/0]).
--export ([stop/0]).
+-export ([start_link/0, start/0, stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
 

@@ -7,14 +7,16 @@
 
 -behaviour (gen_server).
 
--export ([start_link/0]).
--export ([stop/0]).
+-compile (export_all).
+-export ([start_link/0, start/0, stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
     start_link/5, start_link/6, start_link/9,
 
     %% 打印日志消息
-    log/3, log/4
+    log/3, log/4,
+
+    spiltbin_first_zero/2                       % 分割字节中遇到的第一个0
 ]).
 
 -include("define.hrl").
@@ -87,6 +89,11 @@ start_link (Id, Host, Port, User, Password, Database, PoolSize, Reconnect, LogFu
     ?INFO("Mysql: driver start with '~p' on ~s:~p use ~s~n", [Id, Host, Port, Database]),
     Result.
 
+%%% @spec   start() -> ServerRet.
+%%% @doc    Start the process.
+start () ->
+    gen_server:start({local, ?SERVER}, ?MODULE, [], []).
+
 %%% @spec   stop() -> ok.
 %%% @doc    Stop the process.
 stop () ->
@@ -100,6 +107,15 @@ log (LogFun, Level, Message, Arguments) when is_function(LogFun) ->
     LogFun(Level, Message, Arguments);
 log (_LogFun, _Level, Message, Arguments) ->
     ?INFO(Message, Arguments).
+
+%%% @doc    分割字节中遇到的第一个0
+spiltbin_first_zero (<<0:8,       Rest/binary>>, List) ->
+    {lists:reverse(List), Rest};
+spiltbin_first_zero (<<Element:8, Rest/binary>>, List) ->
+    spiltbin_first_zero(Rest, [Element | List]);
+spiltbin_first_zero (<<>>, List) ->
+    {lists:reverse(List), <<>>}.
+
 
 
 %%% ========== ======================================== ====================
