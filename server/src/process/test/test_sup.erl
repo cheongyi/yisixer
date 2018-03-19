@@ -1,16 +1,17 @@
 -module (test_sup).
 
+-copyright  ("Copyright © 2017 YiSiXEr").
 -author     ("WhoAreYou").
 -date       ({2017, 11, 09}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
--behaviour (supervisor).
+-behaviour  (supervisor).
 
 -export ([start_link/0]).
 -export ([init/1]).
 
 -include ("define.hrl").
+-include ("record.hrl").
 
 -define (SERVER, ?MODULE).
 

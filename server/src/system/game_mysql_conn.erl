@@ -170,7 +170,7 @@ mysql_init (RecvPid, Socket, User, Password, LogFun) ->
             end,
             case AuthResp of
                 {ok, <<0:8, _Rest/binary>>, _RecvSeqNum} ->
-                    ?INFO("mysql_init: success (~p): ~p~n", [_RecvSeqNum, _Rest]),
+                    ?INFO("mysql_init: success(~p): ~p~n", [_RecvSeqNum, _Rest]),
                     {ok, Version};
                 {ok, <<255:8, Code:16/little, Message/binary>>, _RecvSeqNum} ->
                     game_mysql:log(LogFun, error, 

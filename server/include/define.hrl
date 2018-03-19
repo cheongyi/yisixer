@@ -64,9 +64,14 @@
 )).
 
 %%% 时间相关
--define (DAY_SECONDS, 86400).           % 一天的秒数
--define (WEEK_DAY_NUMBER, 7).           % 一周的天数
--define (WEEK_SECONDS, ?WEEK_DAY_NUMBER * ?DAY_SECONDS).    % 一周的秒数
+-define (MINUTE_TO_SECOND,  60).        % 分转秒
+-define (HOUR_TO_MINUTE,    60).        % 时转分
+-define (DAY_TO_HOUR,       24).        % 日转时
+-define (WEEK_TO_DAY,       7).         % 周转天
+-define (YEAR_TO_MONTH,     12).        % 年转月
+-define (HOUR_TO_SECOND, ?MINUTE_TO_SECOND * ?HOUR_TO_MINUTE).  % 时转秒
+-define (DAY_TO_SECOND,  ?DAY_TO_HOUR      * ?HOUR_TO_SECOND).  % 天转秒
+-define (WEEK_TO_SECOND, ?WEEK_TO_DAY      * ?DAY_TO_SECOND).   % 周转秒
 
 
 
