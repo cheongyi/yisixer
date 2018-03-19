@@ -2,6 +2,7 @@
 *.beam
 *.log
 *.sql
+server/start.sh
 server/date/*
 server/ebin/*.beam
 server/include/api/*
