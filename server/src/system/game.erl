@@ -76,14 +76,14 @@ init ([]) ->
 %%% ========== ======================================== ====================
 %%% Internal   API
 %%% ========== ======================================== ====================
-stop (TimeOut1, TimeOut2) ->
+stop (TimeOutOffline, TimeOutSync) ->
     % 中断socket链接
-    supervisor:terminate_child(?SERVER, socket_server_sup),
+    % supervisor:terminate_child(?SERVER, socket_server_sup),
     % 踢掉在线玩家
-    mod_online:wait_all_online_player_exit(TimeOut1),
+    % mod_online:wait_all_online_player_exit(TimeOutOffline),
     % 等待数据写入
-    game_db_sync:wait_for_all_data_sync0(TimeOut2),
-    game_db_sync:wait_for_all_data_sync1(TimeOut2),
+    game_db_sync_to_file:wait_for_all_data_sync(TimeOutSync),
+    game_db_sync_to_db:wait_for_all_data_sync(TimeOutSync),
     % 关闭应用game
     application:stop(?SERVER).
 

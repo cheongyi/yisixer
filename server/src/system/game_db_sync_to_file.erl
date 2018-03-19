@@ -10,6 +10,7 @@
 -export ([start_link/0, start/0, stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
+    wait_for_all_data_sync/1,                   % 等待所有数据同步
     get_state/0
 ]).
 
@@ -41,6 +42,33 @@ stop () ->
 
 get_state () ->
     gen_server:call(?SERVER, get_state).
+
+%%% @doc    等待所有数据同步
+wait_for_all_data_sync (TimeOut) ->
+    wait_for_all_data_sync_2(TimeOut, 0).
+wait_for_all_data_sync_2 (TimeOut, TimeOut) ->
+    case io:get_chars("Sync to file time out, continue?[Y/n] : ", 1) of
+        "n" ->
+            io:format("wait for all player data sync to file ... time out"),
+            time_out;
+        _   ->
+            wait_for_all_data_sync_2(TimeOut, 0)
+    end;
+wait_for_all_data_sync_2 (TimeOut, Time) ->
+    io:format("wait for all player data sync to file ... "),
+    receive
+    after 1000 ->
+        case get_message_queue_len() of
+            0 -> io:format("done~n");
+            N -> io:format("~p~n", [N]), 
+                wait_for_all_data_sync_2(TimeOut, Time + 1)
+        end
+    end.
+
+%%% @doc    获取消息队列长度
+get_message_queue_len () ->
+    {message_queue_len, Len} = process_info(whereis(?SERVER), message_queue_len),
+    Len.
 
 
 %%% ========== ======================================== ====================
