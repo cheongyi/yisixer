@@ -5,4 +5,5 @@ php tool/format.php
 erl \
 -noshell \
 -pa tool/ \
+-pa server/ebin/ \
 -s tool start \

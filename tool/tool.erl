@@ -69,18 +69,21 @@ restart () ->
 %%% ========== ======================================== ====================
 %%% Internal   API
 %%% ========== ======================================== ====================
--define (PROTOCOL_DIR, "server/protocol/").     % 协议路径
+-define (PROTOCOL_DIR, "server/protocol/").         % 协议路径
+-define (API_OUT_DIR,  "server/src/gen/api_out/").  % api_out路径
 -record (protocol_file, {
     module_id   = 0,    % 模块ID
     name        = "",   % 模块名字
     action      = [],   % 模块接口  [#protocol_action{}...],
-    class       = []    % 模块类名  [#protocol_field{}...]
+    class       = [],   % 模块类名  [#protocol_field{}...]
+    note        = ""    % 模块注释
 }).
 -record (protocol_action, {
     action_id   = 0,    % 接口ID
     name        = "",   % 接口名字
     in          = [],   % 客户端进来参数   [#protocol_field{}...]
-    out         = []    % 服务端出去参数   [#protocol_field{}...]
+    out         = [],   % 服务端出去参数   [#protocol_field{}...]
+    note        = ""    % 接口注释
 }).
 -record (protocol_field, {
     name        = "",   % 字段名字
@@ -89,7 +92,6 @@ restart () ->
 }).
 %%% @doc    生成协议(服务端代码)
 generate_protocol_for_server () ->
-    io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, file:get_cwd()]),
     {ok, FileNameList} = file:list_dir(?PROTOCOL_DIR),
     io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, FileNameList]),
     % generate_protocol_for_server (FileNameList).
@@ -97,29 +99,91 @@ generate_protocol_for_server () ->
 generate_protocol_for_server ([]) ->
     ok;
 generate_protocol_for_server ([FileName | List]) ->
-    {ok, File}  = file:open(?PROTOCOL_DIR ++ FileName, [read]),
-    IdIndex     = string:str(FileName, "_"),
-    NameIndex   = string:str(FileName, "."),
-    ModuleIdStr = string:substr(FileName,           1, IdIndex - 1),
-    ModuleName  = string:substr(FileName, IdIndex + 1, NameIndex - 1),
-    ProtocolFile= #protocol_file{
-        module_id   = list_to_integer(IdIndex),
-        name        = ModuleName
-    },
-    io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, ProtocolFile]),
-    read_one_protocol_for_server(File, ProtocolFile),
-    file:close(File),
+    ProtocolFile = read_server_protocol(FileName),
+    write_server_src_gen_api_out(ProtocolFile),
     generate_protocol_for_server (List).
 
-read_one_protocol_for_server (File, ProtocolFile) ->
+read_server_protocol (FileName) ->
+    erase(read_line),
+    {ok, File}          = file:open(?PROTOCOL_DIR ++ FileName, [read]),
+    ProtocolFileIdName  = set_protocol_file_id_name(FileName),
+    io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, ProtocolFileIdName]),
+    ProtocolFile        = read_server_protocol_file_title(File, ProtocolFileIdName),
+    io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, ProtocolFile]),
+    file:close(File),
+    ProtocolFile.
+
+%%% @doc    设置协议文件ID和名字
+set_protocol_file_id_name (FileName) ->
+    IdIndex     = string:str(FileName, "_"),
+    NameIndex   = string:str(FileName, "."),
+    ModuleIdStr = string:sub_string(FileName,           1, IdIndex   - 1),
+    ModuleName  = string:sub_string(FileName, IdIndex + 1, NameIndex - 1),
+    #protocol_file{
+        module_id   = ModuleIdStr,
+        name        = ModuleName
+    }.
+
+%%% @doc    读取协议文件标题
+read_server_protocol_file_title (File, ProtocolFile) ->
+    update_line(),
+    ModuleIdStr     = ProtocolFile #protocol_file.module_id,
+    ModuleName      = ProtocolFile #protocol_file.name,
+    NameEqualId     = ModuleName ++ "=" ++ ModuleIdStr,
     case file:read_line(File) of
         {ok, Data} ->
-            io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, Data]),
-            read_one_protocol_for_server(File, ProtocolFile);
+            case ((Data -- string:copies(" ", max(0, length(Data) - 2))) -- "\n") of
+                NameEqualId     ->
+                    put(name_equal_id, true),
+                    read_server_protocol_file_title(File, ProtocolFile);
+                "//" ++ Note    ->
+                    NewNote = ProtocolFile #protocol_file.note ++ "\n%" ++ Note,
+                    NewProtocolFile = ProtocolFile #protocol_file{
+                        note    = NewNote
+                    },
+                    read_server_protocol_file_title(File, NewProtocolFile);
+                "{"     ->
+                    case get(name_equal_id) of
+                        true -> ProtocolFile
+                        _    -> error_title
+                    end;
+                ""      ->
+                    read_server_protocol_file_title(File, ProtocolFile)
+            end;
+        'eof'      ->
+            ProtocolFile;
         Other      ->
             Other
     end.
 
+update_line () ->
+    case get(read_line) of
+        undefined -> put(read_line, 1);
+        ReadLine  -> put(read_line, 1 + ReadLine)
+    end.
+
+write_server_src_gen_api_out (ProtocolFile) ->
+    ModuleName          = ProtocolFile #protocol_file.name,
+
+    ApiOutFileName      = ?API_OUT_DIR ++ "api_" ++ ModuleName ++ "_out.erl",
+    {ok, ApiOutFile}    = file:open(ApiOutFileName, [write]),
+    {Year, Month, Day}  = date(),
+    ok = file:write(ApiOutFile, 
+"-module (api_" ++ ModuleName ++ "_out).
+
+-copyright  (\"Copyright © " ++ integer_to_list(Year) ++ " YiSiXEr\").
+-author     (\"CHEONGYI\").
+-date       ({" ++ lib_time:ymd_tuple_to_cover0str({Year, Month, Day}, ", ") ++ "}).
+-vsn        (\"1.0.0\").
+
+-export ([
+
+]).
+
+
+%%% ========== ======================================== ====================
+"),
+    file:close(ApiOutFile).
 
 
 
