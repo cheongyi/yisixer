@@ -2,9 +2,11 @@
 *.beam
 *.log
 *.sql
+server/src/test.erl
 server/start.sh
 server/date/*
 server/ebin/*.beam
 server/include/api/*
+!server/include/api/api_test.hrl
 server/include/gen/*
 server/log/*
