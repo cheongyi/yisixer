@@ -2,6 +2,7 @@
 *.beam
 *.log
 *.sql
+*.dump
 server/src/test.erl
 server/start.sh
 server/date/*
