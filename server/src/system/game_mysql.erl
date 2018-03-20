@@ -17,10 +17,18 @@
     %% 打印日志消息
     log/3, log/4,
     spiltbin_first_zero/2,                      % 分割字节中遇到的第一个0
+
+    get_result_field_info/1,
+    get_result_rows/1,
+    get_result_affected_rows/1,
+    get_result_reason/1,
+    get_result_insert_id/1,
+
     get_state/0                                 % 获取进程状态数据
 ]).
 
 -include("define.hrl").
+-include("mysql.hrl").
 
 -define (SERVER, ?MODULE).
 -define (MYSQL_ID,       gamedb).
@@ -129,6 +137,16 @@ spiltbin_first_zero (<<Element:8, Rest/binary>>, List) ->
 spiltbin_first_zero (<<>>, List) ->
     {lists:reverse(List), <<>>}.
 
+get_result_field_info (MysqlResult) ->
+    MysqlResult #mysql_result.field_info.
+get_result_rows (MysqlResult) ->
+    MysqlResult #mysql_result.rows.
+get_result_affected_rows (MysqlResult) ->
+    MysqlResult #mysql_result.affect_rows.
+get_result_insert_id (MysqlResult) ->
+    MysqlResult #mysql_result.insert_id.
+get_result_reason (MysqlResult) ->
+    MysqlResult #mysql_result.error.
 
 
 %%% ========== ======================================== ====================

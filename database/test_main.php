@@ -2,6 +2,14 @@
 print_r($_SERVER);
 echo $_SERVER ."\n";
 
+echo "请选择一个操作：
+  1 - 生成代码(服务端)
+  2 - 编译项目(服务端)
+  3 - 生成代码(客户端)
+  4 - 更新数据库
+  x - 退出
+> ";
+
 echo shell_exec("date");
 
 $link = mysqli_connect("127.0.0.1", "root", "wlwlwl", "gamedb", 3306);

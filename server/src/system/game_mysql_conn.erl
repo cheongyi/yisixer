@@ -24,6 +24,7 @@
 -define (SERVER, ?MODULE).
 -define (SECURE_CONNECTION, 32768).
 -define (MYSQL_QUERY_OP, 3).
+-define (DEFAULT_STANDALONE_TIMEOUT, 3600000).
 -define (DEFAULT_RESULT_TYPE, list).
 -define (MYSQL_4_0, 40). %% Support for MySQL 4.0.x
 -define (MYSQL_4_1, 41). %% Support for MySQL 4.1.x et 5.0.x
@@ -285,7 +286,7 @@ get_query_response (RecvPid, LogFun, MysqlVersion, Options) ->
                     %% No Tabular data
                     {AffectRows, RestAffect} = get_with_length(Rest),
                     {InsertId,  _RestInsert} = get_with_length(RestAffect),
-                    {update, #mysql_result{affect_rows = AffectRows, insert_id = InsertId}};
+                    {updated, #mysql_result{affect_rows = AffectRows, insert_id = InsertId}};
                 255 ->
                     <<_MsgLen:16/little, Message/binary>> = Rest,
                     {error, #mysql_result{error = binary_to_list(Message)}};
@@ -465,7 +466,7 @@ get_field_datatype (255) -> 'GEOMETRY'.
 %%% @doc    发送一个Query
 send_query (Pid, Query, From, Options) when is_pid(Pid) andalso is_list(Query) ->
     Self        = self(),
-    Timeout     = get_option(timeout, Options, 1),
+    Timeout     = get_option(timeout, Options, ?DEFAULT_STANDALONE_TIMEOUT),
     TimeoutRef  = erlang:start_timer(Timeout, self(), timeout),
     Pid ! {fetch, TimeoutRef, Query, From, Options},
     % ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {fetch, Pid, From}]),
