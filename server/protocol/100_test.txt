@@ -1,0 +1,57 @@
+test = 100
+{
+    // 信息
+    class info
+    {
+        player_id           : long      // 玩家ID
+        age                 : byte      // 年龄
+        nickname            : string    // 昵称
+        seat_number         : short     // 座号
+        job_number          : int       // 工号
+        department          : enum      // 部门
+    }
+
+
+    // 获取玩家信息
+    get_player_info = 000001
+    {
+        in
+        {
+
+        }
+
+        out
+        {
+            player_id               : long      // 玩家ID
+        }
+    }
+
+    // 获取玩家信息
+    get_other_player_info = 000002
+    {
+        in
+        {
+            player_id               : long      // 玩家ID
+        }
+
+        out
+        {
+            player_id               : long      // 玩家ID
+        }
+    }
+
+    // 获取玩家信息
+    get_all_player_info = 000003
+    {
+        in
+        {
+
+        }
+
+        out
+        {
+
+        }
+    }
+}
+
