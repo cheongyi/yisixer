@@ -3,17 +3,21 @@ test = 100
     // 信息
     class info
     {
-        player_id           : long      // 玩家ID
-        age                 : byte      // 年龄
-        nickname            : string    // 昵称
-        seat_number         : short     // 座号
-        job_number          : int       // 工号
-        department          : enum      // 部门
+        player_id               : long      // 玩家ID
+        age                     : byte      // 年龄
+        nickname                : string    // 昵称
+        seat_number             : short     // 座号
+        job_number              : int       // 工号
+        department              : enum      // 部门
+        {
+            ADMINISTRATION          // 行政
+            PROGRAM                 // 程序
+        }
     }
 
 
     // 获取玩家信息
-    get_player_info = 000001
+    get_player_info = 100001
     {
         in
         {
@@ -23,11 +27,22 @@ test = 100
         out
         {
             player_id               : long      // 玩家ID
+            age                     : byte      // 年龄
+            nickname                : string    // 昵称
+            seat_number             : short     // 座号
+            job_number              : int       // 工号
+            department              : enum      // 部门
+            {
+                ADMIN          // 行政
+                TEST                 // 程序
+            }
+            player_info_list        : list<info>    // 玩家信息
+            player_rank_list        : list<rank.info>   // 玩家排行信息
         }
     }
 
     // 获取玩家信息
-    get_other_player_info = 000002
+    get_other_player_info = 100002
     {
         in
         {
@@ -37,11 +52,12 @@ test = 100
         out
         {
             player_id               : long      // 玩家ID
+            player_info             : typeof<info>  // 玩家信息
         }
     }
 
     // 获取玩家信息
-    get_all_player_info = 000003
+    get_all_player_info = 100003
     {
         in
         {
@@ -50,7 +66,19 @@ test = 100
 
         out
         {
-
+            all_player_info         : list      // 所有玩家信息列表
+            {
+                player_id               : long      // 玩家ID
+                age                     : byte      // 年龄
+                nickname                : string    // 昵称
+                seat_number             : short     // 座号
+                job_number              : int       // 工号
+                department              : enum      // 部门
+                {
+                    HAHA          // 行政
+                    PROGRAM                 // 程序
+                }
+            }
         }
     }
 }

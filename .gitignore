@@ -10,4 +10,6 @@ server/ebin/*.beam
 server/include/api/*
 !server/include/api/api_test.hrl
 server/include/gen/*
+server/src/gen/api_out/
+protocol/
 server/log/*
