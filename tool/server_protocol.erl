@@ -7,9 +7,7 @@
 
 % -compile (export_all).
 -export ([
-    read/1,             % 读取文件
-    write_api_hrl/1,    % 写入文件server/include/api/*.hrl
-    write_api_out/1     % 写入文件server/src/gen/api_out/*.erl
+    read/1              % 读取文件
 ]).
 
 -include ("tool.hrl").
@@ -376,24 +374,15 @@ read_field (File, ProtocolField) ->
                     read_field(File, NewProtocolField);
                 [""]    ->
                     read_field(File, ProtocolField);
-                ["{" | _Note]   ->
-                    {ok, "{"};
-                ["}" | _Note]   ->
-                    {ok, "}"};
-                ["{}"]  ->
-                    {ok, "{}"};
-                ["in"]  ->
-                    {ok, "in"};
-                ["in{"]  ->
-                    {ok, "in{"};
-                ["in{}"]  ->
-                    {ok, "in{}"};
-                ["out"] ->
-                    {ok, "out"};
-                ["out{"] ->
-                    {ok, "out{"};
-                ["out{}"] ->
-                    {ok, "out{}"};
+                ["{" | _Note]   -> {ok, "{"};
+                ["}" | _Note]   -> {ok, "}"};
+                ["{}"]          -> {ok, "{}"};
+                ["in"]          -> {ok, "in"};
+                ["in{"]         -> {ok, "in{"};
+                ["in{}"]        -> {ok, "in{}"};
+                ["out"]         -> {ok, "out"};
+                ["out{"]        -> {ok, "out{"};
+                ["out{}"]       -> {ok, "out{}"};
                 [FieldNameType | Note] ->
                     [FieldName | FieldRest] = string:split(FieldNameType, ":"),
                     ProtocolFieldName       = ProtocolField #protocol_field{
@@ -406,14 +395,14 @@ read_field (File, ProtocolField) ->
                         FieldType  == "list" andalso
                         FieldClass == "undefined" ->
                             put(field_list_start, true),
-                            read_field_list(File, []);
+                            read_list_of_field(File, []);
                         true ->
                             []
                     end,
                     Enum    = if
                         FieldType  == "enum" ->
                             put(field_enum_start, true),
-                            read_field_enum(File, []);
+                            read_enum_of_field(File, []);
                         true ->
                             []
                     end,
@@ -425,7 +414,6 @@ read_field (File, ProtocolField) ->
                         list    = List,
                         enum    = Enum
                     },
-                    % put(field_end, true),
                     {field, NewProtocolField}
             end;
         'eof' ->
@@ -438,7 +426,7 @@ read_field (File, ProtocolField) ->
     end.
 
 %%% @doc    读取字段列表
-read_field_list (File, List) ->
+read_list_of_field (File, List) ->
     case read_field(File, #protocol_field{}) of
         {ok, "{"}   ->
             case erase(field_list_start) of
@@ -449,13 +437,8 @@ read_field_list (File, List) ->
                 undefined -> put(field_list_brace_start, 1);
                 ListBrace -> put(field_list_brace_start, 1 + ListBrace)
             end,
-            % put(field_list_brace_start, true),
-            read_field_list(File, List);
+            read_list_of_field(File, List);
         {ok, "}"}   ->
-            % case get(field_list_brace_start) of
-            %     true -> noop;
-            %     _    -> exit(field_list_brace_start)
-            % end,
             ListBraceStart  = get(field_list_brace_start),
             ListBraceEnd    = get(field_list_brace_end),
             if
@@ -474,20 +457,15 @@ read_field_list (File, List) ->
                 true ->
                     exit({list_brace, ListBraceStart, ListBraceEnd, get(read_line)})
             end,
-            % case get(field_list_brace_end) of
-            %     undefined -> put(field_list_brace_end, 1);
-            %     ListBrace -> put(field_list_brace_end, 1 + ListBrace)
-            % end,
-            % put(field_list_brace_end, true),
             List;
         {field, ProtocolField} ->
-            read_field_list(File, [ProtocolField | List]);
+            read_list_of_field(File, [ProtocolField | List]);
         Other ->
             Other
     end.
 
 %%% @doc    读取字段枚举
-read_field_enum (File, List) ->
+read_enum_of_field (File, List) ->
     case update_then_read_line(File) of
         {ok, Data} ->
             RemoveData = remove_space_tabs_newline(Data),
@@ -498,7 +476,7 @@ read_field_enum (File, List) ->
                         _    -> exit(field_enum_start)
                     end,
                     put(field_enum_brace_start, true),
-                    read_field_enum(File, List);
+                    read_enum_of_field(File, List);
                 ["}" | _Note]   ->
                     case erase(field_enum_brace_start) of
                         true -> noop;
@@ -507,11 +485,11 @@ read_field_enum (File, List) ->
                     put(field_enum_brace_end, true),
                     List;
                 [""]    ->
-                    read_field_enum(File, List);
+                    read_enum_of_field(File, List);
                 ["", _EnumNote]    ->
-                    read_field_enum(File, List);
+                    read_enum_of_field(File, List);
                 [EnumUpper | EnumNote] ->
-                    read_field_enum(File, [{EnumUpper, get(read_line), EnumNote} | List])
+                    read_enum_of_field(File, [{EnumUpper, get(read_line), EnumNote} | List])
             end;
         'eof' ->
             case erase(module_brace_end) of
@@ -527,31 +505,27 @@ split_field_type_class (FieldRest) ->
     case FieldRest of 
         ["typeof<" ++ FieldClassRest] ->
             case string:split(FieldClassRest, ".") of
-                [FieldModule, FieldClass] ->
-                    {"typeof",  FieldModule,    FieldClass -- ">"};
-                [FieldClass] ->
-                    {"typeof",  "undefined",    FieldClass -- ">"}
+                [FieldModule, FieldClass] -> {"typeof",  FieldModule,    FieldClass -- ">"};
+                [FieldClass]              -> {"typeof",  "undefined",    FieldClass -- ">"}
             end;
         ["list<"   ++ FieldClassRest] ->
             case string:split(FieldClassRest, ".") of
-                [FieldModule, FieldClass] ->
-                    {"list",    FieldModule,    FieldClass -- ">"};
-                [FieldClass] ->
-                    {"list",    "undefined",    FieldClass -- ">"}
+                [FieldModule, FieldClass] -> {"list",    FieldModule,    FieldClass -- ">"};
+                [FieldClass]              -> {"list",    "undefined",    FieldClass -- ">"}
             end;
         ["list{"] ->
             case get(field_list_brace_start) of
                 undefined -> put(field_list_brace_start, 1);
                 ListBrace -> put(field_list_brace_start, 1 + ListBrace)
             end,
-                    {"list",    "undefined",    "undefined"};
+            {"list",    "undefined",    "undefined"};
         ["enum{"] ->
             put(field_enum_brace_start, true),
-                    {"enum",    "undefined",    "undefined"};
+            {"enum",    "undefined",    "undefined"};
         ["enum{}"] ->
-                    {"empty_enum",  "undefined",    "undefined"};
+            {"empty_enum","undefined",  "undefined"};
         [FieldType] ->
-                    {FieldType, "undefined",    "undefined"}
+            {FieldType, "undefined",    "undefined"}
     end.
 
 %%% @doc    增加注释
@@ -577,24 +551,15 @@ update_line_number () ->
     ok.
 
 %%% @doc    去除空格和换行
-remove_space_tabs_newline ("\n") ->
-    "";
-remove_space_tabs_newline ("{\n") ->
-    "{";
-remove_space_tabs_newline ("}\n") ->
-    "}";
-remove_space_tabs_newline ("in\n") ->
-    "in";
-remove_space_tabs_newline ("in{\n") ->
-    "in{";
-remove_space_tabs_newline ("in{}\n") ->
-    "in{}";
-remove_space_tabs_newline ("out\n") ->
-    "out";
-remove_space_tabs_newline ("out{\n") ->
-    "out{";
-remove_space_tabs_newline ("out{}\n") ->
-    "out{}";
+remove_space_tabs_newline ("\n")        -> "";
+remove_space_tabs_newline ("{\n")       -> "{";
+remove_space_tabs_newline ("}\n")       -> "}";
+remove_space_tabs_newline ("in\n")      -> "in";
+remove_space_tabs_newline ("in{\n")     -> "in{";
+remove_space_tabs_newline ("in{}\n")    -> "in{}";
+remove_space_tabs_newline ("out\n")     -> "out";
+remove_space_tabs_newline ("out{\n")    -> "out{";
+remove_space_tabs_newline ("out{}\n")   -> "out{}";
 remove_space_tabs_newline (Data) ->
     remove_space_tabs_newline(Data, [" ", "\t", "\n"]).
 remove_space_tabs_newline (Data, [RemoveChar | List]) ->
@@ -606,322 +571,7 @@ remove_space_tabs_newline (Data, [RemoveChar | List]) ->
     end;
 remove_space_tabs_newline (Data, []) ->
     Data.
-    % ((Data
-    %  -- string:copies(" ", length(Data)))
-    %  -- "\n")
-    %  -- "\t".
 
 
-%%% ========== ======================================== ====================
-%%% @doc    写入文件server/include/api/*.hrl
-write_api_hrl (ProtocolModule) ->
-    ModuleClassList     = ProtocolModule #protocol_module.class,
-    ModuleActionList    = ProtocolModule #protocol_module.action,
-    ModuleName          = ProtocolModule #protocol_module.name,
-    ApiHrlFileName      = ?API_HRL_DIR ++ "api_" ++ ModuleName ++ ".hrl",
-    {ok, ApiHrlFile}    = file:open(ApiHrlFileName, [write]),
-    ClassEnumList       = write_api_hrl_class_enum(ApiHrlFile, ModuleClassList, []),
-    write_api_hrl_action_enum(ApiHrlFile, ModuleActionList, ClassEnumList).
-
-%%% @doc    hrl文件写入类声明枚举
-write_api_hrl_class_enum  (ApiHrlFile, [ProtocolClass | List], EnumList) ->
-    ClassEnumList  = write_api_hrl_field_enum(ApiHrlFile, ProtocolClass #protocol_class.field, EnumList),
-    write_api_hrl_class_enum(ApiHrlFile, List, ClassEnumList);
-write_api_hrl_class_enum  (_ApiHrlFile, [], EnumList) ->
-    EnumList.
-
-%%% @doc    hrl文件写入接口中枚举
-write_api_hrl_action_enum (ApiHrlFile, [ProtocolAction | List], EnumList) ->
-    InEnumList  = write_api_hrl_field_enum(ApiHrlFile, ProtocolAction #protocol_action.in,  EnumList),
-    OutEnumList = write_api_hrl_field_enum(ApiHrlFile, ProtocolAction #protocol_action.out, InEnumList),
-    write_api_hrl_action_enum(ApiHrlFile, List, OutEnumList);
-write_api_hrl_action_enum (_ApiHrlFile, [], EnumList) ->
-    EnumList.
-
-%%% @doc    hrl文件写入字段中枚举
-write_api_hrl_field_enum  (ApiHrlFile, [ProtocolField | List], EnumList) ->
-    Enum        = lists:reverse(ProtocolField #protocol_field.enum),
-    NewEnumList = write_api_hrl_enum(ApiHrlFile, Enum, EnumList),
-    write_api_hrl_field_enum(ApiHrlFile, List, NewEnumList);
-write_api_hrl_field_enum  (_ApiHrlFile, [], EnumList) ->
-    EnumList.
-
-%%% @doc    hrl文件写入枚举
-write_api_hrl_enum   (ApiHrlFile, [{EnumUpper, Line, _EnumNote} | List], EnumList) ->
-    [RealEnumUpper, RealEnum]    = case string:split(EnumUpper, "=") of
-        [TheEnumUpper, TheEnum] -> [TheEnumUpper, TheEnum];
-        [EnumUpper]             -> [EnumUpper,    integer_to_list(Line)]
-    end,
-    NewEnumList = case lists:keyfind(RealEnumUpper, 1, EnumList) of
-        {RealEnumUpper, _Line} ->
-            EnumList;
-        _ ->
-            Space       = string:copies(" ", max(1, 40 - length(RealEnumUpper))),
-            ok = file:write(ApiHrlFile, 
-"-define (" ++ RealEnumUpper ++ "," ++ Space ++ RealEnum ++ ").\n"),
-            [{RealEnumUpper, RealEnum} | EnumList]
-    end,
-    write_api_hrl_enum(ApiHrlFile, List, NewEnumList);
-write_api_hrl_enum   (_ApiHrlFile, [], EnumList) ->
-    EnumList.
-
-
-%%% ========== ======================================== ====================
-%%% @doc    写入文件server/src/gen/api_out/*.erl
-write_api_out (ProtocolModule) ->
-    ModuleId            = ProtocolModule #protocol_module.id,
-    ModuleName          = ProtocolModule #protocol_module.name,
-
-    ApiOutFileName      = ?API_OUT_DIR ++ "api_" ++ ModuleName ++ "_out.erl",
-    {ok, ApiOutFile}    = file:open(ApiOutFileName, [write]),
-    {Year, Month, Day}  = date(),
-    ok = file:write(ApiOutFile, 
-"-module (api_" ++ ModuleName ++ "_out).
-
--copyright  (\"Copyright @" ++ integer_to_list(Year) ++ " YiSiXEr\").
--author     (\"CHEONGYI\").
--date       ({" ++ lib_time:ymd_tuple_to_cover0str({Year, Month, Day}, ", ") ++ "}).
--vsn        (\"1.0.0\").
-
--export ([\n"),
-    write_api_out_export(ApiOutFile, ProtocolModule #protocol_module.action),
-    ok = file:write(ApiOutFile, 
-"    class_to_bin/2
-]).
-
-
-%%% ========== ======================================== ====================
-%%% External   API
-%%% ========== ======================================== ====================
-"),
-    write_api_out_function(ApiOutFile, ModuleId, ProtocolModule #protocol_module.action),
-    write_api_out_class(ApiOutFile, ProtocolModule #protocol_module.class),
-    write_api_out_class_field_list(ApiOutFile, ProtocolModule #protocol_module.class),
-    write_api_out_action_field_list(ApiOutFile,  ProtocolModule #protocol_module.action),
-    file:close(ApiOutFile).
-
-%%% @doc    out文件写入函数导出
-write_api_out_export (ApiOutFile, [ProtocolAction | List]) ->
-    ActionName  = ProtocolAction #protocol_action.name,
-    ok = file:write(ApiOutFile, 
-"    " ++ ActionName ++ "/1,\n"),
-    write_api_out_export(ApiOutFile, List);
-write_api_out_export (ApiOutFile, []) ->
-    ok = file:write(ApiOutFile, "\n").
-
-%%% @doc    out文件写入函数
-write_api_out_function (ApiOutFile, ModuleId, [ProtocolAction | List]) ->
-    ActionId            = ProtocolAction #protocol_action.id,
-    ActionName          = ProtocolAction #protocol_action.name,
-    ProtocolActionOut   = ProtocolAction #protocol_action.out,
-    ok = file:write(ApiOutFile, ActionName ++ " ({\n"),
-    write_api_out_function_argument(ApiOutFile, ProtocolActionOut),
-    ok = file:write(ApiOutFile, 
-"}) ->"),
-    write_api_out_function_body(ApiOutFile,     ProtocolActionOut),
-    ok = file:write(ApiOutFile, 
-"    <<
-           " ++ ModuleId ++ ":16/unsigned,
-        "    ++ ActionId ++ ":16/unsigned"),
-    case ProtocolActionOut of
-        [] -> noop;
-        _  -> ok = file:write(ApiOutFile, ",\n")
-    end,
-    write_api_out_function_return(ApiOutFile,   ProtocolActionOut),
-    ok = file:write(ApiOutFile, 
-"    >>.\n\n"),
-    write_api_out_function(ApiOutFile, ModuleId, List);
-write_api_out_function (ApiOutFile, _ModuleId, []) ->
-    ok = file:write(ApiOutFile, "
-%%% ========== ======================================== ====================
-%%% class_to_bin
-%%% ========== ======================================== ====================
-").
-
-%%% @doc    out文件写入函数参数
-write_api_out_function_argument (ApiOutFile, [ProtocolField | []]) ->
-    FieldLine   = ProtocolField #protocol_field.line,
-    FieldName   = ProtocolField #protocol_field.name,
-    ok = file:write(ApiOutFile, 
-"    _" ++ FieldName ++ "_" ++ integer_to_list(FieldLine) ++ "\n");
-write_api_out_function_argument (ApiOutFile, [ProtocolField | List]) ->
-    FieldLine   = ProtocolField #protocol_field.line,
-    FieldName   = ProtocolField #protocol_field.name,
-    ok = file:write(ApiOutFile, 
-"    _" ++ FieldName ++ "_" ++ integer_to_list(FieldLine) ++ ",\n"),
-    write_api_out_function_argument(ApiOutFile, List);
-write_api_out_function_argument (ApiOutFile, []) ->
-    ok = file:write(ApiOutFile, "\n").
-
-%%% @doc    out文件写入函数主体
-write_api_out_function_body (ApiOutFile, [ProtocolField | List]) ->
-    FieldLine   = ProtocolField #protocol_field.line,
-    FieldName   = ProtocolField #protocol_field.name,
-    FieldType   = ProtocolField #protocol_field.type,
-    FieldModule = case ProtocolField #protocol_field.module of
-        "undefined" ->
-            "";
-        TheFieldModule  ->
-            "api_" ++ TheFieldModule ++ "_out:"
-    end,
-    FieldClass  = ProtocolField #protocol_field.class,
-    Variable    = "_" ++ FieldName ++ "_" ++ integer_to_list(FieldLine),
-    if
-        %% string
-        FieldType == "string"   ->
-            ok = file:write(ApiOutFile, "
-    " ++ Variable ++ "_Bin    = list_to_binary(" ++ Variable ++ "),
-    " ++ Variable ++ "_BinLen = size(" ++ Variable ++ "_Bin),\n");
-        %% typeof
-        FieldType == "typeof"   ->
-            ok = file:write(ApiOutFile, "
-    " ++ Variable ++ "_Bin = " ++ FieldModule ++ "class_to_bin(" ++ FieldClass ++ ", " ++ Variable ++ "),\n");
-        %% just list
-        FieldClass == "undefined" andalso
-        FieldType == "list"     ->
-            ok = file:write(ApiOutFile, "
-    BinList" ++ Variable ++ " = [
-        element_to_bin_" ++ integer_to_list(FieldLine) ++ "(" ++ Variable ++ "_Element)
-        || 
-        " ++ Variable ++ "_Element <- " ++ Variable ++ "
-    ], 
-    " ++ Variable ++ "_Bin    = list_to_binary(BinList" ++ Variable ++ "),
-    " ++ Variable ++ "_BinLen = length(" ++ Variable ++ "),\n");
-        %% list class
-        FieldType == "list"     ->
-            ok = file:write(ApiOutFile, "
-    BinList" ++ Variable ++ " = [
-        " ++ FieldModule ++ "class_to_bin(" ++ FieldClass ++ ", " ++ Variable ++ "_Element)
-        || 
-        " ++ Variable ++ "_Element <- " ++ Variable ++ "
-    ], 
-    " ++ Variable ++ "_Bin    = list_to_binary(BinList" ++ Variable ++ "),
-    " ++ Variable ++ "_BinLen = length(" ++ Variable ++ "),\n");
-        %% other
-        true                    ->
-            ignore
-    end,
-    write_api_out_function_body(ApiOutFile, List);
-write_api_out_function_body (ApiOutFile, []) ->
-    ok = file:write(ApiOutFile, "\n").
-
-%%% @doc    out文件写入函数返回
-write_api_out_function_return (ApiOutFile, [ProtocolField | List]) ->
-    FieldLine   = ProtocolField #protocol_field.line,
-    FieldName   = ProtocolField #protocol_field.name,
-    FieldType   = ProtocolField #protocol_field.type,
-    Variable    = "_" ++ FieldName ++ "_" ++ integer_to_list(FieldLine),
-    ok = file:write(ApiOutFile, 
-"        " ++ 
-        case FieldType of 
-            "string" ->
-                Variable ++ "_BinLen:16/unsigned, " ++ Variable ++ get_field_type_bin_suffix(FieldType);
-            "typeof" ->
-                Variable ++ "_Bin/binary";
-            "list"   ->
-                Variable ++ "_BinLen:16/unsigned, " ++ Variable ++ get_field_type_bin_suffix(FieldType);
-            _        ->
-                Variable ++ get_field_type_bin_suffix(FieldType)
-        end ++ 
-        case List of
-            [] ->
-                "";
-            _ ->
-                ",\n"
-        end
-    ),
-    write_api_out_function_return(ApiOutFile, List);
-write_api_out_function_return (ApiOutFile, []) ->
-    ok = file:write(ApiOutFile, "\n").
-
-%%% @doc    获取字段类型对应的字节后缀
-get_field_type_bin_suffix ("empty_enum")     ->
-    ":32/unsigned";
-get_field_type_bin_suffix ("enum")     ->
-    ":32/unsigned";
-get_field_type_bin_suffix ("byte")     ->
-    ":08/signed";
-get_field_type_bin_suffix ("short")    ->
-    ":16/signed";
-get_field_type_bin_suffix ("int")      ->
-    ":32/signed";
-get_field_type_bin_suffix ("long")     ->
-    ":64/signed";
-get_field_type_bin_suffix ("list")     ->
-    "_Bin/binary";
-get_field_type_bin_suffix ("string")   ->
-    "_Bin/binary".
-
-
-%%% @doc    out文件写入类声明
-write_api_out_class (ApiOutFile, [ProtocolClass | List]) ->
-    ClassName   = ProtocolClass #protocol_class.name,
-    ok = file:write(ApiOutFile, 
-"class_to_bin (" ++ ClassName ++ ", {\n"),
-    write_api_out_function_argument(ApiOutFile, ProtocolClass #protocol_class.field),
-    ok = file:write(ApiOutFile, 
-"}) ->"),
-    write_api_out_function_body(ApiOutFile,     ProtocolClass #protocol_class.field),
-    ok = file:write(ApiOutFile, 
-"    <<\n"),
-    write_api_out_function_return(ApiOutFile,   ProtocolClass #protocol_class.field),
-    ok = file:write(ApiOutFile, 
-"    >>;\n"),
-    write_api_out_class(ApiOutFile, List);
-write_api_out_class (ApiOutFile, []) ->
-    ok = file:write(ApiOutFile, 
-"class_to_bin (_ClassName, _Class) ->
-    <<>>.
-
-
-%%% ========== ======================================== ====================
-%%% element_to_bin_
-%%% ========== ======================================== ====================
-").
-
-
-%%% @doc    out文件写入函数字段列表
-write_api_out_class_field_list (ApiOutFile, [ProtocolClass | List]) ->
-    write_api_out_field_list(ApiOutFile, ProtocolClass #protocol_class.field),
-    write_api_out_class_field_list(ApiOutFile, List);
-write_api_out_class_field_list (ApiOutFile, []) ->
-    ok = file:write(ApiOutFile, "\n").
-
-%%% @doc    out文件写入函数字段列表
-write_api_out_action_field_list (ApiOutFile, [ProtocolAction | List]) ->
-    write_api_out_field_list(ApiOutFile, ProtocolAction #protocol_action.out),
-    write_api_out_action_field_list(ApiOutFile, List);
-write_api_out_action_field_list (ApiOutFile, []) ->
-    ok = file:write(ApiOutFile, "
-
-%%% ========== ======================================== ====================
-%%% end
-%%% ========== ======================================== ====================
-").
-
-%%% @doc    out文件写入字段列表
-write_api_out_field_list (ApiOutFile, [ProtocolField | List]) when 
-    ProtocolField #protocol_field.type == "list" andalso
-    ProtocolField #protocol_field.class == "undefined"
-->
-    ProtocolFieldLine   = ProtocolField #protocol_field.line,
-    ProtocolFieldList   = lists:reverse(ProtocolField #protocol_field.list),
-    ok = file:write(ApiOutFile, 
-"element_to_bin_" ++ integer_to_list(ProtocolFieldLine) ++ " ({\n"),
-    write_api_out_function_argument(ApiOutFile, ProtocolFieldList),
-    ok = file:write(ApiOutFile, 
-"}) ->"),
-    write_api_out_function_body(ApiOutFile,     ProtocolFieldList),
-    ok = file:write(ApiOutFile, 
-"    <<\n"),
-    write_api_out_function_return(ApiOutFile,   ProtocolFieldList),
-    ok = file:write(ApiOutFile, 
-"    >>.\n\n"),
-    write_api_out_field_list(ApiOutFile, ProtocolFieldList),
-    write_api_out_field_list(ApiOutFile, List);
-write_api_out_field_list (ApiOutFile, [_ProtocolField | List]) ->
-    write_api_out_field_list(ApiOutFile, List);
-write_api_out_field_list (_ApiOutFile, []) ->
-    ok.
 
 

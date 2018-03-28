@@ -42,7 +42,10 @@ Please choose an operation :
             % 服务端数据库映射代码生成完毕
             % 关键字未改变，不需要生成
             % 区域代码未改变，不需要生成
+    {Time1, _} = statistics(runtime),
             generate_server_protocol(),
+    {Time3, _} = statistics(runtime),
+    io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, Time3 - Time1]),
             erlang:halt();
             % start();
         "2" ->
@@ -77,9 +80,11 @@ generate_server_protocol () ->
     {ok, FileNameList}  = file:list_dir(?PROTOCOL_DIR),
     generate_server_protocol(lists:sort(FileNameList -- ["Readme.txt"])).
     % generate_server_protocol (["50_dream_section.txt"]).
+    % generate_server_protocol(["100_test.txt"]).
 generate_server_protocol ([FileName | List]) ->
     io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, FileName]),
     ProtocolModule      = server_protocol:read(FileName),
+    io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, ProtocolModule]),
     ProtocolActionList  = ProtocolModule #protocol_module.action,
     ProtocolClassList   = ProtocolModule #protocol_module.class,
     NewProtocolModule   = ProtocolModule #protocol_module{
@@ -99,9 +104,9 @@ generate_server_protocol ([FileName | List]) ->
             ProtocolClass <- ProtocolClassList
         ])
     },
-    % io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, NewProtocolModule]),
-    server_protocol:write_api_hrl(NewProtocolModule),
-    server_protocol:write_api_out(NewProtocolModule),
+    io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, NewProtocolModule]),
+    api_hrl:write(NewProtocolModule),
+    api_out:write(NewProtocolModule),
     generate_server_protocol(List);
 generate_server_protocol ([]) ->
     ok.

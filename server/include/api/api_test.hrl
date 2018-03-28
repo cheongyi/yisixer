@@ -1,4 +1,4 @@
--define (ADMINISTRATION,                          13).
--define (PROGRAM,                                 14).
--define (ADMIN,                                   36).
--define (TEST,                                    37).
+-define (ADMINISTRATION,                          14).
+-define (PROGRAM,                                 15).
+-define (ADMIN,                                   37).
+-define (TEST,                                    38).

@@ -2,8 +2,10 @@
 -define (PROTOCOL_DIR, "../cog/protocol/").         % 协议路径
 % -define (PROTOCOL_DIR, "protocol/").         % 协议路径
 -define (API_HRL_DIR,  "server/include/api/").  % api_hrl路径
-% -define (API_OUT_DIR,  "server/src/gen/api_out/").  % api_out路径
--define (API_OUT_DIR,  "../cog/server-new/src/gen/").  % api_out路径
+-define (API_OUT_DIR,  "server/src/gen/api_out/").  % api_out路径
+% -define (API_OUT_DIR,  "../cog/server-new/src/gen/").  % api_out路径
+-define (GAME_ROUTER_DIR,  "server/src/gen/").  % game_router
+
 -record (protocol_module, {
     id      = 0,    % 模块ID
     name    = "",   % 模块名字
