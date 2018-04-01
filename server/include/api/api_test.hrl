@@ -1,4 +1,4 @@
--define (ADMINISTRATION,                          14).
--define (PROGRAM,                                 15).
--define (ADMIN,                                   37).
--define (TEST,                                    38).
+-define (ADMINISTRATION,                        14).    % 行政
+-define (PROGRAM,                               15).    % 程序
+-define (ADMIN,                                999).    % 行政
+-define (TEST,                                  50).    % 程序

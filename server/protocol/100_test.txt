@@ -11,11 +11,23 @@ test = 100
         job_number              : int       // 工号
         department              : enum      // 部门
         {
-            ADMINISTRATION          // 行政
-            PROGRAM                 // 程序
+            ADMINISTRATION                  // 行政
+            PROGRAM                         // 程序
         }
     }
 
+    // 新信息1
+    class new_info1  : test.info
+    {
+        addr                    : string    // 地址
+    }
+
+    // 新信息2
+    class new_info2  : info
+    {
+        phone                   : long      // 电话号码
+        addr                    : string    // 地址
+    }
 
     // 获取玩家信息
     get_player_info = 100001
@@ -34,11 +46,11 @@ test = 100
             job_number              : int       // 工号
             department              : enum      // 部门
             {
-                ADMIN          // 行政
-                TEST                 // 程序
+                ADMIN               = 999       // 行政
+                TEST                            // 程序
             }
             player_info_list        : list<info>    // 玩家信息
-            player_rank_list        : list<rank.info>   // 玩家排行信息
+            player_rank_list        : list<test.info>   // 玩家排行信息
         }
     }
 
@@ -48,11 +60,20 @@ test = 100
         in
         {
             player_id               : long      // 玩家ID
+            age                     : byte      // 年龄
+            nickname                : string    // 昵称
+            seat_number             : short     // 座号
+            job_number              : int       // 工号
+            department              : enum      // 部门
+            {
+                ADMIN               = 999       // 行政
+                TEST                            // 程序
+            }
+            player_info             : typeof<info>  // 玩家信息
         }
 
         out
         {
-            player_id               : long      // 玩家ID
             player_info             : typeof<info>  // 玩家信息
         }
     }
@@ -67,19 +88,40 @@ test = 100
 
         out
         {
-            all_player_info         : list      // 所有玩家信息列表
+            player_id_list          : list      // 玩家ID列表
             {
-                player_id               : long      // 玩家ID
-                age                     : byte      // 年龄
-                nickname                : string    // 昵称
-                seat_number             : short     // 座号
-                job_number              : int       // 工号
-                department              : enum      // 部门
-                {
-                    HAHA          // 行政
-                    PROGRAM                 // 程序
-                }
+                player_id           : long      // 玩家ID
             }
+            all_player_info1        : list<new_info1>      // 所有玩家信息列表
+            all_player_info2        : list<new_info2>      // 所有玩家信息列表
+        }
+    }
+
+    // 标识功能开放提示已播放
+    sign_play_player_function = 100004
+    {
+        in
+        {
+            game_function_id        : int       // 功能ID
+        }
+
+        out
+        {
+
+        }
+    }
+
+    // jiekou_test
+    jiekou_test = 100099
+    {
+        in
+        {
+
+        }
+
+        out
+        {
+
         }
     }
 }

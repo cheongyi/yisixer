@@ -77,11 +77,13 @@ restart () ->
 %%% ========== ======================================== ====================
 %%% @doc    生成协议(服务端代码)
 generate_server_protocol () ->
+    RouterFile          = gen_router:init(),
     {ok, FileNameList}  = file:list_dir(?PROTOCOL_DIR),
-    generate_server_protocol(lists:sort(FileNameList -- ["Readme.txt"])).
-    % generate_server_protocol (["50_dream_section.txt"]).
-    % generate_server_protocol(["100_test.txt"]).
-generate_server_protocol ([FileName | List]) ->
+    generate_server_protocol(RouterFile, lists:sort(FileNameList -- ["Readme.txt"])),
+    % generate_server_protocol(RouterFile, ["100_test.txt"]),
+    gen_router:write_relay_end(RouterFile),
+    ok.
+generate_server_protocol (RouterFile, [FileName | List]) ->
     io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, FileName]),
     ProtocolModule      = server_protocol:read(FileName),
     io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, ProtocolModule]),
@@ -107,8 +109,9 @@ generate_server_protocol ([FileName | List]) ->
     io:format("~p(~p) : ~p~n", [?MODULE, ?LINE, NewProtocolModule]),
     api_hrl:write(NewProtocolModule),
     api_out:write(NewProtocolModule),
-    generate_server_protocol(List);
-generate_server_protocol ([]) ->
+    gen_router:write_relay(RouterFile, NewProtocolModule),
+    generate_server_protocol(RouterFile, List);
+generate_server_protocol (_RouterFile, []) ->
     ok.
 
 

@@ -7,7 +7,9 @@
 
 % -compile (export_all).
 -export ([
-    write/1             % 写入文件server/src/gen/api_out/*.erl
+    write/1,                        % 写入文件server/src/gen/api_out/*.erl
+
+    get_field_type_bin_suffix/1     % 获取字段类型对应的字节后缀
 ]).
 
 -include ("tool.hrl").
@@ -193,11 +195,14 @@ get_field_type_bin_suffix ("short")     -> ":16/signed";
 get_field_type_bin_suffix ("int")       -> ":32/signed";
 get_field_type_bin_suffix ("long")      -> ":64/signed";
 get_field_type_bin_suffix ("list")      -> "_Bin/binary";
+get_field_type_bin_suffix ("typeof")    -> "/binary";
 get_field_type_bin_suffix ("string")    -> "_Bin/binary".
 
 
 %%% @doc    out文件写入类声明
-write_class (ApiOutFile, [ProtocolClass | List]) ->
+write_class (ApiOutFile, [ProtocolClass | List]) when 
+    ProtocolClass #protocol_class.class == "undefined"
+->
     ClassName   = ProtocolClass #protocol_class.name,
     ok = file:write(ApiOutFile, 
 "class_to_bin (" ++ ClassName ++ ", {\n"),
@@ -208,6 +213,40 @@ write_class (ApiOutFile, [ProtocolClass | List]) ->
     ok = file:write(ApiOutFile, 
 "    <<\n"),
     write_function_return(ApiOutFile,   ProtocolClass #protocol_class.field),
+    ok = file:write(ApiOutFile, 
+"    >>;\n"),
+    write_class(ApiOutFile, List);
+write_class (ApiOutFile, [ProtocolClass | List]) ->
+    ClassName   = ProtocolClass #protocol_class.name,
+    ClassModule = ProtocolClass #protocol_class.module,
+    ClassFather = ProtocolClass #protocol_class.class,
+    ClassField  = ProtocolClass #protocol_class.field,
+    FieldModule = case ClassModule of
+        "undefined" ->
+            "";
+        TheClassModule  ->
+            "api_" ++ TheClassModule ++ "_out:"
+    end,
+    ok = file:write(ApiOutFile, 
+"class_to_bin (" ++ ClassName ++ ", ClassTuple) ->
+    ClassSize                   = tuple_size(ClassTuple),
+    {ClassFather, ClassExtend}  = lists:split(
+        ClassSize - " ++ integer_to_list(length(ClassField)) ++ ",
+        tuple_to_list(ClassTuple)
+    ),
+    ClassInherit_Bin            = " ++ FieldModule ++ "class_to_bin(
+        " ++ ClassFather ++ ", 
+        list_to_tuple(ClassFather)
+    ),
+    ["),
+    write_class_extend(ApiOutFile, ClassField),
+    ok = file:write(ApiOutFile, "
+    ] = ClassExtend,"),
+    write_function_body(ApiOutFile,     ClassField),
+    ok = file:write(ApiOutFile, 
+"    <<
+        ClassInherit_Bin/binary,\n"),
+    write_function_return(ApiOutFile,   ClassField),
     ok = file:write(ApiOutFile, 
 "    >>;\n"),
     write_class(ApiOutFile, List);
@@ -222,6 +261,20 @@ write_class (ApiOutFile, []) ->
 %%% ========== ======================================== ====================
 ").
 
+%%% @doc    out文件写入类声明扩展
+write_class_extend (ApiOutFile, [ProtocolField]) ->
+    FieldLine   = ProtocolField #protocol_field.line,
+    FieldName   = ProtocolField #protocol_field.name,
+    ok = file:write(ApiOutFile, "
+        _" ++ FieldName ++ "_" ++ integer_to_list(FieldLine));
+write_class_extend (ApiOutFile, [ProtocolField | List]) ->
+    FieldLine   = ProtocolField #protocol_field.line,
+    FieldName   = ProtocolField #protocol_field.name,
+    ok = file:write(ApiOutFile, "
+        _" ++ FieldName ++ "_" ++ integer_to_list(FieldLine) ++ ","),
+    write_class_extend(ApiOutFile, List);
+write_class_extend (_ApiOutFile, []) ->
+    ok.
 
 %%% @doc    out文件写入函数字段列表
 write_class_field_list (ApiOutFile, [ProtocolClass | List]) ->

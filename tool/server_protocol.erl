@@ -178,17 +178,26 @@ read_class_and_action (File, ProtocolModule) ->
 
 %%% @doc    类声明初始化
 class_init (Class, Note) ->
-    ClassName   = case string:split(Class, "{") of
-        [TheClassName, ""] ->
-            put(class_brace_start, true),
-            TheClassName;
-        [TheClassName] ->
-            put(class_start, true),
-            TheClassName
+    [BraceLeft | BraceRight] = string:split(Class, "{"),
+    case BraceRight of
+        [""] -> put(class_brace_start, true);
+        []   -> put(class_start, true)
+    end,
+    [ClassName | ColonsRight] = string:split(BraceLeft, ":"),
+    {ClassModule, ClassClass} = case ColonsRight of
+        [] ->
+            {"undefined", "undefined"};
+        [TheColonsRight] ->
+            case string:split(TheColonsRight, ".") of
+                [DotLeft, DotRight] -> {DotLeft,     DotRight};
+                _                   -> {"undefined", TheColonsRight}
+            end
     end,
     #protocol_class{
         line    = get(read_line), 
         name    = ClassName, 
+        module  = ClassModule, 
+        class   = ClassClass, 
         note    = Note
     }.
 

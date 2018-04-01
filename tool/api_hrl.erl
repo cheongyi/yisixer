@@ -59,9 +59,10 @@ write_api_hrl_enum   (ApiHrlFile, [{EnumUpper, Line, _EnumNote} | List], EnumLis
         {RealEnumUpper, _Line} ->
             EnumList;
         _ ->
-            Space       = string:copies(" ", max(1, 40 - length(RealEnumUpper))),
+            Space       = string:copies(" ", max(1, 40 - length(RealEnumUpper) - length(RealEnum))),
             ok = file:write(ApiHrlFile, 
-"-define (" ++ RealEnumUpper ++ "," ++ Space ++ RealEnum ++ ").\n"),
+"-define (" ++ RealEnumUpper ++ "," ++ Space ++ RealEnum ++ ")."),
+            ok = io:format(ApiHrlFile, "    % ~s\n", [list_to_binary(_EnumNote)]),
             [{RealEnumUpper, RealEnum} | EnumList]
     end,
     write_api_hrl_enum(ApiHrlFile, List, NewEnumList);

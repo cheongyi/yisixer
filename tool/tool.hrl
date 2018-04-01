@@ -1,5 +1,5 @@
 % -define (PROTOCOL_DIR, "server/protocol/").         % 协议路径
--define (PROTOCOL_DIR, "../cog/protocol/").         % 协议路径
+-define (PROTOCOL_DIR, "../COG/protocol/").         % 协议路径
 % -define (PROTOCOL_DIR, "protocol/").         % 协议路径
 -define (API_HRL_DIR,  "server/include/api/").  % api_hrl路径
 -define (API_OUT_DIR,  "server/src/gen/api_out/").  % api_out路径
@@ -23,6 +23,8 @@
 -record (protocol_class, {
     line    = 0,    % 类ID
     name    = "",   % 类名字
+    module  = "undefined",   % 类继承模块
+    class   = "undefined",   % 类继承类
     field   = [],   % 类字段   [#protocol_field{}...]
     note    = ""    % 类注释
 }).
@@ -30,8 +32,8 @@
     line    = 0,    % 字段行数
     name    = "",   % 字段名字
     type    = "",   % 字段类型
-    module  = "undefined",   % 字段模块
-    class   = "undefined",   % 字段类
+    module  = "undefined",   % 字段引用模块
+    class   = "undefined",   % 字段引用类
     list    = [],   % 字段列表  [#protocol_field{}...]
     enum    = [],   % 字段枚举  [{EnumUpper, Line, EnumNote}...]
     note    = ""    % 字段注释
