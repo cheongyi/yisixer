@@ -480,7 +480,7 @@ function change_db () {
 
 // @todo   导出数据库
 function export_db ($is_backup = false) {
-    global $mode, $mysqli, $db_host, $db_user, $db_pass, $db_name, $db_port, $backup_dir, $change_dir, $temp_cron_file;
+    global $mode, $mysqli, $db_host, $db_name, $backup_dir, $change_dir, $temp_cron_file;
     
     $main_stime = microtime(true);
         
