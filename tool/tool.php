@@ -9,7 +9,7 @@
     $db_sign = 'localhost';
     $db_host = '127.0.0.1';
     $db_user = 'root';
-    $db_pass = 'wlwlwl';
+    $db_pass = 'ybybyb';
     $db_name = 'yisixer';
     $db_port = 3306;
     // $db_host = $db_argv[$db_sign]['host'];
@@ -44,6 +44,7 @@
 
     db_enum();
     db_record();
+    game_db_init();
 
     // 关闭数据库连接
     $mysqli->close();
@@ -151,11 +152,20 @@ function db_record () {
 function game_db_init () {
     global $mysqli, $tables, $game_db_init_fname, $game_db_init_file;
     
-    $file       = fopen($game_db_hrl_file, 'w');
+    $file       = fopen($game_db_init_file, 'w');
     
-    write_attributes();
-    fwrite($file, "-module (".$filename.").");
-    fwrite($file, "");
+    fwrite($file, "-module (".$game_db_init_fname.").");
+    write_attributes($file);
+    fwrite($file, "
+-export ([init/1,   load/1]).
+
+-include (\"define.hrl\").
+-include (\"record.hrl\").
+-include (\"gen/game_db.hrl\").
+
+
+%%% ========== ======================================== ====================
+");
     
     fclose($file);
 }

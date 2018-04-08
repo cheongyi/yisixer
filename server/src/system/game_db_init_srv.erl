@@ -62,7 +62,7 @@ load_new (TableName) ->
 %%% @doc    gen_server init, opens the server in an initial state.
 init ([]) ->
     ets:new(auto_increment, [set, named_table, public]),
-    game_db_init:load(),
+    game_db_init:init(),
     ?INFO("database init finished~n", []),
     {ok, #state{}}.
 
@@ -71,7 +71,7 @@ init ([]) ->
 handle_call (is_loaded, _From, State) ->
     {reply, ok, State};
 handle_call ({load, TableName}, _From, State) ->
-    Reply = case catch game_db_init:load(TableName) of 
+    Reply = case catch game_db_init:init(TableName) of 
         ok -> ok;
         R -> ?INFO("game_db init: ~p error: ~p~n",[TableName, R]), error
     end,
