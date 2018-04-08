@@ -1,6 +1,7 @@
 <?php
 print_r($_SERVER);
 echo $_SERVER ."\n";
+echo date("Y") ."\n";
 
 echo "请选择一个操作：
   1 - 生成代码(服务端)

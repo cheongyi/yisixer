@@ -11,12 +11,20 @@ $db_argv = array(
 
 $enum_table = array(
     'item' => array(
-        'table' => 'item',
+        'tname' => 'item',
         'id'    => 'id',
         'sign'  => 'sign',
-        'name'  => 'name',
+        'cname' => 'cname',
         'prefix'=> 'II_',
         'note'  => '物品'
+    ),
+    'item_type' => array(
+        'tname' => 'item_type',
+        'id'    => 'id',
+        'sign'  => 'sign',
+        'cname' => 'cname',
+        'prefix'=> 'IT_',
+        'note'  => '物品类型'
     )
 );
 ?>

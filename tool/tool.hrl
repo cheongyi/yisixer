@@ -6,6 +6,8 @@
 % -define (API_OUT_DIR,  "../cog/server-new/src/gen/").  % api_out路径
 -define (GAME_ROUTER_DIR,  "server/src/gen/").  % game_router
 
+-define (HRL_DEFINE_LEN, 50).
+
 -record (protocol_module, {
     id      = 0,    % 模块ID
     name    = "",   % 模块名字

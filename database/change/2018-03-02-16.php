@@ -19,6 +19,7 @@
             `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT '物品ID',
             `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
             `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
+            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
             `description`           INTEGER     NOT NULL DEFAULT 0      COMMENT '描述',
             `type`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '类型',
             `color`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '颜色:4绿5青6蓝7紫1红2橙3黄',
@@ -42,27 +43,28 @@
             `id`                    INTEGER     NOT NULL DEFAULT 0      COMMENT '物品类型ID',
             `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
             `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
+            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
             CONSTRAINT `pk_item_type` PRIMARY KEY (`id`)
         )
         COMMENT       = '物品类型'
         ENGINE        = 'InnoDB'
         CHARACTER SET = 'utf8'
         COLLATE       = 'utf8_general_ci';
-        INSERT INTO `item_type` (`id`, `sign`) VALUES
-            (1000, 'resource'),     -- 资源:经验体力木粮石铁币
-            (2000, 'helmet'),        -- 头盔
-            (3000, 'armour'),        -- 盔甲
-            (4000, 'caliga'),        -- 战靴
-            (5000, 'weapon'),        -- 武器
-            (6000, 'shield'),        -- 护盾
-            (7000, 'amulet'),        -- 护符
-            (8000, 'dress'),        -- 时装
-            (11000, 'corps'),        -- 士兵
-            (12000, 'dragon'),       -- 龙宠
-            (13000, 'building'),     -- 建筑
-            (14000, 'mount'),        -- 坐骑
-            (15000, 'gift'),         -- 礼包
-            (26000, 'role');         -- 伙伴
+        INSERT INTO `item_type` (`id`, `sign`, `cname`) VALUES
+            (1000,  'resource', '资源'),  -- 资源:经验体力木粮石铁币
+            (2000,  'helmet',   '头盔'),  -- 头盔
+            (3000,  'armour',   '盔甲'),  -- 盔甲
+            (4000,  'caliga',   '战靴'),  -- 战靴
+            (5000,  'weapon',   '武器'),  -- 武器
+            (6000,  'shield',   '护盾'),  -- 护盾
+            (7000,  'amulet',   '护符'),  -- 护符
+            (8000,  'dress',    '时装'),  -- 时装
+            (11000, 'corps',    '士兵'),  -- 士兵
+            (12000, 'dragon',   '龙宠'),  -- 龙宠
+            (13000, 'building', '建筑'),  -- 建筑
+            (14000, 'mount',    '坐骑'),  -- 坐骑
+            (15000, 'gift',     '礼包'),  -- 礼包
+            (26000, 'role',     '伙伴');  -- 伙伴
 
         DROP TABLE IF EXISTS `log_type`;
         CREATE TABLE `log_type`
