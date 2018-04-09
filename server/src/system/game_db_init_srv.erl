@@ -1,6 +1,6 @@
 -module (game_db_init_srv).
 
-%%% @doc    
+%%% @doc    游戏数据库初始化进程
 
 -copyright  ("Copyright © 2017-2018 YiSiXEr").
 -author     ("CHEONGYI").
@@ -63,7 +63,7 @@ load_new (TableName) ->
 init ([]) ->
     ets:new(auto_increment, [set, named_table, public]),
     game_db_init:init(),
-    ?INFO("database init finished~n", []),
+    ?INFO("=== database init finished ===~n", []),
     {ok, #state{}}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple().

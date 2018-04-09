@@ -6,6 +6,13 @@ $db_argv = array(
         'pass'  => 'ybybyb',
         'name'  => 'yisixer',
         'port'  => 3306
+    ),
+    'mini' => array(
+        'host'  => '127.0.0.1',
+        'user'  => 'root',
+        'pass'  => 'wlwlwl',
+        'name'  => 'yisixer',
+        'port'  => 3306
     )
 );
 

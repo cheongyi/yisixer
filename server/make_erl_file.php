@@ -2,7 +2,7 @@
     // 判断命令行参数
     if ($argc < 3) {
         echo "Argument error!\n";
-        echo "Usage:   php make_erl_file.php [api|mod|sup|srv|app] directory filename[.erl]\n";
+        echo "Usage:   php make_erl_file.php [api|mod|sup|srv|app|] directory filename[.erl]\n";
         exit;
     }
 
@@ -35,6 +35,10 @@
         write_sup();
     } elseif ($file_type == "srv") {
         write_srv();
+    } elseif ($file_type == "app") {
+        write_app();
+    } else {
+        write_body();
     }
 
     fclose($file);
@@ -205,6 +209,64 @@ terminate (Reason, _State) ->
 %%% @doc    gen_server code_change callback (trivial).
 code_change (_Vsn, State, _Extra) ->
     {ok, State}.
+
+
+%%% ========== ======================================== ====================
+%%% Internal   API
+%%% ========== ======================================== ====================
+
+
+
+
+");
+}
+
+
+// @todo    写入app
+function write_app() {
+    global $file;
+
+    fwrite($file, "
+-behaviour  (application).
+-behaviour  (supervisor).
+
+-export ([start/0, stop/0, restart/0]).
+-export ([start/2, stop/1]).
+-export ([init/1]).
+
+-include(\"define.hrl\").
+
+-define (SERVER, ?MODULE).
+
+
+%%% ========== ======================================== ====================
+%%% External   API
+%%% ========== ======================================== ====================
+%%% @doc    erl -s game start
+start () ->
+    application:start(?SERVER).
+
+stop () ->
+    %% 关闭应用
+    application:stop(?SERVER).
+
+restart () ->
+    stop(),
+    start().
+
+
+%%% ========== ======================================== ====================
+%%% callbacks  function
+%%% ========== ======================================== ====================
+start (_Type, _Args) ->
+    Result = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
+    Result.
+
+stop (_State) ->
+    ok.
+
+init ([]) ->
+    {ok, {{one_for_one, 10, 10}, []}}.
 
 
 %%% ========== ======================================== ====================

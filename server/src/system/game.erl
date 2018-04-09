@@ -52,6 +52,8 @@ start (_Type, _Args) ->
     start_child(game_mysql,         worker),        % 启动进程 --- 游戏内mysql
     timer:sleep(1000),
     start_child(game_db_sync_sup,   supervisor),    % 启动督程 --- 游戏数据同步
+    start_child(game_db_init_srv,   worker),        % 启动进程 --- 游戏数据库初始化
+    game_db_init_srv:wait_for_loaded(),
 
     % start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端
 
@@ -63,7 +65,7 @@ start (_Type, _Args) ->
 
     start_child(reloader,           worker),        % 启动进程 --- 代码自动载入
 
-    ?INFO("========== Game start! ==========~n", []),
+    ?INFO("========== Game start ==========~n", []),
     Result.
 
 stop (_State) ->

@@ -19,12 +19,6 @@
     st_union_id
 }).
 
--record (player, {
-    id,                                 % 玩家ID
-    username               = "",        % 用户名
-    nickname               = ""         % 玩家昵称
-}).
-
 
 -record (player_four_color_card, {
     player_id,
