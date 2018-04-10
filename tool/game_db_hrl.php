@@ -15,31 +15,42 @@ function db_enum() {
     $year   = date("Y");
     $ymd    = date("Y, m, d");
     fwrite($file, "
--copyright  (\"Copyright © 2017-$year YiSiXEr\").
+-copyright  (\"Copyright © 2017-{$year} YiSiXEr\").
 -author     (\"CHEONGYI\").
 -date       ({{$ymd}}).
 
 %%% ========== ======================================== ====================
 %%% database table rows to define
 %%% ========== ======================================== ====================
+-define (FRAG_ID_LIST, [
+    00, 01, 02, 03, 04, 05, 06, 07, 08, 09,
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+    30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+    40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+    50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+    60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+    70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+    80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+    90, 91, 92, 93, 94, 95, 96, 97, 98, 99
+]).
 ");
-    foreach ($enum_table as $table) {
-        $fields     = array();
-        $fields[]   = $table['id'];
-        $fields[]   = $table['sign'];
-        $fields[]   = $table['cname'];
-        $table_name = $table['tname'];
-        $table_note = $table['note'];
-        fwrite($file, "%%% $table_name\n");
+    foreach ($enum_table as $table_name => $table) {
+        $fields     = array(
+            'id', 'sign', 'cname'
+        );
+        $enum_note  = $table['note'];
+        $enum_prefix= $table['prefix'];
+        fwrite($file, "%%% {$table_name}\n");
         $table_data = get_table_data($mysqli, $table_name, $fields);
         foreach ($table_data as $row) {
-            $dots = generate_char(50, strlen($row[$table['sign']].$row[$table['id']]), ' ');
-            fwrite($file, "-define("
-                .$table['prefix'].strtoupper($row[$table['sign']])
-                .",$dots"
-                .$row[$table['id']]
-                .").    %% $table_note - ".$row[$table['cname']]
-                ."\n");
+            $id     = $row['id'];
+            $sign   = $row['sign'];
+            $cname  = $row['cname'];
+            $dots   = generate_char(50, strlen($sign.$id), ' ');
+            fwrite($file, "-define ({$enum_prefix}"
+                .strtoupper($sign)
+                .",{$dots}{$id}).    %% {$enum_note} - {$cname}\n");
         }
         fwrite($file, "\n");
     }
@@ -50,7 +61,7 @@ function db_enum() {
 
 // 数据库记录
 function db_record () {
-    global $tables, $tables_fields, $game_db_hrl_file;
+    global $tables_info, $tables_fields_info, $game_db_hrl_file;
 
     $file       = fopen($game_db_hrl_file, 'a');
 
@@ -59,9 +70,9 @@ function db_record () {
 %%% database table create to record
 %%% ========== ======================================== ====================
 ");
-
+    $tables = $tables_info['TABLES'];
     foreach ($tables as $table_name) {
-        $fields = $tables_fields[$table_name];
+        $fields = $tables_fields_info[$table_name]['FIELDS'];
         fwrite($file, "-record($table_name, {
     row_key,");
         foreach ($fields as $field) {

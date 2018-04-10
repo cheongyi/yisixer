@@ -7,6 +7,7 @@
     require_once 'lib_misc.php';
     require_once 'game_db_hrl.php';
     require_once 'game_db_init.php';
+    require_once 'game_db_data.php';
 
     // 数据库配置
     $db_sign = 'localhost';
@@ -28,6 +29,8 @@
     $game_db_hrl_file   = "{$include_gen_dir}game_db.hrl";
     $game_db_init       = "game_db_init";
     $game_db_init_file  = "{$src_gen_dir}{$game_db_init}.erl";
+    $game_db_data       = "game_db_data";
+    $game_db_data_file  = "{$src_gen_dir}{$game_db_data}.erl";
 
     // 生成新的数据库连接对象
     $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
@@ -40,18 +43,16 @@
     if ($schema->connect_error) {
         die("Open 'information_schema' failed (".$schema->connect_errno.".) ".$schema->connect_error.".\n");
     }
-    $tables         = get_tables();
-    $tables_fields  = get_all_table_fields($table_name);
-    $table_name_len = 0;
-    foreach ($tables as $table_name) {
-        $table_name_len = max($table_name_len, strlen($table_name));
-    }
-        print_r($tables);
-        print_r($tables_fields);
+    $tables_info        = get_tables_info();
+    $tables_fields_info = get_tables_fields_info();
+
+        print_r($tables_info);
+        print_r($tables_fields_info);
 
     db_enum();
     db_record();
     game_db_init();
+    game_db_data();
 
     // 关闭数据库连接
     $mysqli->close();
@@ -84,58 +85,81 @@ function get_table_data ($mysqli, $table_name, $fields) {
 
 
 // @todo   获取对应数据库的所有表
-function get_tables () {
+function get_tables_info () {
     global $schema, $db_name;
     
-    $sql    = "SELECT `TABLE_NAME` FROM `TABLES` WHERE `TABLE_SCHEMA` = '{$db_name}';";
-    $result = $schema->query($sql);
-    $tables = array();
-    $name_len   = 0;
+    $sql            = "SELECT `TABLE_NAME` FROM `TABLES` WHERE `TABLE_SCHEMA` = '{$db_name}';";
+    $result         = $schema->query($sql);
+    $tables_info    = array();
+    $name_len       = 0;
     
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $tables[]   = $row['TABLE_NAME'];
-        $name_len   = max($name_len, strlen($row['COLUMN_NAME']));
+        $tables_info['TABLES'][] = $row['TABLE_NAME'];
+        $name_len                = max($name_len, strlen($row['TABLE_NAME']));
     }
+    $tables_info['NAME_LEN_MAX'] = $name_len;
     
     $result->close();
     
-    return $tables;
+    return $tables_info;
 }
 
 // @todo   获取所有表字段信息
-function get_all_table_fields () {
-    global $tables;
-    $tables_fields  = array();
-    foreach ($tables as $table_name) {
-        $fields = get_table_fields($table_name);
-        $tables_fields[$table_name] = $fields;
+function get_tables_fields_info () {
+    global $tables_info;
+    $tables_fields_info = array();
+    foreach ($tables_info['TABLES'] as $table_name) {
+        $fields = get_table_fields_info($table_name);
+        $tables_fields_info[$table_name] = $fields;
     }
-    return $tables_fields;
+    return $tables_fields_info;
 }
 
 // @todo   获取表字段信息
-function get_table_fields ($table_name) {
+function get_table_fields_info ($table_name) {
     global $schema, $db_name;
     
-    $sql    = "SELECT 
+    $sql        = "SELECT 
             `COLUMN_NAME`, `COLUMN_KEY`, `DATA_TYPE`, `EXTRA`, `COLUMN_DEFAULT`, `IS_NULLABLE`, `COLUMN_COMMENT`
         FROM  `COLUMNS`
         WHERE `TABLE_SCHEMA` = '$db_name' AND `TABLE_NAME` = '$table_name'";
     $result     = $schema->query($sql);
-    $fields     = array();
+    $fields_info= array();
     $name_len   = 0;
+    $primary    = array();
+    $is_frag    = false;
+    $auto_increment     = "";
     
     while($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $fields[]   = $row;
-        $name_len   = max($name_len, strlen($row['COLUMN_NAME']));
+        $field_name             = $row['COLUMN_NAME'];
+        $field_key              = $row['COLUMN_KEY'];
+        $field_extra            = $row['EXTRA'];
+        $name_len               = max($name_len, strlen($field_name));
+        if ($field_key == "PRI") {
+            $primary[]  = $field_name;
+        }
+        if ($field_name == "player_id") {
+            $is_frag    = true;
+        }
+        if ($field_extra == "auto_increment") {
+            $auto_increment     = $field_name;
+        }
+        $fields_info['FIELDS'][$field_name] = $row;
     }
-    $fieldsLen      = array();
-    foreach ($fields as $field) {
-        $field['FIELD_NAME_LEN'] = $name_len;
-        $fieldsLen[]             = $field;
+    $player_start    = "player";
+    if (substr_compare($table_name, $player_start, 0, strlen($player_start)) === 0) {
+        $is_temp_table  = false;
     }
+    else {
+        $is_temp_table  = true;
+    }
+    $fields_info['NAME_LEN_MAX']    = $name_len;
+    $fields_info['PRIMARY']         = $primary;
+    $fields_info['IS_FRAG']         = $is_frag;
+    $fields_info['AUTO_INCREMENT']  = $auto_increment;
+    $fields_info['IS_TEMP_TABLE']   = $is_temp_table;
     
     $result->close();
-    return $fieldsLen;
+    return $fields_info;
 }
 ?>

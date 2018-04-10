@@ -2,7 +2,7 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库初始化
 function game_db_init () {
-    global $mysqli, $tables, $game_db_init, $game_db_init_file, $tables_fields;
+    global $tables_info, $game_db_init, $game_db_init_file, $tables_fields_info;
 
     $file       = fopen($game_db_init_file, 'w');
 
@@ -12,8 +12,6 @@ function game_db_init () {
     fwrite($file, "
 -export ([init/0, init/1, load/1]).
 
--include (\"define.hrl\").
--include (\"record.hrl\").
 -include (\"gen/game_db.hrl\").
 
 -define (CUT_LINE, 
@@ -27,6 +25,7 @@ function game_db_init () {
 ");
 
     // 写入init/0函数
+    $tables = $tables_info['TABLES'];
     fwrite($file, "init () ->
     [
         begin
@@ -62,7 +61,7 @@ init ($table_name) ->
 ");
 
         // 判断是否自增长
-        $fields = $tables_fields[$table_name];
+        $fields = $tables_fields_info[$table_name]['FIELDS'];
         foreach ($fields as $field) {
             $field_extra      = $field['EXTRA'];
             if ($field_extra == "auto_increment") {
@@ -87,16 +86,15 @@ init ($table_name) ->
         else {
             // 判断是否建立ets分表
             $player_start    = "player_";
-            echo $table_name.substr_compare($table_name, $player_start, 0, strlen($player_start))."\n";
             if (substr_compare($table_name, $player_start, 0, strlen($player_start)) === 0) {
         fwrite($file, "
     [
         ets:new(
-            list_to_atom(\"$table_name\" ++ integer_to_list(I)), 
+            list_to_atom(\"t_{$table_name}_\" ++ integer_to_list(Id)), 
             [public, set, named_table, {keypos, 2}]
         ) 
         || 
-        I <- lists:seq(0, 99)
+        Id <- ?FRAG_ID_LIST
     ],");
             } 
             else {
@@ -142,26 +140,25 @@ load ($table_name) ->
             
             lists:foreach(
                 fun(Row) ->");
-        $fields     = $tables_fields[$table_name];
-        $keyfind    = "";
-        $record     = "";
-        $is_rem_tab = false;
-        $primary    = array();
+        $fields_info    = $tables_fields_info[$table_name];
+        $fields         = $fields_info['FIELDS'];
+        $is_frag        = $fields_info['IS_FRAG'];
+        $name_len_max   = $fields_info['NAME_LEN_MAX'];
+        $keyfind        = "";
+        $record         = "";
+        $primary        = array();
         foreach ($fields as $field) {
             $field_name     = $field['COLUMN_NAME'];
             $field_key      = $field['COLUMN_KEY'];
-            $field_nameF    = ucfirst($field_name);
+            $field_name_up  = ucfirst($field_name);
             if ($field_key == "PRI") {
-                $primary[] = $field_nameF;
+                $primary[] = $field_name_up;
             }
-            if ($field_name == "player_id") {
-                $is_rem_tab = true;
-            }
-            $dots = generate_char($field['FIELD_NAME_LEN'], strlen($field_name), ' ');
+            $dots = generate_char($name_len_max, strlen($field_name), ' ');
             $keyfind    = $keyfind."
-                    {{$field_name}, {$dots}{$field_nameF}}{$dots} = lists:keyfind({$field_name},{$dots}1, Row),";
+                    {{$field_name}, {$dots}{$field_name_up}}{$dots} = lists:keyfind({$field_name},{$dots}1, Row),";
             $record     = $record."
-                        {$field_name}{$dots} = {$field_nameF},";
+                        {$field_name}{$dots} = {$field_name_up},";
         }
         $primary_arr = implode(", ", $primary);
         fwrite($file, "{$keyfind}
@@ -170,7 +167,7 @@ load ($table_name) ->
                         row_key = {{$primary_arr}},{$record}
                         row_ver = 0
                     },");
-        if ($is_rem_tab) {
+        if ($is_frag) {
             fwrite($file, "
                     TabId  = integer_to_list((Record #$table_name.player_id) rem 100),
                     EtsTab = list_to_atom(\"t_{$table_name}_\" ++ TabId),");

@@ -44,14 +44,10 @@ init () ->
 %%% ========== ======================================== ====================
 route_request (_Pack = <<ModuleId:16/unsigned, ActionId:16/unsigned, Args/binary>>, State) ->
     put(prev_request, {ModuleId, ActionId}),
-    {RunTime1,   _} = statistics(runtime),
-    {WallClock1, _} = statistics(wall_clock),
+    TimeRecord  = game_perf:statistics_start(),
     {Module, Fuction, ArgsNum, NewState} = route_relay(ModuleId, ActionId, Args, State),
-    {RunTime2,   _} = statistics(runtime),
-    {WallClock2, _} = statistics(wall_clock),
-    RunTimeSecond   = (RunTime2   - RunTime1)   / 1000.0,
-    WallClockSecond = (WallClock2 - WallClock1) / 1000.0,
     gen_server:cast(game_perf, {set_info, {Module, Fuction, ArgsNum}, RunTimeSecond, WallClockSecond}),
+    game_perf:statistics_end({Module, Fuction, ArgsNum}, TimeRecord),
     NewState.
 "),
     RouterFile.

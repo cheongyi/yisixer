@@ -13,11 +13,14 @@
 -export ([stop/0]).
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
+    statistics_start/0,                 % 统计开始
+    statistics_end/2,                   % 统计结束
     write/1                             % 写入游戏性能分析文件
 ]).
 
 -include ("define.hrl").
 
+-define (SERVER, ?MODULE).
 -define (TABLE_NAME, game_perf_data).
 
 -record (state, {}).
@@ -35,12 +38,12 @@
 %%% @spec   start_link() -> ServerRet
 %%% @doc    Start the process and link gen_server.
 start_link () ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 %%% @spec   stop() -> ok
 %%% @doc    Stop the process.
 stop () ->
-    gen_server:call(?MODULE, stop).
+    gen_server:call(?SERVER, stop).
 
 
 %%% ========== ======================================== ====================
@@ -139,6 +142,20 @@ code_change (_Vsn, State, _Extra) ->
 %%% ========== ======================================== ====================
 %%% External   API
 %%% ========== ======================================== ====================
+%%% @doc    统计开始
+statistics_start () ->
+    {RunTime1,   _} = statistics(runtime),
+    {WallClock1, _} = statistics(wall_clock),
+    {RunTime1, WallClock1}.
+
+%%% @doc    统计结束
+statistics_end (Key, {RunTime1, WallClock1}) ->
+    {RunTime2,   _} = statistics(runtime),
+    {WallClock2, _} = statistics(wall_clock),
+    RunTimeSecond   = (RunTime2   - RunTime1)   / 1000.0,
+    WallClockSecond = (WallClock2 - WallClock1) / 1000.0,
+    gen_server:cast(?SERVER, {set_info, Key, RunTimeSecond, WallClockSecond}),
+
 %%% @doc    写入游戏性能分析文件
 write (Mode) ->
     SortFun = fun(A, B) -> 
@@ -165,7 +182,7 @@ write (Mode) ->
                 RateA > RateB
         end
     end,
-    {perf, List}= gen_server:call(?MODULE, {get_info}),
+    {perf, List}= gen_server:call(?SERVER, {get_info}),
     SortList    = lists:sort(SortFun, List),
     FileName    = ?GAME_DATA_DIR ++ lib_time:ymd_tuple_to_cover0str(date(), "_") ++ "." ++ atom_to_list(Mode),
     {ok, File}  = file:open(FileName, [write, raw]),

@@ -18,7 +18,6 @@ $db_argv = array(
 
 $enum_table = array(
     'item' => array(
-        'tname' => 'item',
         'id'    => 'id',
         'sign'  => 'sign',
         'cname' => 'cname',
@@ -26,7 +25,6 @@ $enum_table = array(
         'note'  => '物品'
     ),
     'item_type' => array(
-        'tname' => 'item_type',
         'id'    => 'id',
         'sign'  => 'sign',
         'cname' => 'cname',
