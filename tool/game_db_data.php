@@ -127,6 +127,8 @@ read (_Record) ->
 
 
 %%% ========== ======================================== ====================
+%%% select
+%%% ========== ======================================== ====================
 select (Table, MatchSpec) ->
     select(Table, signle, MatchSpec).
 ");
@@ -164,6 +166,8 @@ select (_Table, _ModeOrFragId, _MatchSpec) ->
     ok.
 
 
+%%% ========== ======================================== ====================
+%%% write
 %%% ========== ======================================== ====================");
 
 
@@ -240,6 +244,8 @@ write (_Record) ->
     ok.
 
 
+%%% ========== ======================================== ====================
+%%% delete
 %%% ========== ======================================== ====================");
 
 
@@ -279,6 +285,8 @@ delete (_Record) ->
     ok.
 
 
+%%% ========== ======================================== ====================
+%%% delete_select
 %%% ========== ======================================== ====================
 delete_select (Table, MatchSpec) ->
     delete_select(Table, signle, MatchSpec).
@@ -324,6 +332,8 @@ do_delete_select ([], Count) ->
     Count.
 
 
+%%% ========== ======================================== ====================
+%%% delete_all
 %%% ========== ======================================== ====================");
 
 
@@ -353,21 +363,22 @@ delete_all ({$table_name}) -> ?ENSURE_TRAN,
     Size        = count({$table_name}),
     Return      = {$delete_all_objects},
     if 
-        Size > 10000 -> add_tran_action({{$table_name}, sql, \"TRUNCATE `{$table_name}`;\"});
-        true         -> add_tran_action({{$table_name}, sql, \"DELETE FROM `{$table_name}`;\"})
+        Size > 10000 -> add_tran_action({{$table_name}, bin_sql, <<\"TRUNCATE `{$table_name}`;\">>});
+        true         -> add_tran_action({{$table_name}, bin_sql, <<\"DELETE FROM `{$table_name}`;\">>})
     end,
     game_perf:statistics_end({?MODULE, 'delete_all.{$table_name}', 1}, TimeTuple),
     Return;
 ");
     }
 
-    // 写入 delete_all/1  通配分支函数
+    // 写入 delete_all/1 通配分支函数
     fwrite($file, "
 delete_all (_Table) ->
     ok.
 
 
 %%% ========== ======================================== ====================
+%%% count
 %%% ========== ======================================== ====================");
 
 
@@ -393,6 +404,8 @@ count_frag (Table) ->
     lists:sum([ets:info(game_db_table:ets_tab(Table, FragId), size) || FragId <- ?FRAG_ID_LIST]).
 
 
+%%% ========== ======================================== ====================
+%%% memory
 %%% ========== ======================================== ====================
 memory () ->
     memory(game_db_table:get_all_table(), 0).

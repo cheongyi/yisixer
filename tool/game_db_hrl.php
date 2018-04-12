@@ -81,6 +81,7 @@ function db_record () {
     row_key,");
         foreach ($fields as $field) {
             $field_name     = $field['COLUMN_NAME'];
+            $field_key      = $field['COLUMN_KEY'];
             $field_type     = $field['DATA_TYPE'];
             $field_default  = $field['COLUMN_DEFAULT'];
             $field_comment  = $field['COLUMN_COMMENT'];
@@ -88,18 +89,23 @@ function db_record () {
             fwrite($file, "
     ".$field_name.$dots);
             $field_default_len = strlen($field_default);
-            if ($field_default == "NULL" || $field_default == "") {
-                $field_default_len = 4;
+            if ($field_key == "PRI") {
                 fwrite($file, "= null");
+                $field_default_len = 4;
             }
-            elseif ($field_type == "tinyint" || $field_type == "int" || $field_type == "bigint" || $field_type == "float") {
+            elseif ($field_default == "") {
+                fwrite($file, "= \"\"");
+                $field_default_len = 2;
+            }
+            elseif ($field_type == "tinyint" || $field_type == "int" || $field_type == "bigint") {
                 fwrite($file, "= {$field_default}");
             }
             elseif ($field_type == "float") {
                 fwrite($file, "= {$field_default}");
             }
             else {
-                fwrite($file, "= \"{$field_default}\"");
+                fwrite($file, "= null");
+                $field_default_len = 4;
             }
             $dots = generate_char(10, $field_default_len, ' ');
             fwrite($file, ",{$dots}%% {$field_comment}");

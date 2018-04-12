@@ -6,8 +6,9 @@
     require_once 'conf.php';
     require_once 'lib_misc.php';
     require_once 'game_db_hrl.php';
-    require_once 'game_db_init.php';
     require_once 'game_db_data.php';
+    require_once 'game_db_init.php';
+    require_once 'game_db_sync.php';
     require_once 'game_db_table.php';
 
     // 数据库配置
@@ -28,10 +29,12 @@
 
     // 文件名称
     $game_db_hrl_file   = "{$include_gen_dir}game_db.hrl";
-    $game_db_init       = "game_db_init";
-    $game_db_init_file  = "{$src_gen_dir}{$game_db_init}.erl";
     $game_db_data       = "game_db_data";
     $game_db_data_file  = "{$src_gen_dir}{$game_db_data}.erl";
+    $game_db_init       = "game_db_init";
+    $game_db_init_file  = "{$src_gen_dir}{$game_db_init}.erl";
+    $game_db_sync       = "game_db_sync";
+    $game_db_sync_file  = "{$src_gen_dir}{$game_db_sync}.erl";
     $game_db_table      = "game_db_table";
     $game_db_table_file = "{$src_gen_dir}{$game_db_table}.erl";
 
@@ -55,8 +58,9 @@
 
     db_enum();
     db_record();
-    game_db_init();
     game_db_data();
+    game_db_init();
+    game_db_sync();
     game_db_table();
 
     // 关闭数据库连接
