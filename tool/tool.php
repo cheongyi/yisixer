@@ -13,7 +13,7 @@
 
     // 数据库配置
     $db_sign = 'localhost';
-    if ($argc > 0) {
+    if ($argc > 1) {
         $db_sign = $argv[1];
     }
     $db_host = $db_argv[$db_sign]['host'];
@@ -49,6 +49,7 @@
     if ($schema->connect_error) {
         die("Open 'information_schema' failed (".$schema->connect_errno.".) ".$schema->connect_error.".\n");
     }
+    $schema->query("SET NAMES utf8;");
     $tables_info        = get_tables_info();
     $tables_fields_info = get_tables_fields_info();
     $table_name_len_max = $tables_info['NAME_LEN_MAX'];
