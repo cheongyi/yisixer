@@ -8,6 +8,7 @@
     require_once 'game_db_hrl.php';
     require_once 'game_db_init.php';
     require_once 'game_db_data.php';
+    require_once 'game_db_table.php';
 
     // 数据库配置
     $db_sign = 'localhost';
@@ -31,6 +32,8 @@
     $game_db_init_file  = "{$src_gen_dir}{$game_db_init}.erl";
     $game_db_data       = "game_db_data";
     $game_db_data_file  = "{$src_gen_dir}{$game_db_data}.erl";
+    $game_db_table      = "game_db_table";
+    $game_db_table_file = "{$src_gen_dir}{$game_db_table}.erl";
 
     // 生成新的数据库连接对象
     $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
@@ -45,6 +48,7 @@
     }
     $tables_info        = get_tables_info();
     $tables_fields_info = get_tables_fields_info();
+    $table_name_len_max = $tables_info['NAME_LEN_MAX'];
 
         print_r($tables_info);
         print_r($tables_fields_info);
@@ -53,6 +57,7 @@
     db_record();
     game_db_init();
     game_db_data();
+    game_db_table();
 
     // 关闭数据库连接
     $mysqli->close();
@@ -94,8 +99,13 @@ function get_tables_info () {
     $name_len       = 0;
     
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $tables_info['TABLES'][] = $row['TABLE_NAME'];
-        $name_len                = max($name_len, strlen($row['TABLE_NAME']));
+        $table_name              = $row['TABLE_NAME'];
+        // 过滤掉不需要的表
+        if ($table_name == "db_version") {
+            continue;
+        }
+        $tables_info['TABLES'][] = $table_name;
+        $name_len                = max($name_len, strlen($table_name));
     }
     $tables_info['NAME_LEN_MAX'] = $name_len;
     
@@ -127,8 +137,8 @@ function get_table_fields_info ($table_name) {
     $fields_info= array();
     $name_len   = 0;
     $primary    = array();
-    $is_frag    = false;
     $auto_increment     = "";
+    $frag_field    = "";
     
     while($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $field_name             = $row['COLUMN_NAME'];
@@ -138,26 +148,35 @@ function get_table_fields_info ($table_name) {
         if ($field_key == "PRI") {
             $primary[]  = $field_name;
         }
-        if ($field_name == "player_id") {
-            $is_frag    = true;
-        }
         if ($field_extra == "auto_increment") {
             $auto_increment     = $field_name;
         }
+        if ($field_name == "player_id") {
+            $frag_field = $field_name;
+        }
         $fields_info['FIELDS'][$field_name] = $row;
     }
-    $player_start    = "player";
+    $player_start   = "player";
     if (substr_compare($table_name, $player_start, 0, strlen($player_start)) === 0) {
         $is_temp_table  = false;
+        $log_end        = "_log";
+        if (substr_compare($table_name, $log_end, -strlen($log_end)) === 0) {
+            $is_log_table   = true;
+        } 
+        else {
+            $is_log_table   = false;
+        }
     }
     else {
         $is_temp_table  = true;
+        $is_log_table   = false;
     }
     $fields_info['NAME_LEN_MAX']    = $name_len;
     $fields_info['PRIMARY']         = $primary;
-    $fields_info['IS_FRAG']         = $is_frag;
     $fields_info['AUTO_INCREMENT']  = $auto_increment;
+    $fields_info['FRAG_FIELD']      = $frag_field;
     $fields_info['IS_TEMP_TABLE']   = $is_temp_table;
+    $fields_info['IS_LOG_TABLE']    = $is_log_table;
     
     $result->close();
     return $fields_info;

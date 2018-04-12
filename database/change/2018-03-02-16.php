@@ -103,6 +103,20 @@
         COLLATE       = 'utf8_general_ci';
 
         -- 玩家数据表
+        DROP TABLE IF EXISTS `player_data`;
+        CREATE TABLE `player_data`
+        (
+            `player_id`             BIGINT(25)  NOT NULL                COMMENT '玩家ID',
+            `ingot`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '金币',
+            `charge_ingot`          INTEGER     NOT NULL DEFAULT 0      COMMENT '充值金币',
+            `coins`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '铜钱',
+            CONSTRAINT `pk_player_data` PRIMARY KEY (`player_id`)
+        )
+        COMMENT       = '玩家数据'
+        ENGINE        = 'InnoDB'
+        CHARACTER SET = 'utf8'
+        COLLATE       = 'utf8_general_ci';
+
         DROP TABLE IF EXISTS `player_item`;
         CREATE TABLE `player_item`
         (

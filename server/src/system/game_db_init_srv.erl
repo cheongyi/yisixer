@@ -63,7 +63,7 @@ load_new (TableName) ->
 init ([]) ->
     ets:new(auto_increment, [set, named_table, public]),
     game_db_init:init(),
-    ?INFO("=== database init finished ===~n", []),
+    ?INFO("=== database init finished =======================================~n~n", []),
     {ok, #state{}}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple().

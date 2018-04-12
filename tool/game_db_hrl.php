@@ -72,8 +72,12 @@ function db_record () {
 ");
     $tables = $tables_info['TABLES'];
     foreach ($tables as $table_name) {
-        $fields = $tables_fields_info[$table_name]['FIELDS'];
-        fwrite($file, "-record($table_name, {
+        $fields_info    = $tables_fields_info[$table_name];
+        $fields         = $fields_info['FIELDS'];
+        $primary        = $fields_info['PRIMARY'];
+        $primary_arr    = implode(", ", $primary);
+        fwrite($file, "-record (pk_{$table_name}, {{$primary_arr}}).
+-record ({$table_name}, {
     row_key,");
         foreach ($fields as $field) {
             $field_name     = $field['COLUMN_NAME'];
@@ -89,16 +93,16 @@ function db_record () {
                 fwrite($file, "= null");
             }
             elseif ($field_type == "tinyint" || $field_type == "int" || $field_type == "bigint" || $field_type == "float") {
-                fwrite($file, "= $field_default");
+                fwrite($file, "= {$field_default}");
             }
             elseif ($field_type == "float") {
-                fwrite($file, "= $field_default");
+                fwrite($file, "= {$field_default}");
             }
             else {
-                fwrite($file, "= \"$field_default\"");
+                fwrite($file, "= \"{$field_default}\"");
             }
             $dots = generate_char(10, $field_default_len, ' ');
-            fwrite($file, ",$dots%% $field_comment");
+            fwrite($file, ",{$dots}%% {$field_comment}");
         }
         fwrite($file, "
     row_ver             = 0

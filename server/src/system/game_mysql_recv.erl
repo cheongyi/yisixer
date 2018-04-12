@@ -88,10 +88,10 @@ handle_info ({tcp,        Sock, InData}, State = #state{socket = Sock}) ->
     NewData = send_packet(State #state.conn_pid, Data),
     {noreply, State #state{data = NewData}};
 handle_info ({tcp_error,  Sock, Reason}, State = #state{socket = Sock}) ->
-    game_mysql:log(State #state.log_fun, info, "mysql_recv: Socket ~p tcp_error.~n", [Sock]),
+    game_mysql:log(State #state.log_fun, error, "mysql_recv: Socket ~p tcp_error.~n", [Sock]),
     {stop, {tcp_error, Reason}, State};
 handle_info ({tcp_closed, Sock},         State = #state{socket = Sock}) ->
-    game_mysql:log(State #state.log_fun, info, "mysql_recv: Socket ~p tcp_closed.~n", [Sock]),
+    game_mysql:log(State #state.log_fun, error, "mysql_recv: Socket ~p tcp_closed.~n", [Sock]),
     {stop, normal, State};
 handle_info (Info, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),

@@ -154,7 +154,7 @@ statistics_end (Key, {RunTime1, WallClock1}) ->
     {WallClock2, _} = statistics(wall_clock),
     RunTimeSecond   = (RunTime2   - RunTime1)   / 1000.0,
     WallClockSecond = (WallClock2 - WallClock1) / 1000.0,
-    gen_server:cast(?SERVER, {set_info, Key, RunTimeSecond, WallClockSecond}),
+    gen_server:cast(?SERVER, {set_info, Key, RunTimeSecond, WallClockSecond}).
 
 %%% @doc    写入游戏性能分析文件
 write (Mode) ->

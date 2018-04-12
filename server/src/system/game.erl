@@ -65,7 +65,7 @@ start (_Type, _Args) ->
 
     start_child(reloader,           worker),        % 启动进程 --- 代码自动载入
 
-    ?INFO("========== Game start ==========~n", []),
+    ?INFO("========== Game start ==============~n", []),
     Result.
 
 stop (_State) ->

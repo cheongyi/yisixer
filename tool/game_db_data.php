@@ -2,7 +2,7 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库数据操作
 function game_db_data () {
-    global $tables_info, $tables_fields_info, $game_db_data, $game_db_data_file;
+    global $tables_info, $tables_fields_info, $table_name_len_max, $game_db_data, $game_db_data_file;
 
     $file       = fopen($game_db_data_file, 'w');
 
@@ -14,9 +14,6 @@ function game_db_data () {
     do/1,
     fetch/1,
 
-    dirty_read/1, 
-    dirty_select/2,     dirty_select/3, 
-
     read/1, 
     select/2,           select/3, 
     write/1, 
@@ -24,11 +21,8 @@ function game_db_data () {
     delete_select/2,    delete_select/3, 
     delete_all/1,
 
-    table/1,            table/2,
-    ets/1,              ets/2,
     count/1,
-    memory/0,           memory/1,
-    get_all_template_table/0
+    memory/0,           memory/1
 ]).
 
 -include (\"gen/game_db.hrl\").
@@ -42,7 +36,7 @@ function game_db_data () {
 do (Tran) ->
     case get(tran_action_list) of
         undefined ->
-            do_tran_put(),
+            do_tran_put_init(),
 
             case catch Tran() of
                 {'EXIT', {aborted, Reason}} -> 
@@ -68,40 +62,29 @@ do (Tran) ->
             {atomic, Tran()}
     end.
 
-do_tran_put () ->
-    put(tran_log, []),
-    put(tran_action_list, []),
-    put(tran_action_list2, []).
-
-do_tran_erase () ->
-    erase(tran_log),
-    erase(tran_action_list),
-    erase(tran_action_list2).
 
 fetch (Sql) ->
     {data, ResultId} = game_mysql:fetch(gamedb, Sql),
     lib_mysql:get_rows(ResultId).
 
 
-dirty_read (Key) ->
-    read(Key).
-
-dirty_select (Table, MatchSpec) ->
-    select(Table, MatchSpec).
-
-dirty_select (Table, PlayerId, MatchSpec) ->
-    select(Table, PlayerId, MatchSpec).
-
-
 %%% ========== ======================================== ====================
+%%% read
 %%% ========== ======================================== ====================");
 
-    // 写入 read   函数
+
+
+    // 写入 read/1 函数
     $tables = $tables_info['TABLES'];
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
+        // 日志表不读
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        if ($is_log_table) {
+            continue;
+        }
         $primary        = $fields_info['PRIMARY'];
-        $is_frag        = $fields_info['IS_FRAG'];
+        $frag_field     = $fields_info['FRAG_FIELD'];
         $primary_key    = array();
         $row_key_up     = array();
         foreach ($primary as $field_name) {
@@ -111,23 +94,33 @@ dirty_select (Table, PlayerId, MatchSpec) ->
         }
         $primary_key_arr    = implode(", ", $primary_key);
         $row_key_up_arr     = implode(", ", $row_key_up);
-        if ($is_frag) {
-            $ets_table  = "list_to_atom(\"t_{$table_name}_\" ++ integer_to_list(Record #{$table_name}.player_id rem 100))";
+        if ($frag_field) {
+            if (in_array($frag_field, $primary)) {
+                $ets_lookup  = "ets:lookup(
+        game_db_table:ets_tab({$table_name}, {$field_name_up} rem 100), 
+        {{$row_key_up_arr}}
+    )";
+            }
+            else {
+                $ets_lookup  = "fetch_lookup({$table_name}, {{$row_key_up_arr}})";
+            }
         }
         else {
-            $ets_table  = "t_{$table_name}";
+            $ets_lookup  = "ets:lookup(t_{$table_name}, {{$row_key_up_arr}})";
         }
         fwrite($file, "
 read (#pk_{$table_name}{{$primary_key_arr}}) ->
     TimeTuple   = game_perf:statistics_start(),
-    Return      = ets:lookup({$ets_table}, {{$row_key_up_arr}}),
-    game_perf:statistics_end({{$game_db_data}, 'read.{$table_name}', 1}, TimeTuple),
+    Return      = {$ets_lookup},
+    game_perf:statistics_end({?MODULE, 'read.{$table_name}', 1}, TimeTuple),
     Return;
 ");
     }
 
-    // 写入 read   通配分支函数
-    // 写入 select 函数
+
+
+    // 写入 read/1 通配分支函数
+    // 写入 select/2 函数
     fwrite($file, "
 read (_Record) ->
     ok.
@@ -139,13 +132,18 @@ select (Table, MatchSpec) ->
 ");
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
-        $is_frag        = $fields_info['IS_FRAG'];
-        if ($is_frag) {
+        // 日志表不读
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        if ($is_log_table) {
+            continue;
+        }
+        $frag_field     = $fields_info['FRAG_FIELD'];
+        if ($frag_field) {
             $record_select  = "Return      = case _ModeOrFragId of
         slow    -> 
-            fetch_select(\"t_{$table_name}_\", MatchSpec);
+            fetch_select({$table_name}, MatchSpec);
         _FragId ->
-            ets:select(list_to_atom(\"t_{$table_name}_\" ++ integer_to_list(_FragId rem 100)), MatchSpec)
+            ets:select(game_db_table:ets_tab({$table_name}, _FragId rem 100), MatchSpec)
     end,";
         }
         else {
@@ -155,24 +153,27 @@ select (Table, MatchSpec) ->
 select ({$table_name}, _ModeOrFragId, MatchSpec) ->
     TimeTuple   = game_perf:statistics_start(),
     {$record_select}
-    game_perf:statistics_end({{$game_db_data}, 'select.{$table_name}', 3}, TimeTuple),
+    game_perf:statistics_end({?MODULE, 'select.{$table_name}', 3}, TimeTuple),
     Return;
 ");
     }
 
-    // 写入 select 通配分支函数
-    // 写入 write  函数
+    // 写入 select/3 通配分支函数
     fwrite($file, "
 select (_Table, _ModeOrFragId, _MatchSpec) ->
     ok.
 
 
 %%% ========== ======================================== ====================");
+
+
+
+    // 写入 write/1  函数
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
         $fields         = $fields_info['FIELDS'];
         $primary        = $fields_info['PRIMARY'];
-        $is_frag        = $fields_info['IS_FRAG'];
+        $frag_field     = $fields_info['FRAG_FIELD'];
         $auto_increment = $fields_info['AUTO_INCREMENT'];
         $fields_num     = count($fields);
         $primary_key    = array();
@@ -184,14 +185,14 @@ select (_Table, _ModeOrFragId, _MatchSpec) ->
         }
         $primary_key_arr    = implode(", ", $primary_key);
         $row_key_up_arr     = implode(", ", $row_key_up);
-        if ($is_frag) {
-            $ets_table  = "list_to_atom(\"t_{$table_name}_\" ++ integer_to_list(Record #{$table_name}.player_id rem 100))";
+        if ($frag_field) {
+            $ets_table  = "game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
         }
         else {
             $ets_table  = "t_{$table_name}";
         }
         if ($auto_increment == "") {
-            $insert_record  = "NewRecord = Record #peach_fail_tips{
+            $insert_record  = "InsertRecord = Record #{$table_name}{
                 row_key = {{$row_key_up_arr}}
             },";
         }
@@ -200,9 +201,9 @@ select (_Table, _ModeOrFragId, _MatchSpec) ->
                null -> ets:update_counter(auto_increment, {{$table_name}, id}, 1);
                Id   -> Id
             end,
-            NewRecord = Record #peach_fail_tips{
+            InsertRecord = Record #{$table_name}{
                 {$auto_increment}      = NewId,
-                row_key = {{$row_key_up_arr}}
+                row_key = {NewId}
             },";
         }
         fwrite($file, "
@@ -211,14 +212,14 @@ write (Record = #{$table_name}{row_key = RowKey, {$primary_key_arr}, row_ver = R
     EtsTable    = {$ets_table},
     Return      = case RowKey of
         undefined ->
-            validate_for_insert(Record),
+            validate_for_write(Record, insert),
             {$insert_record}
             true = ets:insert_new(EtsTable, InsertRecord),
             add_tran_log({insert, EtsTable, InsertRecord #{$table_name}.row_key}),
             add_tran_action({{$table_name}, insert, InsertRecord}),
             {ok, InsertRecord};
         _ ->
-            validate_for_update(Record),
+            validate_for_write(Record, update),
             [OldRecord]  = ets:lookup(EtsTable, RowKey),
             if OldRecord #{$table_name}.row_ver =:= RowVer -> ok end,
             Changes      = get_changes({$fields_num}, Record, OldRecord),
@@ -228,24 +229,32 @@ write (Record = #{$table_name}{row_key = RowKey, {$primary_key_arr}, row_ver = R
             add_tran_action({{$table_name}, update, Record, Changes}),
             {ok, UpdateRecord}
     end,
-    game_perf:statistics_end({{$game_db_data}, 'write.{$table_name}', 1}, TimeTuple),
+    game_perf:statistics_end({?MODULE, 'write.{$table_name}', 1}, TimeTuple),
     Return;
 ");
     }
 
-    // 写入 write  通配分支函数
-    // 写入 delete 函数
+    // 写入 write/1  通配分支函数
     fwrite($file, "
 write (_Record) ->
     ok.
 
 
 %%% ========== ======================================== ====================");
+
+
+
+    // 写入 delete/1 函数
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
-        $is_frag        = $fields_info['IS_FRAG'];
-        if ($is_frag) {
-            $ets_table  = "list_to_atom(\"t_{$table_name}_\" ++ integer_to_list(_FragId rem 100))";
+        // 日志表不读
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        if ($is_log_table) {
+            continue;
+        }
+        $frag_field     = $fields_info['FRAG_FIELD'];
+        if ($frag_field) {
+            $ets_table  = "game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
         }
         else {
             $ets_table  = "t_{$table_name}";
@@ -257,13 +266,14 @@ delete (Record = #{$table_name}{row_key = RowKey}) -> ?ENSURE_TRAN,
     ets:delete(EtsTable, RowKey),
     add_tran_log({delete, EtsTable, Record}),
     add_tran_action({{$table_name}, delete, Record}),
-    game_perf:statistics_end({{$game_db_data}, 'delete.{$table_name}', 1}, TimeTuple),
+    game_perf:statistics_end({?MODULE, 'delete.{$table_name}', 1}, TimeTuple),
     ok;
 ");
     }
 
-    // 写入 delete 通配分支函数
-    // 写入 delete_select 函数
+
+    // 写入 delete/1 通配分支函数
+    // 写入 delete_select/2 函数
     fwrite($file, "
 delete (_Record) ->
     ok.
@@ -281,20 +291,28 @@ delete_select (Table, MatchSpec) ->
 %     game_perf:statistics_end({game_db_data, Action, 3}, TimeTuple),
 %     {ok, Count}.
 ");
+
+
+    // 写入 delete_select/3 函数
     foreach ($tables as $table_name) {
+        $fields_info    = $tables_fields_info[$table_name];
+        // 日志表不读
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        if ($is_log_table) {
+            continue;
+        }
         fwrite($file, "
 delete_select ({$table_name}, _ModeOrFragId, MatchSpec) -> ?ENSURE_TRAN,
     TimeTuple   = game_perf:statistics_start(),
     RecordList  = select({$table_name}, _ModeOrFragId, MatchSpec),
     Count       = do_delete_select(RecordList,  0),
-    game_perf:statistics_end({{$game_db_data}, 'delete_select.{$table_name}', 3}, TimeTuple),
+    game_perf:statistics_end({?MODULE, 'delete_select.{$table_name}', 3}, TimeTuple),
     {ok, Count};
 ");
     }
 
-    // 写入 delete_select  通配分支函数
-    // 写入 do_delete_select 函数
-    // 写入 delete_all 函数
+    // 写入 delete_select/3  通配分支函数
+    // 写入 do_delete_select/2 函数
     fwrite($file, "
 delete_select (_Table, _ModeOrFragId, _MatchSpec) ->
     ok.
@@ -307,14 +325,23 @@ do_delete_select ([], Count) ->
 
 
 %%% ========== ======================================== ====================");
+
+
+
+    // 写入 delete_all/1 函数
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
-        $is_frag        = $fields_info['IS_FRAG'];
-        if ($is_frag) {
+        // 日志表不读
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        if ($is_log_table) {
+            continue;
+        }
+        $frag_field     = $fields_info['FRAG_FIELD'];
+        if ($frag_field) {
             $delete_all_objects  = "[
-        ets:delete_all_objects(list_to_atom(\"t_player_abnormal_\" ++ integer_to_list(Id))) 
+        ets:delete_all_objects(game_db_table:ets_tab({$table_name}, FragId)) 
         || 
-        Id <- ?FRAG_ID_LIST
+        FragId <- ?FRAG_ID_LIST
     ]";
         }
         else {
@@ -329,71 +356,140 @@ delete_all ({$table_name}) -> ?ENSURE_TRAN,
         Size > 10000 -> add_tran_action({{$table_name}, sql, \"TRUNCATE `{$table_name}`;\"});
         true         -> add_tran_action({{$table_name}, sql, \"DELETE FROM `{$table_name}`;\"})
     end,
-    game_perf:statistics_end({{$game_db_data}, 'delete_all.{$table_name}', 1}, TimeTuple),
+    game_perf:statistics_end({?MODULE, 'delete_all.{$table_name}', 1}, TimeTuple),
     Return;
 ");
     }
 
-    // 写入 delete_all  通配分支函数
-    // 写入 get_all_template_table 函数
-    $template_tables     = array();
-    foreach ($tables as $table_name) {
-        $fields_info    = $tables_fields_info[$table_name];
-        $is_temp_table  = $fields_info['IS_TEMP_TABLE'];
-        if ($is_temp_table) {
-            $template_tables[]  = $table_name;
-        }
-    }
-    $template_tables_arr = implode(",
-        ", $template_tables);
+    // 写入 delete_all/1  通配分支函数
     fwrite($file, "
 delete_all (_Table) ->
     ok.
 
 
 %%% ========== ======================================== ====================
-get_all_template_table () ->
-    [
-        {$template_tables_arr}
-    ].
-");
+%%% ========== ======================================== ====================");
 
-    // 写入 delete_all  通配分支函数
-    // 写入 delete 函数
+
+    // 写入 count/1 函数
+    foreach ($tables as $table_name) {
+        $fields_info    = $tables_fields_info[$table_name];
+        $frag_field     = $fields_info['FRAG_FIELD'];
+        if ($frag_field) {
+            $dots   = generate_char($table_name_len_max, strlen($table_name), ' ');
+            fwrite($file, "
+count ({$table_name}){$dots} -> count_frag({$table_name});");
+        }
+    }
+
+    // 写入 count/1  通配分支函数
+    // 写入 memory/0 函数
+    // 写入 memory/2 函数
+    $dots = generate_char($table_name_len_max, strlen("Table"), ' ');
     fwrite($file, "
+count (Table){$dots} -> ets:info(game_db_table:ets_tab(Table), size).
+
+count_frag (Table) ->
+    lists:sum([ets:info(game_db_table:ets_tab(Table, FragId), size) || FragId <- ?FRAG_ID_LIST]).
+
+
 %%% ========== ======================================== ====================
+memory () ->
+    memory(game_db_table:get_all_table(), 0).
+
+memory ([Table | List], TotalMemory) ->
+    Memory  = memory(Table),
+    memory(List, TotalMemory + Memory);
+memory ([], TotalMemory) ->
+    TotalMemory.
 ");
+
+
+    // 写入 memory/1 函数
     foreach ($tables as $table_name) {
+        $fields_info    = $tables_fields_info[$table_name];
+        $frag_field     = $fields_info['FRAG_FIELD'];
+        if ($frag_field) {
+            $dots   = generate_char($table_name_len_max, strlen($table_name), ' ');
+            fwrite($file, "
+memory ({$table_name}){$dots} -> memory_frag({$table_name});");
+        }
     }
 
-    // 写入 delete_all  通配分支函数
-    // 写入 delete 函数
+    // 写入 memory/1  通配分支函数
+    $dots = generate_char($table_name_len_max, strlen("Table"), ' ');
     fwrite($file, "
-%%% ========== ======================================== ====================
-");
-    foreach ($tables as $table_name) {
-    }
+memory (Table){$dots} -> ets:info(game_db_table:ets_tab(Table), memory).
 
-    // 写入 delete_all  通配分支函数
-    // 写入 delete 函数
-        fwrite($file, "
-%%% ========== ======================================== ====================
-");
-    foreach ($tables as $table_name) {
-    }
+memory_frag (Table) ->
+    lists:sum([ets:info(game_db_table:ets_tab(Table, FragId), memory) || FragId <- ?FRAG_ID_LIST]).
+
+
+%%% ========== ======================================== ====================");
 
 
 
-
+    // 写入内部函数
     fwrite($file, "
 %%% ========== ======================================== ====================
 %%% Internal   API
-%%% ========== ======================================== ====================
+%%% ========== ======================================== ====================");
+
+    // 写入 validate_for_write 函数
+    foreach ($tables as $table_name) {
+        fwrite($file, "
+validate_for_write (Record, Type) when is_record(Record, {$table_name}) ->");
+        $fields_info        = $tables_fields_info[$table_name];
+        $fields             = $fields_info['FIELDS'];
+        $field_name_len_max = $fields_info['NAME_LEN_MAX'];
+        foreach ($fields as $field) {
+            $field_extra    = $field['EXTRA'];
+            $is_nullable    = $field['IS_NULLABLE'];
+            $field_name     = $field['COLUMN_NAME'];
+            $dots   = generate_char($field_name_len_max, strlen($field_name), ' ');
+            if ($field_extra == "auto_increment" && $is_nullable == "NO") {
+                fwrite($file, "
+    if  Type == update andalso 
+        Record #{$table_name}.{$field_name}{$dots} == null -> exit({null_column, Type, {$table_name}, {$field_name}});{$dots} true -> ok end,");
+                continue;
+            }
+            if ($is_nullable == "NO") {
+                fwrite($file, "
+    if  Record #{$table_name}.{$field_name}{$dots} == null -> exit({null_column, Type, {$table_name}, {$field_name}});{$dots} true -> ok end,");
+            }
+        }
+        fwrite($file, "
+    ok;
+");
+    }
+
+    // 写入 validate_for_write  通配分支函数
+        fwrite($file, "
+validate_for_write (Record, Type) ->
+    exit({validate_for_write, Type, Record}).
+
+
+%%% ========== ======================================== ====================");
+    foreach ($tables as $table_name) {
+    }
+
+    // 写入我也不知道怎么注释了
+    fwrite($file, "
 ensure_tran () -> 
     case get(tran_action_list) of 
         undefined -> exit(need_gamedb_tran); 
         _         -> ok 
     end.
+
+do_tran_put_init () ->
+    put(tran_log, []),
+    put(tran_action_list, []),
+    put(tran_action_list2, []).
+
+do_tran_erase () ->
+    erase(tran_log),
+    erase(tran_action_list),
+    erase(tran_action_list2).
     
 add_tran_log (TranLog) ->
     TranLogList = get(tran_log),
@@ -416,39 +512,49 @@ rollback ([TranLog | List]) ->
 rollback ([]) ->
     ok.
 
-get_changes (N, NewRecord, OldRecord) ->
-    get_changes(N, NewRecord, OldRecord, []).
+
+%%% ========== ======================================== ====================
+%%% @doc    Index:: need add record_name and row_key
+get_changes (Index, NewRecord, OldRecord) ->
+    get_changes(Index + 2, NewRecord, OldRecord, []).
     
 get_changes (2, _, _, Changes) -> 
     Changes;
-get_changes (N, NewRecord, OldRecord, Changes) ->
-    case element(N, NewRecord) =:= element(N, OldRecord) of
-        true  -> get_changes(N - 1, NewRecord, OldRecord, Changes);
-        false -> get_changes(N - 1, NewRecord, OldRecord, [N | Changes])
+get_changes (Index, NewRecord, OldRecord, Changes) ->
+    case element(Index, NewRecord) =:= element(Index, OldRecord) of
+        true  -> get_changes(Index - 1, NewRecord, OldRecord, Changes);
+        false -> get_changes(Index - 1, NewRecord, OldRecord, [Index | Changes])
     end.
 
-fetch_lookup(TablePrefix, Key) ->
-    fetch_lookup(TablePrefix, Key, 0).
+
+%%% ========== ======================================== ====================
+fetch_lookup(Table, Key) ->
+    fetch_lookup(Table, Key, 0).
 
 fetch_lookup(_, _, 100) ->
     [];
-fetch_lookup(TablePrefix, Key, N) ->
-    case ets:lookup(list_to_atom(TablePrefix ++ integer_to_list(N)), Key) of
-        [] -> fetch_lookup(TablePrefix, Key, N + 1);
+fetch_lookup(Table, Key, FragId) ->
+    case ets:lookup(game_db_table:ets_tab(Table, FragId), Key) of
+        [] -> fetch_lookup(Table, Key, FragId + 1);
         R  -> R
     end.
 
-fetch_select(TablePrefix, MatchSpec) ->
-    fetch_select(TablePrefix, MatchSpec, 0, []).
 
-fetch_select(_, _, 100, Result) ->
-    lists:concat(Result);
-fetch_select(TablePrefix, MatchSpec, N, Result) ->
+fetch_select(Table, MatchSpec) ->
+    fetch_select(Table, MatchSpec, 0, []).
+
+fetch_select(_, _, 100, Return) ->
+    lists:concat(Return);
+fetch_select(Table, MatchSpec, FragId, Return) ->
+    NewReturn   = case ets:select(game_db_table:ets_tab(Table, FragId), MatchSpec) of
+        []      -> Return;
+        Result  -> Result ++ Return
+    end,
     fetch_select(
-        TablePrefix, 
+        Table, 
         MatchSpec, 
-        N + 1, 
-        [ets:select(list_to_atom(TablePrefix ++ integer_to_list(N)), MatchSpec) | Result]
+        FragId + 1, 
+        NewReturn
     ).
 ");
 }

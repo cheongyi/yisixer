@@ -12,6 +12,7 @@ function game_db_init () {
     fwrite($file, "
 -export ([init/0, init/1, load/1]).
 
+-include (\"define.hrl\").
 -include (\"gen/game_db.hrl\").
 
 -define (CUT_LINE, 
@@ -27,45 +28,42 @@ function game_db_init () {
     // 写入init/0函数
     $tables = $tables_info['TABLES'];
     fwrite($file, "init () ->
+    cut_line(),
     [
         begin
             cut_line(),
             init(TableName)
         end
         ||
-        TableName <- [
-            ");
-    fwrite($file, implode(",
-            ", $tables));
-    fwrite($file, "
-        ]
+        TableName <- if
+            ?IS_DEBUG -> game_db_table:get_all_table();
+            true      -> game_db_table:get_all_player_table()
+        end
     ],
+    cut_line(),
     cut_line().
 ");
 
     // 写入init/1函数
     foreach ($tables as $table_name) {
-        $dots = generate_char(50, strlen($table_name), ' ');
-        fwrite($file, "
-init ($table_name) ->
-    ?FORMAT(\"game_db init : $table_name{$dots}|");
-        if ($table_name == "db_version") {
-        fwrite($file, " ignore~n\", []),
-    ok;
-");
+        $fields_info    = $tables_fields_info[$table_name];
+        $fields         = $fields_info['FIELDS'];
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        if ($is_log_table) {
             continue;
         }
 
-        // 写入init开头
-        fwrite($file, " start~n\", []),
+        $dots = generate_char(50, strlen($table_name), ' ');
+        fwrite($file, "
+init ($table_name) ->
+    ?FORMAT(\"game_db init : $table_name{$dots}| start~n\", []),
 ");
 
         // 判断是否自增长
-        $fields = $tables_fields_info[$table_name]['FIELDS'];
         foreach ($fields as $field) {
-            $field_extra      = $field['EXTRA'];
+            $field_extra    = $field['EXTRA'];
             if ($field_extra == "auto_increment") {
-                $field_name   = $field['COLUMN_NAME'];
+                $field_name = $field['COLUMN_NAME'];
                 fwrite($file, "
     {data, AutoIncResultId} = game_mysql:fetch(
         gamedb, 
@@ -90,11 +88,11 @@ init ($table_name) ->
         fwrite($file, "
     [
         ets:new(
-            list_to_atom(\"t_{$table_name}_\" ++ integer_to_list(Id)), 
+            game_db_table:ets_tab({$table_name}, FragId), 
             [public, set, named_table, {keypos, 2}]
         ) 
         || 
-        Id <- ?FRAG_ID_LIST
+        FragId <- ?FRAG_ID_LIST
     ],");
             } 
             else {
@@ -118,7 +116,15 @@ init (_) ->
 
     // 写入load/0函数
     foreach ($tables as $table_name) {
-        if ($table_name == "db_version") {
+        $fields_info    = $tables_fields_info[$table_name];
+        $fields         = $fields_info['FIELDS'];
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        $frag_field     = $fields_info['FRAG_FIELD'];
+        $name_len_max   = $fields_info['NAME_LEN_MAX'];
+        $keyfind        = "";
+        $record         = "";
+        $primary        = array();
+        if ($is_log_table) {
             continue;
         }
 
@@ -140,13 +146,6 @@ load ($table_name) ->
             
             lists:foreach(
                 fun(Row) ->");
-        $fields_info    = $tables_fields_info[$table_name];
-        $fields         = $fields_info['FIELDS'];
-        $is_frag        = $fields_info['IS_FRAG'];
-        $name_len_max   = $fields_info['NAME_LEN_MAX'];
-        $keyfind        = "";
-        $record         = "";
-        $primary        = array();
         foreach ($fields as $field) {
             $field_name     = $field['COLUMN_NAME'];
             $field_key      = $field['COLUMN_KEY'];
@@ -167,10 +166,9 @@ load ($table_name) ->
                         row_key = {{$primary_arr}},{$record}
                         row_ver = 0
                     },");
-        if ($is_frag) {
+        if ($frag_field) {
             fwrite($file, "
-                    TabId  = integer_to_list((Record #$table_name.player_id) rem 100),
-                    EtsTab = list_to_atom(\"t_{$table_name}_\" ++ TabId),");
+                    EtsTab = game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100),");
         }
         else {
             fwrite($file, "
