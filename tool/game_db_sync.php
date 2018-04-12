@@ -87,7 +87,7 @@ tran_action_to_sql ({{$table_name}, delete, Record}) ->");
     >>;
 tran_action_to_sql ({{$table_name}, update, _Record, []})      -> none;
 tran_action_to_sql ({{$table_name}, update,  Record, Changes}) ->
-    Sql     = generate_update_sql({$table_name}, <<\" \">>, Record, Changes, []),
+    Sql     = generate_update_sql({$table_name}, Record, <<\" \">>, Changes, []),
     BinSql  = list_to_binary(lists:reverse(Sql)),
     <<\"UPDATE `{$table_name}` SET\", BinSql/binary>>;
 ");
@@ -115,7 +115,7 @@ tran_action_to_sql ({_Table, bin_sql, BinSql}) ->
         $fields         = $fields_info['FIELDS'];
         $name_len_max   = $fields_info['NAME_LEN_MAX'];
 
-        $index  = 2;
+        $index  = 3;
         foreach ($fields as $field) {
             $field_key      = $field['COLUMN_KEY'];
             if ($field_key == "PRI") {

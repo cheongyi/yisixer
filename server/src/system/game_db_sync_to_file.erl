@@ -98,13 +98,20 @@ handle_cast (Request, State) ->
 %%% @spec   handle_info(Info, State) -> tuple().
 %%% @doc    gen_server callback.
 handle_info ({to_file, SqlList}, State) ->
-    File = State #state.file,
+    File = case State #state.file of
+        undefined ->
+            {{Y, M, D}, {H, MM, SS}} = erlang:localtime(),
+            erlang:send_after((?HOUR_TO_SECOND - (MM * 60 + SS)) * 1000, self(), {change_file}),
+            get_log_file({Y, M, D, H});
+        OldFile   ->
+            OldFile
+    end,
     try file:write(File, [<<"\n">> | SqlList])
     catch
         Error ->
             ?ERROR("~p : SqlList = ~p~n  Error = ~p~n", [?SERVER, SqlList, Error])
     end,
-    {noreply, State};
+    {noreply, State #state{file = File}};
 handle_info ({change_file}, State) ->
     File    = State #state.file,
     ok      = file:close(File),
