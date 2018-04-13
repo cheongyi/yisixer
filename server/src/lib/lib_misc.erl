@@ -121,14 +121,46 @@ index_of_tuple (Element, Tuple) ->
 index_of_list (Element, List) ->
     index_of_list_3(Element, List, 1).
 
-index_of_list_3 (Element, [Element | List], Index) ->
+index_of_list_3 (Element, [Element | _List], Index) ->
     Index;
 index_of_list_3 (Element, [_ | List], Index) ->
     index_of_list_3(Element, List, Index + 1);
 index_of_list_3 (_Element, [], _Index) ->
     0.
 
+%%% @doc    list_to_binary
+lst_to_bin (null) ->
+    <<"NULL">>;
+lst_to_bin (List) ->
+    List2 = escape_str(List, []),
+    Bin   = list_to_binary(List2),
+    <<"'", Bin/binary, "'">>.
+    
+%%% @doc    integer_to_binary
+int_to_bin (null) ->
+    <<"NULL">>;
+int_to_bin (Value) ->
+    integer_to_binary(Value).
 
+%%% @doc    float_to_binary
+rel_to_bin (null) ->
+    <<"NULL">>;
+rel_to_bin (Value) when is_integer(Value) ->
+    integer_to_binary(Value);
+rel_to_bin (Value) ->
+    float_to_binary(Value).
+
+%%% @doc    escape_str
+escape_str ([$'   | String], Result) ->
+    escape_str(String, [$'   | [$\\ | Result]]);
+escape_str ([$"   | String], Result) ->
+    escape_str(String, [$"   | [$\\ | Result]]);
+escape_str ([$\\  | String], Result) ->
+    escape_str(String, [$\\  | [$\\ | Result]]);
+escape_str ([Char | String], Result) ->
+    escape_str(String, [Char | Result]);
+escape_str ([], Result) ->
+    lists:reverse(Result).
 
 
 

@@ -159,6 +159,9 @@ code_change (_Vsn, State, _Extra) ->
     {ok, State}.
 
 
+%%% ========== ======================================== ====================
+%%% Internal   API
+%%% ========== ======================================== ====================
 %%% @doc    更新游戏工作数据
 update_game_worker_data (M, F, A) ->
     update_game_worker_data(self(), M, F, A, lib_misc:get_local_timestamp()).

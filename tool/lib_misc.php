@@ -27,4 +27,26 @@ function write_attributes($file) {
 ");
 }
 
+
+// 写入 FieldValueBin = type_to_bin(FieldValue),
+function write_type_to_bin ($file, $table_name, $field, $name_len_max) {
+    $field_name     = $field['COLUMN_NAME'];
+    $field_type     = $field['DATA_TYPE'];
+    $field_name_up  = ucfirst($field_name);
+
+    if ($field_type == "tinyint" || $field_type == "int" || $field_type == "bigint") {
+        $type_to_bin    = "?INT_TO_BIN";
+    }
+    elseif ($field_type == "float") {
+        $type_to_bin    = "?REL_TO_BIN";
+    }
+    else {
+        $type_to_bin    = "?LST_TO_BIN";
+    }
+
+    $dots = generate_char($name_len_max, strlen($field_name), ' ');
+    fwrite($file, "
+    {$field_name_up}{$dots} = {$type_to_bin}(Record #{$table_name}.{$field_name}),");
+}
+
 ?>

@@ -131,5 +131,23 @@
         ENGINE        = 'InnoDB'
         CHARACTER SET = 'utf8'
         COLLATE       = 'utf8_general_ci';
+
+        DROP TABLE IF EXISTS `player_item_log`;
+        CREATE TABLE `player_item_log`
+        (
+            `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
+            `player_id`             BIGINT(25)  NOT NULL                COMMENT '玩家ID',
+            `player_item_id`        INTEGER     NOT NULL DEFAULT 0      COMMENT '玩家物品ID',
+            `item_id`               INTEGER     NOT NULL DEFAULT 0      COMMENT '物品ID',
+            `value`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '值',
+            `after_value`           INTEGER     NOT NULL DEFAULT 0      COMMENT '操作后的值',
+            `op_type`               INTEGER     NOT NULL DEFAULT 0      COMMENT '操作类型',
+            `op_time`               INTEGER     NOT NULL DEFAULT 0      COMMENT '操作时间',
+            CONSTRAINT `pk_player_item_log` PRIMARY KEY (`id`)
+        )
+        COMMENT       = '玩家物品日志'
+        ENGINE        = 'InnoDB'
+        CHARACTER SET = 'utf8'
+        COLLATE       = 'utf8_general_ci';
     ");
 ?>

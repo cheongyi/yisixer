@@ -102,7 +102,7 @@ handle_info ({to_file, SqlList}, State) ->
         undefined ->
             {{Y, M, D}, {H, MM, SS}} = erlang:localtime(),
             erlang:send_after((?HOUR_TO_SECOND - (MM * 60 + SS)) * 1000, self(), {change_file}),
-            get_log_file({Y, M, D, H});
+            get_sql_file({Y, M, D, H});
         OldFile   ->
             OldFile
     end,
@@ -116,7 +116,7 @@ handle_info ({change_file}, State) ->
     File    = State #state.file,
     ok      = file:close(File),
     {{Y, M, D}, {H, MM, SS}} = erlang:localtime(),
-    NewFile = get_log_file({Y, M, D, H}),
+    NewFile = get_sql_file({Y, M, D, H}),
     erlang:send_after((?HOUR_TO_SECOND - (MM * 60 + SS)) * 1000, self(), {change_file}),
     {noreply, State #state{file = NewFile}};
 handle_info ({apply, From, M, F, A}, State) ->
@@ -142,7 +142,7 @@ code_change (_Vsn, State, _Extra) ->
 %%% Internal   API
 %%% ========== ======================================== ====================
 %%% @doc    获取日志文件
-get_log_file ({Y, M, D, H}) ->
+get_sql_file ({Y, M, D, H}) ->
     FileName = ?GAME_DATA_DIR 
         ++ lib_time:ymdhms_integer_to_cover0str(Y) ++ "_" 
         ++ lib_time:ymdhms_integer_to_cover0str(M) ++ "_" 

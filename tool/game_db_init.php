@@ -35,9 +35,9 @@ function game_db_init () {
             init(TableName)
         end
         ||
-        TableName <- if
-            ?IS_DEBUG -> game_db_table:get_all_table();
-            true      -> game_db_table:get_all_player_table()
+        TableName <- case ?GET_ENV_ATOM(build_code_db, false) of
+            true  -> game_db_table:get_all_table();
+            false -> game_db_table:get_all_player_table()
         end
     ],
     cut_line(),
@@ -48,15 +48,15 @@ function game_db_init () {
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
         $fields         = $fields_info['FIELDS'];
+        $frag_field     = $fields_info['FRAG_FIELD'];
         $is_log_table   = $fields_info['IS_LOG_TABLE'];
         if ($is_log_table) {
-            continue;
         }
 
         $dots = generate_char(50, strlen($table_name), ' ');
         fwrite($file, "
 init ($table_name) ->
-    ?FORMAT(\"game_db init : $table_name{$dots}| start~n\", []),
+    ?FORMAT(\"game_db init : $table_name{$dots}| start~n\"),
 ");
 
         // 判断是否自增长
@@ -77,14 +77,12 @@ init ($table_name) ->
         }
 
         // 写入init结尾
-        $log_end    = "_log";
-        if (substr_compare($table_name, $log_end, -strlen($log_end)) === 0) {
+        if ($is_log_table) {
             $init_end = "ok;";
         } 
         else {
             // 判断是否建立ets分表
-            $player_start    = "player_";
-            if (substr_compare($table_name, $player_start, 0, strlen($player_start)) === 0) {
+            if ($frag_field) {
         fwrite($file, "
     [
         ets:new(
@@ -137,11 +135,14 @@ load ($table_name) ->
     ),
     {num, RecordNumber} = lists:keyfind(num, 1, hd(lib_mysql:get_rows(NumResultId))),
 
+    RowsBin = integer_to_binary(?SELECT_LIMIT_ROWS),
     lists:foreach(
         fun(Page) ->
-            Sql  = \"SELECT * FROM `$table_name` LIMIT \" 
-                ++  integer_to_list((Page - 1) * 500000) ++ \", 500000\",
-            {data, ResultId} = game_mysql:fetch(gamedb, [list_to_binary(Sql)]),
+            RowsStartBin     = integer_to_binary((Page - 1) * ?SELECT_LIMIT_ROWS),
+            {data, ResultId} = game_mysql:fetch(
+                gamedb, 
+                [<<\"SELECT * FROM `$table_name` LIMIT \", RowsStartBin/binary, \", \", RowsBin/binary>>]
+            ),
             Rows = lib_mysql:get_rows(ResultId),
             
             lists:foreach(
@@ -181,9 +182,9 @@ load ($table_name) ->
                 Rows
             )
         end,
-        lists:seq(1, ceil(RecordNumber / 500000))
+        lists:seq(1, ceil(RecordNumber / ?SELECT_LIMIT_ROWS))
     ),
-    ?FORMAT(\"game_db init : $table_name{$dots}| finished~n\", []);
+    ?FORMAT(\"game_db init : $table_name{$dots}| finished~n\");
 ");
     }
 
@@ -193,7 +194,7 @@ load (_) ->
     ok.
 
 cut_line () ->
-    ?FORMAT(?CUT_LINE, []).
+    ?FORMAT(?CUT_LINE).
 
 ");
 

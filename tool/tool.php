@@ -7,6 +7,7 @@
     require_once 'lib_misc.php';
     require_once 'game_db_hrl.php';
     require_once 'game_db_data.php';
+    require_once 'game_db_dump.php';
     require_once 'game_db_init.php';
     require_once 'game_db_sync.php';
     require_once 'game_db_table.php';
@@ -37,6 +38,8 @@
     $game_db_sync_file  = "{$src_gen_dir}{$game_db_sync}.erl";
     $game_db_table      = "game_db_table";
     $game_db_table_file = "{$src_gen_dir}{$game_db_table}.erl";
+    $game_db_dump       = "game_db_dump";
+    $game_db_dump_file  = "{$src_gen_dir}{$game_db_dump}.erl";
 
     // 生成新的数据库连接对象
     $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
@@ -60,6 +63,7 @@
     db_enum();
     db_record();
     game_db_data();
+    game_db_dump();
     game_db_init();
     game_db_sync();
     game_db_table();

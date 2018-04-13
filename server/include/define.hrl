@@ -7,18 +7,21 @@
         )
     ).
     -define (FORMAT(Msg, Args), io:format(Msg, Args)).
+    -define (FORMAT(Msg),       io:format(Msg)).
     % -define (CATCH(Fun), catch Fun()).
     -define (CATCH(Fun), Fun()).
 -else.
     -define (IS_DEBUG,          false).
     -define (DEBUG(Msg,  Args), ok).
     -define (FORMAT(Msg, Args), ok).
+    -define (FORMAT(Msg),       ok).
     -define (CATCH(Fun), catch Fun()).
 -endif.
 
 
 -define (GAME_LOG_DIR,  "./log/").          % 游戏日志存放路劲
 -define (GAME_DATA_DIR, "./data/").         % 游戏数据存放路劲
+-define (GAME_PERF_DIR,  ?GAME_DATA_DIR ++ "perf/").        % 游戏性能分析存放路劲
 -define (WAR_REPORT_DIR, ?GAME_DATA_DIR ++ "war_report/").  % 战报数据存放路劲
 
 -define (SHUTDOWN_WORKER,       16#ABCDEF0).        % 一个工作进程将怎样被终止
@@ -72,6 +75,14 @@
 -define (HOUR_TO_SECOND, ?MINUTE_TO_SECOND * ?HOUR_TO_MINUTE).  % 时转秒
 -define (DAY_TO_SECOND,  ?DAY_TO_HOUR      * ?HOUR_TO_SECOND).  % 天转秒
 -define (WEEK_TO_SECOND, ?WEEK_TO_DAY      * ?DAY_TO_SECOND).   % 周转秒
+
+%%% 数据库相关
+-define (DELETE_OR_TRUNCATE_ROWS, 10000).   % 逐条删除或清空重建行数判定
+-define (INSERT_BATCH_ROWS, 100).           % 表数据插入分批行数
+-define (SELECT_LIMIT_ROWS, 500000).        % 表数据查询限制行数
+-define (LST_TO_BIN(List),  lib_misc:lst_to_bin(List)).
+-define (INT_TO_BIN(Value), lib_misc:int_to_bin(Value)).
+-define (REL_TO_BIN(Value), lib_misc:rel_to_bin(Value)).
 
 
 

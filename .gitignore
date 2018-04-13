@@ -3,14 +3,14 @@
 *.log
 *.sql
 *.dump
+protocol/
 server/src/test.erl
 server/start.sh
-server/date/*
+server/data/*
 server/ebin/*.beam
+server/log/*
 server/include/api/*
 !server/include/api/api_test.hrl
 server/include/gen/*
 server/src/gen/*
 server/src/gen/api_out/
-protocol/
-server/log/*

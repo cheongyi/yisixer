@@ -16,6 +16,7 @@ function game_db_sync () {
     tran_action_to_sql/1
 ]).
 
+-include (\"define.hrl\").
 -include (\"gen/game_db.hrl\").
 
 
@@ -29,15 +30,20 @@ function game_db_sync () {
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
         $fields         = $fields_info['FIELDS'];
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
         $name_len_max   = $fields_info['NAME_LEN_MAX'];
         $primary        = $fields_info['PRIMARY'];
+        // $is_temp_table  = $fields_info['IS_TEMP_TABLE'];
+        // if ($is_temp_table) {
+        //     continue;
+        // }
 
         // 写入 insert 分支
         fwrite($file, "
 tran_action_to_sql ({{$table_name}, insert, Record}) ->");
 
         foreach ($fields as $field) {
-            write_type_to_bin($file, $table_name, $field, $field_name, $name_len_max);
+            write_type_to_bin($file, $table_name, $field, $name_len_max);
         }
 
         fwrite($file, "
@@ -50,12 +56,17 @@ tran_action_to_sql ({{$table_name}, insert, Record}) ->");
             $field_name_up  = ucfirst($field_name);
             $dots = generate_char($name_len_max, strlen($field_name), ' ');
             $insert_arr[]   = "
-            \"`{$field_name}`{$dots} = \", {$dots}{$field_name_up}/binary, ";
+            {$dots}\"`{$field_name}` = \", {$dots}{$field_name_up}/binary, ";
         }
 
         $insert_arr = implode("\", \"", $insert_arr);
         fwrite($file, "{$insert_arr}\";\\n\"
     >>;");
+
+        // 玩家日志表只有insert new
+        if ($is_log_table) {
+            continue;
+        }
 
         // 写入 delete 分支
         fwrite($file, "
@@ -66,7 +77,7 @@ tran_action_to_sql ({{$table_name}, delete, Record}) ->");
             if ($field_key == "") {
                 continue;
             }
-            write_type_to_bin($file, $table_name, $field, $field_name, $name_len_max);
+            write_type_to_bin($file, $table_name, $field, $name_len_max);
         }
 
         fwrite($file, "
@@ -78,7 +89,7 @@ tran_action_to_sql ({{$table_name}, delete, Record}) ->");
             $field_name_up  = ucfirst($field_name);
             $dots = generate_char($name_len_max, strlen($field_name), ' ');
             $insert_arr[]   = "
-            \"`{$field_name}`{$dots} = \", {$dots}{$field_name_up}/binary, ";
+            {$dots}\"`{$field_name}` = \", {$dots}{$field_name_up}/binary, ";
             $comma  = ", ";
         }
 
@@ -112,6 +123,12 @@ tran_action_to_sql ({_Table, bin_sql, BinSql}) ->
     // 写入 generate_update_sql/5 函数
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        // $is_temp_table  = $fields_info['IS_TEMP_TABLE'];
+        // if ($is_log_table || $is_temp_table) {
+        if ($is_log_table) {
+            continue;
+        }
         $fields         = $fields_info['FIELDS'];
         $name_len_max   = $fields_info['NAME_LEN_MAX'];
 
@@ -126,7 +143,7 @@ tran_action_to_sql ({_Table, bin_sql, BinSql}) ->
             $field_name_up  = ucfirst($field_name);
             fwrite($file, "
 generate_update_sql ({$table_name}, Record,  Comma, [$index | Changes], Sql) ->");
-            write_type_to_bin($file, $table_name, $field, $field_name, $name_len_max);
+            write_type_to_bin($file, $table_name, $field, $name_len_max);
             $dots = generate_char($name_len_max, strlen("NewSql"), ' ');
             fwrite($file, "
     NewSql{$dots} = [<<\"`{$field_name}` = \", Comma/binary, {$field_name_up}/binary>> | Sql],
@@ -141,7 +158,7 @@ generate_update_sql ({$table_name}, Record, _Comma, [], Sql) ->");
             if ($field_key == "") {
                 continue;
             }
-            write_type_to_bin($file, $table_name, $field, $field_name, $name_len_max);
+            write_type_to_bin($file, $table_name, $field, $name_len_max);
         }
         $primary_key    = array();
         foreach ($fields as $field) {
@@ -163,63 +180,6 @@ generate_update_sql ({$table_name}, Record, _Comma, [], Sql) ->");
     fwrite($file, "
 generate_update_sql (_Table, _Record, _Comma, _Changes, _Sql) ->
     <<>>.
-
-
-%%% ========== ======================================== ====================
-%%% @doc    list_to_binary
-lst_to_bin (null) ->
-    <<\"NULL\">>;
-lst_to_bin (List) ->
-    List2 = escape_str(List, []),
-    Bin   = list_to_binary(List2),
-    <<\"'\", Bin/binary, \"'\">>.
-    
-%%% @doc    integer_to_binary
-int_to_bin (null) ->
-    <<\"NULL\">>;
-int_to_bin (Value) ->
-    integer_to_binary(Value).
-
-%%% @doc    float_to_binary
-rel_to_bin (null) ->
-    <<\"NULL\">>;
-rel_to_bin (Value) when is_integer(Value) ->
-    integer_to_binary(Value);
-rel_to_bin (Value) ->
-    float_to_binary(Value).
-
-%%% @doc    escape_str
-escape_str ([$'   | String], Result) ->
-    escape_str(String, [$'   | [$\\\\ | Result]]);
-escape_str ([$\"   | String], Result) ->
-    escape_str(String, [$\"   | [$\\\\ | Result]]);
-escape_str ([$\\\\  | String], Result) ->
-    escape_str(String, [$\\\\  | [$\\\\ | Result]]);
-escape_str ([Char | String], Result) ->
-    escape_str(String, [Char | Result]);
-escape_str ([], Result) ->
-    lists:reverse(Result).
 ");
-}
-
-
-function write_type_to_bin ($file, $table_name, $field, $field_name, $name_len_max) {
-    $field_name     = $field['COLUMN_NAME'];
-    $field_type     = $field['DATA_TYPE'];
-    $field_name_up  = ucfirst($field_name);
-
-    if ($field_type == "tinyint" || $field_type == "int" || $field_type == "bigint") {
-        $type_to_bin    = "int_to_bin";
-    }
-    elseif ($field_type == "float") {
-        $type_to_bin    = "rel_to_bin";
-    }
-    else {
-        $type_to_bin    = "lst_to_bin";
-    }
-
-    $dots = generate_char($name_len_max, strlen($field_name), ' ');
-    fwrite($file, "
-    {$field_name_up}{$dots} = {$type_to_bin}(Record #{$table_name}.{$field_name}),");
 }
 ?>

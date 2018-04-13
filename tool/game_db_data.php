@@ -179,6 +179,24 @@ select (_Table, _ModeOrFragId, _MatchSpec) ->
         $primary        = $fields_info['PRIMARY'];
         $frag_field     = $fields_info['FRAG_FIELD'];
         $auto_increment = $fields_info['AUTO_INCREMENT'];
+        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        // 判断是否日志表
+        if ($is_log_table) {
+            fwrite($file, "
+write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
+    TimeTuple   = game_perf:statistics_start(),
+    validate_for_write(Record, insert),
+    NewId        = ets:update_counter(auto_increment, {{$table_name}, id}, 1),
+    InsertRecord = Record #{$table_name}{
+        {$auto_increment}      = NewId,
+        row_key = {NewId}
+    },
+    add_tran_action({{$table_name}, insert, InsertRecord}),
+    game_perf:statistics_end({?MODULE, 'write.{$table_name}', 1}, TimeTuple),
+    {ok, InsertRecord};
+");
+            continue;
+        }
         $fields_num     = count($fields);
         $primary_key    = array();
         $row_key_up     = array();
@@ -189,12 +207,14 @@ select (_Table, _ModeOrFragId, _MatchSpec) ->
         }
         $primary_key_arr    = implode(", ", $primary_key);
         $row_key_up_arr     = implode(", ", $row_key_up);
+        // 判断是否分表
         if ($frag_field) {
             $ets_table  = "game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
         }
         else {
             $ets_table  = "t_{$table_name}";
         }
+        // 判断是否自增长
         if ($auto_increment == "") {
             $insert_record  = "InsertRecord = Record #{$table_name}{
                 row_key = {{$row_key_up_arr}}
@@ -363,7 +383,7 @@ delete_all ({$table_name}) -> ?ENSURE_TRAN,
     Size        = count({$table_name}),
     Return      = {$delete_all_objects},
     if 
-        Size > 10000 -> add_tran_action({{$table_name}, bin_sql, <<\"TRUNCATE `{$table_name}`;\">>});
+        Size > 10000 -> add_tran_action({{$table_name}, bin_sql, <<   \"TRUNCATE `{$table_name}`;\">>});
         true         -> add_tran_action({{$table_name}, bin_sql, <<\"DELETE FROM `{$table_name}`;\">>})
     end,
     game_perf:statistics_end({?MODULE, 'delete_all.{$table_name}', 1}, TimeTuple),

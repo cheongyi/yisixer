@@ -62,7 +62,8 @@ ets_tab ({$table_name}, 0{$i}){$dots}     -> t_{$table_name}_0{$i};");
 ets_tab ({$table_name}, {$i}){$dots}     -> t_{$table_name}_{$i};");
             }
             fwrite($file, "
-ets_tab ({$table_name}, FragId){$dots} -> ets_tab({$table_name}, FragId rem 100);");
+ets_tab ({$table_name}, FragId){$dots} -> ets_tab({$table_name}, FragId rem 100);
+");
         }
     }
 
@@ -72,8 +73,7 @@ ets_tab ({$table_name}, FragId){$dots} -> ets_tab({$table_name}, FragId rem 100)
 ets_tab (Table, _FragId){$dots}-> exit({?MODULE, ets_tab, {unkown_table, Table}}).
 
 
-%%% ========== ======================================== ====================
-");
+%%% ========== ======================================== ====================");
 
 
 

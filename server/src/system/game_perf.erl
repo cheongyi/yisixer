@@ -52,6 +52,7 @@ stop () ->
 %%% @spec   init([]) -> {ok, State}
 %%% @doc    gen_server init, opens the server in an initial state.
 init ([]) ->
+    filelib:ensure_dir(?GAME_PERF_DIR),
     ets:new(?TABLE_NAME, [set, named_table, protected, {keypos, #game_perf_data.key}]),
     {ok, #state{}}.
 
@@ -184,7 +185,7 @@ write (Mode) ->
     end,
     {perf, List}= gen_server:call(?SERVER, {get_info}),
     SortList    = lists:sort(SortFun, List),
-    FileName    = ?GAME_DATA_DIR ++ lib_time:ymd_tuple_to_cover0str(date(), "_") ++ "." ++ atom_to_list(Mode),
+    FileName    = ?GAME_PERF_DIR ++ lib_time:ymd_tuple_to_cover0str(date(), "_") ++ "." ++ atom_to_list(Mode),
     {ok, File}  = file:open(FileName, [write, raw]),
     file:write(File, io_lib:format("+--------------------+--------------------+--------------------+--------------------+--------------------+~n",[])),
     file:write(File, io_lib:format("| Module:Function/ArgsNum                                      |                    |                    |~n",[])),
