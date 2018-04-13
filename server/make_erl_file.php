@@ -24,31 +24,37 @@
 
     $file       = fopen($erl_file.".erl", 'x');
 
-    fwrite($file, "-module (".$filename.").");
-    write_attributes($file);
+    write_module($file, $filename);
+    write_author($file);
 
     if ($file_type == "api") {
-        write_body();
+        write_general($file);
     } elseif ($file_type == "mod") {
-        write_body();
+        write_general($file);
     } elseif ($file_type == "sup") {
-        write_sup();
+        write_sup($file);
     } elseif ($file_type == "srv") {
-        write_srv();
+        write_srv($file);
     } elseif ($file_type == "app") {
-        write_app();
+        write_app($file);
     } else {
-        write_body();
+        write_general($file);
     }
 
     fclose($file);
 
 
 // =========== ======================================== ====================
-// @todo    写入属性
-function write_attributes($file) {
-    fwrite($file, "
+// @todo    写入模块声明
+function write_module($file, $filename) {
+    fwrite($file, "-module (".$filename.").
+");
+}
 
+
+// @todo    写入作者信息声明
+function write_author($file) {
+    fwrite($file, "
 %%% @doc    
 
 -copyright  (\"Copyright © 2017-".date("Y")." YiSiXEr\").
@@ -59,61 +65,90 @@ function write_attributes($file) {
 }
 
 
-// @todo    写入属性
-function write_body($file) {
+// @todo    写入常规
+function write_general($file) {
+    write_export($file);
+    write_include($file);
+    write_external_api_note($file);
+    write_internal_api_note($file);
+}
+
+
+// @todo    写入空export声明
+function write_export($file) {
     fwrite($file, "
 -export ([
 
 ]).
+");
+}
 
+
+// @todo    写入include声明
+function write_include($file) {
+    fwrite($file, "
 % -include (\"define.hrl\").
 % -include (\"record.hrl\").
 % -include (\"gen/game_db.hrl\").
 % -include (\"api/api_code.hrl\").
 
+");
+}
 
+
+// @todo    写入ExternalApi注释
+function write_external_api_note($file) {
+    fwrite($file, "
 %%% ========== ======================================== ====================
 %%% External   API
-%%% ========== ======================================== ====================
+%%% ========== ======================================== ====================");
+}
 
 
+// @todo    写入InternalApi注释
+function write_internal_api_note($file) {
+    fwrite($file, "
 %%% ========== ======================================== ====================
 %%% Internal   API
 %%% ========== ======================================== ====================
-
-
 
 
 ");
 }
 
 
-// @todo    写入sup
-function write_sup() {
-    global $file;
+// @todo    写入callback注释
+function write_callback_note($file) {
+    fwrite($file, "
+%%% ========== ======================================== ====================
+%%% callback
+%%% ========== ======================================== ====================");
+}
 
+
+// @todo    写入sup
+function write_sup($file) {
     fwrite($file, "
 -behaviour  (supervisor).
 
 -export ([start_link/0]).
 -export ([init/1]).
 
--include (\"define.hrl\").
--include (\"record.hrl\").
-
 -define (SERVER, ?MODULE).
+");
 
+    write_include($file);
 
-%%% ========== ======================================== ====================
-%%% External   API
-%%% ========== ======================================== ====================
+    write_external_api_note($file);
+    fwrite($file, "
 %%% @doc    Start the process and link.
 start_link () ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
-%%% ========== ======================================== ====================
-%%% callback
-%%% ========== ======================================== ====================
+");
+
+    write_callback_note($file);
+    fwrite($file, "
 %%% @doc    Process start callback.
 init ([]) ->
     ChildSpecs = [
@@ -121,17 +156,14 @@ init ([]) ->
     ],
     {ok, {{one_for_one, 10, 10}, ChildSpecs}}.
 
-
-
-
 ");
+
+    write_internal_api_note($file);
 }
 
 
 // @todo    写入srv
-function write_srv() {
-    global $file;
-
+function write_srv($file) {
     fwrite($file, "
 -behaviour  (gen_server).
 
@@ -141,17 +173,15 @@ function write_srv() {
     get_state/0
 ]).
 
--include (\"define.hrl\").
--include (\"record.hrl\").
-
 -define (SERVER, ?MODULE).
 
 -record (state, {}).
+");
 
+    write_include($file);
 
-%%% ========== ======================================== ====================
-%%% External   API
-%%% ========== ======================================== ====================
+    write_external_api_note($file);
+    fwrite($file, "
 %%% @spec   start_link() -> ServerRet.
 %%% @doc    Start the process and link gen_server.
 start_link () ->
@@ -170,10 +200,10 @@ stop () ->
 get_state () ->
     gen_server:call(?SERVER, get_state).
 
+");
 
-%%% ========== ======================================== ====================
-%%% gen_server 6 callbacks
-%%% ========== ======================================== ====================
+    write_callback_note($file);
+    fwrite($file, "
 %%% @spec   init([]) -> {ok, State}.
 %%% @doc    gen_server init, opens the server in an initial state.
 init ([]) ->
@@ -212,22 +242,14 @@ terminate (Reason, _State) ->
 code_change (_Vsn, State, _Extra) ->
     {ok, State}.
 
-
-%%% ========== ======================================== ====================
-%%% Internal   API
-%%% ========== ======================================== ====================
-
-
-
-
 ");
+
+    write_internal_api_note($file);
 }
 
 
 // @todo    写入app
-function write_app() {
-    global $file;
-
+function write_app($file) {
     fwrite($file, "
 -behaviour  (application).
 -behaviour  (supervisor).
@@ -236,14 +258,13 @@ function write_app() {
 -export ([start/2, stop/1]).
 -export ([init/1]).
 
--include(\"define.hrl\").
-
 -define (SERVER, ?MODULE).
+");
 
+    write_include($file);
 
-%%% ========== ======================================== ====================
-%%% External   API
-%%% ========== ======================================== ====================
+    write_external_api_note($file);
+    fwrite($file, "
 %%% @doc    erl -s game start
 start () ->
     application:start(?SERVER).
@@ -256,10 +277,10 @@ restart () ->
     stop(),
     start().
 
+");
 
-%%% ========== ======================================== ====================
-%%% callbacks  function
-%%% ========== ======================================== ====================
+    write_callback_note($file);
+    fwrite($file, "
 start (_Type, _Args) ->
     Result = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
     Result.
@@ -270,14 +291,8 @@ stop (_State) ->
 init ([]) ->
     {ok, {{one_for_one, 10, 10}, []}}.
 
-
-%%% ========== ======================================== ====================
-%%% Internal   API
-%%% ========== ======================================== ====================
-
-
-
-
 ");
+
+    write_internal_api_note($file);
 }
 ?>
