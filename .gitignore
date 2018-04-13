@@ -5,7 +5,6 @@
 *.dump
 protocol/
 server/src/test.erl
-server/start.sh
 server/data/*
 server/ebin/*.beam
 server/log/*
