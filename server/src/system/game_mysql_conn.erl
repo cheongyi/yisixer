@@ -18,7 +18,7 @@
 ]).
 
 -include ("define.hrl").
--include ("record.hrl").
+% -include ("record.hrl").
 -include ("mysql.hrl").
 
 -define (SERVER, ?MODULE).

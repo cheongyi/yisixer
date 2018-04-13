@@ -24,22 +24,8 @@ init (_) ->
         {
             {one_for_one, 10, 10},
             [
-                {
-                    four_color_srv,
-                    {four_color_srv, start_link, []},
-                    transient,
-                    brutal_kill,
-                    worker,
-                    [four_color_srv]
-                },
-                {
-                    four_color_auto_srv,
-                    {four_color_auto_srv, start_link, []},
-                    transient,
-                    brutal_kill,
-                    worker,
-                    [four_color_auto_srv]
-                }
+                ?WORKER_CHILD_SPEC(four_color_srv),
+                ?WORKER_CHILD_SPEC(four_color_auto_srv)
             ]
         }
     }.

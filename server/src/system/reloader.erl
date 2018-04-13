@@ -47,7 +47,7 @@ stop () ->
 init ([]) ->
     if
         ?IS_DEBUG ->
-            {ok, TRef} = timer:send_interval(timer:seconds(2), doit),
+            {ok, TRef} = timer:send_interval(timer:seconds(3), doit),
             {ok, #state{last = erlang:localtime(), tref = TRef}};
         true ->
             {ok, #state{last = erlang:localtime()}}

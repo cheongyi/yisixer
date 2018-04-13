@@ -17,7 +17,7 @@
     -define (FORMAT(Msg),       ok).
     -define (CATCH(Fun), catch Fun()).
 -endif.
-
+ 
 
 -define (GAME_LOG_DIR,  "./log/").          % 游戏日志存放路劲
 -define (GAME_DATA_DIR, "./data/").         % 游戏数据存放路劲
@@ -26,6 +26,9 @@
 
 -define (SHUTDOWN_WORKER,       16#ABCDEF0).        % 一个工作进程将怎样被终止
 -define (SHUTDOWN_SUPERVISOR,   infinity).          % 一个监督进程将怎样被终止
+-define (WORKER_CHILD_SPEC(Module),                 % 工作进程的子规程
+    {Module, {Module, start_link, []}, transient, ?SHUTDOWN_WORKER, worker, [Module]}
+).
 
 
 %% 日志写入

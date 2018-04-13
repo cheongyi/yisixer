@@ -9,6 +9,7 @@
 -export ([init/0]).
 
 -include ("define.hrl").
+% -include ("record.hrl").
 
 -define (SERVER, ?MODULE).
 

@@ -66,8 +66,10 @@ function write_body($file) {
 
 ]).
 
--include (\"define.hrl\").
--include (\"record.hrl\").
+% -include (\"define.hrl\").
+% -include (\"record.hrl\").
+% -include (\"gen/game_db.hrl\").
+% -include (\"api/api_code.hrl\").
 
 
 %%% ========== ======================================== ====================
