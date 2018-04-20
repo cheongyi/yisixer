@@ -1,10 +1,11 @@
-% -define (PROTOCOL_DIR, "server/protocol/").         % 协议路径
--define (PROTOCOL_DIR, "../COG/protocol/").         % 协议路径
-% -define (PROTOCOL_DIR, "protocol/").         % 协议路径
--define (API_HRL_DIR,  "server/include/api/").  % api_hrl路径
--define (API_OUT_DIR,  "server/src/gen/api_out/").  % api_out路径
-% -define (API_OUT_DIR,  "../cog/server-new/src/gen/").  % api_out路径
--define (GAME_ROUTER_DIR,  "server/src/gen/").  % game_router
+-define (PROJECT_DIR,   "../").                     % 项目根路径
+% -define (PROTOCOL_DIR, ?PROJECT_DIR ++ "server/protocol/").         % 协议路径
+-define (PROTOCOL_DIR,  ?PROJECT_DIR ++ "../COG/protocol/").         % 协议路径
+% -define (PROTOCOL_DIR, ?PROJECT_DIR ++ "protocol/").         % 协议路径
+-define (API_HRL_DIR,   ?PROJECT_DIR ++ "server/include/api/").  % api_hrl路径
+-define (API_OUT_DIR,   ?PROJECT_DIR ++ "server/src/gen/api_out/").  % api_out路径
+% -define (API_OUT_DIR,  ?PROJECT_DIR ++ "../cog/server-new/src/gen/").  % api_out路径
+-define (GAME_ROUTER_DIR,  ?PROJECT_DIR ++ "server/src/gen/").  % game_router
 
 -define (HRL_DEFINE_LEN, 50).
 

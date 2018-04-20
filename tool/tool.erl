@@ -8,6 +8,7 @@
 % -compile (export_all).
 -export ([start/0, stop/0, restart/0]).
 -export ([
+    generate_server_protocol/0                  % 生成协议(服务端代码)
 ]).
 
 -include ("tool.hrl").

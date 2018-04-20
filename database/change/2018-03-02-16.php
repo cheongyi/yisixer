@@ -13,13 +13,27 @@
         -- COLLATE       = 'utf8_general_ci';
 
         -- 模版数据表
+        DROP TABLE IF EXISTS `constant`;
+        CREATE TABLE `constant`
+        (
+            `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
+            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
+            `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
+            `data`                  FLOAT       NOT NULL DEFAULT 0      COMMENT '数值',
+            CONSTRAINT `pk_constant` PRIMARY KEY (`id`)
+        )
+        COMMENT       = '常量'
+        ENGINE        = 'InnoDB'
+        CHARACTER SET = 'utf8'
+        COLLATE       = 'utf8_general_ci';
+
         DROP TABLE IF EXISTS `item`;
         CREATE TABLE `item`
         (
             `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT '物品ID',
+            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
             `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
             `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
-            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
             `description`           INTEGER     NOT NULL DEFAULT 0      COMMENT '描述',
             `type`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '类型',
             `color`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '颜色:4绿5青6蓝7紫1红2橙3黄',
@@ -41,9 +55,9 @@
         CREATE TABLE `item_type`
         (
             `id`                    INTEGER     NOT NULL DEFAULT 0      COMMENT '物品类型ID',
+            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
             `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
             `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
-            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
             CONSTRAINT `pk_item_type` PRIMARY KEY (`id`)
         )
         COMMENT       = '物品类型'
@@ -70,6 +84,7 @@
         CREATE TABLE `log_type`
         (
             `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
+            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
             `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
             `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
             `type`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '类型:0消耗|1获得',

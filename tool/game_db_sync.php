@@ -144,9 +144,10 @@ tran_action_to_sql ({_Table, bin_sql, BinSql}) ->
             fwrite($file, "
 generate_update_sql ({$table_name}, Record,  Comma, [$index | Changes], Sql) ->");
             write_type_to_bin($file, $table_name, $field, $name_len_max);
-            $dots = generate_char($name_len_max, strlen("NewSql"), ' ');
+            $dots  = generate_char($name_len_max, strlen("NewSql"), ' ');
+            $dots2 = generate_char($name_len_max, strlen($field_name), ' ');
             fwrite($file, "
-    NewSql{$dots} = [<<\"`{$field_name}` = \", Comma/binary, {$field_name_up}/binary>> | Sql],
+    NewSql{$dots} = [<<Comma/binary, {$dots2}\"`{$field_name}` = \", {$dots2}{$field_name_up}/binary>> | Sql],
     generate_update_sql({$table_name}, Record, <<\", \">>, Changes, NewSql);");
             $index ++;
         }

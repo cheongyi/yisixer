@@ -122,8 +122,8 @@ read (#pk_{$table_name}{{$primary_key_arr}}) ->
     // 写入 read/1 通配分支函数
     // 写入 select/2 函数
     fwrite($file, "
-read (_Record) ->
-    ok.
+read (Record) ->
+    exit({?MODULE, read, {unkown_record, Record}}).
 
 
 %%% ========== ======================================== ====================
@@ -162,8 +162,8 @@ select ({$table_name}, _ModeOrFragId, MatchSpec) ->
 
     // 写入 select/3 通配分支函数
     fwrite($file, "
-select (_Table, _ModeOrFragId, _MatchSpec) ->
-    ok.
+select (Table, ModeOrFragId, MatchSpec) ->
+    exit({?MODULE, select, {unkown_info, Table, ModeOrFragId, MatchSpec}}).
 
 
 %%% ========== ======================================== ====================
@@ -260,8 +260,8 @@ write (Record = #{$table_name}{row_key = RowKey, {$primary_key_arr}, row_ver = R
 
     // 写入 write/1  通配分支函数
     fwrite($file, "
-write (_Record) ->
-    ok.
+write (Record) ->
+    exit({?MODULE, write, {unkown_record, Record}}).
 
 
 %%% ========== ======================================== ====================
@@ -301,8 +301,8 @@ delete (Record = #{$table_name}{row_key = RowKey}) -> ?ENSURE_TRAN,
     // 写入 delete/1 通配分支函数
     // 写入 delete_select/2 函数
     fwrite($file, "
-delete (_Record) ->
-    ok.
+delete (Record) ->
+    exit({?MODULE, delete, {unkown_record, Record}}).
 
 
 %%% ========== ======================================== ====================
@@ -342,8 +342,8 @@ delete_select ({$table_name}, _ModeOrFragId, MatchSpec) -> ?ENSURE_TRAN,
     // 写入 delete_select/3  通配分支函数
     // 写入 do_delete_select/2 函数
     fwrite($file, "
-delete_select (_Table, _ModeOrFragId, _MatchSpec) ->
-    ok.
+delete_select (Table, ModeOrFragId, MatchSpec) ->
+    exit({?MODULE, delete_select, {unkown_info, Table, ModeOrFragId, MatchSpec}}).
 
 do_delete_select ([Record | List], Count) ->
     delete(Record),
@@ -393,8 +393,8 @@ delete_all ({$table_name}) -> ?ENSURE_TRAN,
 
     // 写入 delete_all/1 通配分支函数
     fwrite($file, "
-delete_all (_Table) ->
-    ok.
+delete_all (Table) ->
+    exit({?MODULE, delete_all, {unkown_table, Table}}).
 
 
 %%% ========== ======================================== ====================

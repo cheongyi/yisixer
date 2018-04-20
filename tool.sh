@@ -1,10 +1,6 @@
 #!/bin/sh
-ulimit -n 1048576
+ulimit -n 1024
 clear
-erlc -o tool/ tool/*.erl 
-php tool/format.php
-erl \
--noshell \
--pa tool/ \
--pa server/ebin/ \
--s tool start \
+cd tool
+erlc -o ../server/ebin/ *.erl
+php tool.php $1
