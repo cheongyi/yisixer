@@ -46,7 +46,6 @@ route_request (_Pack = <<ModuleId:16/unsigned, ActionId:16/unsigned, Args/binary
     put(prev_request, {ModuleId, ActionId}),
     TimeRecord  = game_perf:statistics_start(),
     {Module, Fuction, ArgsNum, NewState} = route_relay(ModuleId, ActionId, Args, State),
-    gen_server:cast(game_perf, {set_info, {Module, Fuction, ArgsNum}, RunTimeSecond, WallClockSecond}),
     game_perf:statistics_end({Module, Fuction, ArgsNum}, TimeRecord),
     NewState.
 "),
@@ -127,7 +126,7 @@ write_action_in_args (RouterFile, [ProtocolField | List]) ->
             FieldType == "string"   ->
                 "binary_to_list(" ++ Variable ++ "), ";
             FieldType == "typeof"   ->
-                Variable ++ "Tuple, ";
+                Variable++ ", ";
             true ->
                 Variable ++ ", "
         end

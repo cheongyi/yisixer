@@ -80,8 +80,8 @@ restart () ->
 generate_server_protocol () ->
     RouterFile          = gen_router:init(),
     {ok, FileNameList}  = file:list_dir(?PROTOCOL_DIR),
-    generate_server_protocol(RouterFile, lists:sort(FileNameList -- ["Readme.txt"])),
-    % generate_server_protocol(RouterFile, ["100_test.txt"]),
+    % generate_server_protocol(RouterFile, lists:sort(FileNameList -- ["Readme.txt"])),
+    generate_server_protocol(RouterFile, ["100_test.txt"]),
     gen_router:write_relay_end(RouterFile),
     ok.
 generate_server_protocol (RouterFile, [FileName | List]) ->

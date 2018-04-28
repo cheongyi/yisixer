@@ -111,7 +111,7 @@ function get_tables_info () {
         $table_name              = $row['TABLE_NAME'];
         // 过滤掉不需要的表
         if ($table_name == "db_version") {
-            continue;
+            // continue;
         }
         $tables_info['TABLES'][] = $table_name;
         $name_len                = max($name_len, strlen($table_name));

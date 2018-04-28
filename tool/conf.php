@@ -32,4 +32,31 @@ $enum_table = array(
         'note'  => '物品类型'
     )
 );
+
+$protocol   = array(
+    'test'  => array(
+        'module_note'   => "测  试",
+        'module_name'   => "test",
+        'module_id'     => "100",
+        'class'         => array(
+            'info'  => array(
+                'extend_module' => "",
+                'extend_class'  => "",
+                'class_note'    => "信息",
+                'class_field'   => array(
+                    0   => array(
+                        'field_name'    => "player_id",
+                        'field_type'    => "long",
+                        'field_module'  => "",
+                        'field_class'   => "",
+                        'field_note'    => "玩家ID",
+                        'field_enum'    => array(
+                            0   =>  "PROGRAM"
+                        )
+                    )
+                )
+            )
+        )
+    )
+);
 ?>

@@ -1,6 +1,6 @@
 -define (PROJECT_DIR,   "../").                     % 项目根路径
-% -define (PROTOCOL_DIR, ?PROJECT_DIR ++ "server/protocol/").         % 协议路径
--define (PROTOCOL_DIR,  ?PROJECT_DIR ++ "../COG/protocol/").         % 协议路径
+-define (PROTOCOL_DIR, ?PROJECT_DIR ++ "server/protocol/").         % 协议路径
+% -define (PROTOCOL_DIR,  ?PROJECT_DIR ++ "../COG/protocol/").         % 协议路径
 % -define (PROTOCOL_DIR, ?PROJECT_DIR ++ "protocol/").         % 协议路径
 -define (API_HRL_DIR,   ?PROJECT_DIR ++ "server/include/api/").  % api_hrl路径
 -define (API_OUT_DIR,   ?PROJECT_DIR ++ "server/src/gen/api_out/").  % api_out路径
