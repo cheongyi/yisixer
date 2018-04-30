@@ -24,6 +24,7 @@
 -define (GAME_PERF_DIR,  ?GAME_DATA_DIR ++ "perf/").        % 游戏性能分析存放路劲
 -define (WAR_REPORT_DIR, ?GAME_DATA_DIR ++ "war_report/").  % 战报数据存放路劲
 
+-define (SHUTDOWN_PLAYER,       36#14X2).           % 一个玩家进程将怎样被终止
 -define (SHUTDOWN_WORKER,       16#ABCDEF0).        % 一个工作进程将怎样被终止
 -define (SHUTDOWN_SUPERVISOR,   infinity).          % 一个监督进程将怎样被终止
 -define (WORKER_CHILD_SPEC(Module),                 % 工作进程的子规程

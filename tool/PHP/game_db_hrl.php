@@ -1,6 +1,6 @@
 <?php
 // =========== ======================================== ====================
-// 数据库枚举
+// @todo   数据库枚举
 function db_enum() {
     global $mysqli, $enum_table, $game_db_hrl_file;
 
@@ -59,7 +59,7 @@ function db_enum() {
 }
 
 
-// 数据库记录
+// @todo   数据库记录
 function db_record () {
     global $tables_info, $tables_fields_info, $game_db_hrl_file;
 

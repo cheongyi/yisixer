@@ -1,79 +1,4 @@
 <?php
-    // 设定用于所有日期时间函数的默认时区
-    date_default_timezone_set("Asia/Shanghai");
-
-    // 加载配置文件
-    require_once 'conf.php';
-    require_once 'lib_misc.php';
-    require_once 'game_db_hrl.php';
-    require_once 'game_db_data.php';
-    require_once 'game_db_dump.php';
-    require_once 'game_db_init.php';
-    require_once 'game_db_sync.php';
-    require_once 'game_db_table.php';
-
-    // 数据库配置
-    $db_sign = 'localhost';
-    if ($argc > 1) {
-        $db_sign = $argv[1];
-    }
-    $db_host = $db_argv[$db_sign]['host'];
-    $db_user = $db_argv[$db_sign]['user'];
-    $db_pass = $db_argv[$db_sign]['pass'];
-    $db_name = $db_argv[$db_sign]['name'];
-    $db_port = $db_argv[$db_sign]['port'];
-
-    // 目录路径
-    $server_dir         = "../server/";
-    $include_gen_dir    = "{$server_dir}include/gen/";
-    $src_gen_dir        = "{$server_dir}src/gen/";
-
-    // 文件名称
-    $game_db_hrl_file   = "{$include_gen_dir}game_db.hrl";
-    $game_db_data       = "game_db_data";
-    $game_db_data_file  = "{$src_gen_dir}{$game_db_data}.erl";
-    $game_db_init       = "game_db_init";
-    $game_db_init_file  = "{$src_gen_dir}{$game_db_init}.erl";
-    $game_db_sync       = "game_db_sync";
-    $game_db_sync_file  = "{$src_gen_dir}{$game_db_sync}.erl";
-    $game_db_table      = "game_db_table";
-    $game_db_table_file = "{$src_gen_dir}{$game_db_table}.erl";
-    $game_db_dump       = "game_db_dump";
-    $game_db_dump_file  = "{$src_gen_dir}{$game_db_dump}.erl";
-
-    // 生成新的数据库连接对象
-    $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
-    if ($mysqli->connect_error) {
-        die("Open '$db_name' failed (".$mysqli->connect_errno.".) ".$mysqli->connect_error.".\n");
-    }
-    $mysqli->query("SET NAMES utf8;");
-
-    $schema = new mysqli($db_host, $db_user, $db_pass, 'information_schema', $db_port);
-    if ($schema->connect_error) {
-        die("Open 'information_schema' failed (".$schema->connect_errno.".) ".$schema->connect_error.".\n");
-    }
-    $schema->query("SET NAMES utf8;");
-    $tables_info        = get_tables_info();
-    $tables_fields_info = get_tables_fields_info();
-    $table_name_len_max = $tables_info['NAME_LEN_MAX'];
-
-        print_r($tables_info);
-        print_r($tables_fields_info);
-
-    db_enum();
-    db_record();
-    game_db_data();
-    game_db_dump();
-    game_db_init();
-    game_db_sync();
-    game_db_table();
-
-    // 关闭数据库连接
-    $mysqli->close();
-    $schema->close();
-
-
-
 // =========== ======================================== ====================
 // @todo   获取表数据
 function get_table_data ($mysqli, $table_name, $fields) {
@@ -190,4 +115,70 @@ function get_table_fields_info ($table_name) {
     $result->close();
     return $fields_info;
 }
+
+
+// @todo   生成填补字符
+function generate_char ($max_length, $length, $char) {
+    $space      = "";
+    $fill_len   = $max_length - $length;
+    for ($i = 0; $i < $fill_len; $i ++) {
+        $space .= $char;
+    }
+     
+    return $space;
+}
+
+
+// @todo    写入属性注释
+function write_attributes_note($file) {
+    $year   = date("Y");
+    $ymd    = date("Y, m, d");
+    fwrite($file, "
+%%% ========== ======================================== ====================
+%%% -copyright  (\"Copyright © 2017-$year YiSiXEr\").
+%%% -author     (\"CHEONGYI\").
+%%% -date       ({{$ymd}}).
+%%% -vsn        (\"1.0.0\").
+%%% ========== ======================================== ====================
+");
+}
+
+
+// @todo    写入属性
+function write_attributes($file) {
+    $year   = date("Y");
+    $ymd    = date("Y, m, d");
+    fwrite($file, "
+
+%%% @doc    
+
+-copyright  (\"Copyright © 2017-$year YiSiXEr\").
+-author     (\"CHEONGYI\").
+-date       ({{$ymd}}).
+-vsn        (\"1.0.0\").
+");
+}
+
+
+// @todo   写入 FieldValueBin = type_to_bin(FieldValue),
+function write_type_to_bin ($file, $table_name, $field, $name_len_max) {
+    $field_name     = $field['COLUMN_NAME'];
+    $field_type     = $field['DATA_TYPE'];
+    $field_name_up  = ucfirst($field_name);
+
+    if ($field_type == "tinyint" || $field_type == "int" || $field_type == "bigint") {
+        $type_to_bin    = "?INT_TO_BIN";
+    }
+    elseif ($field_type == "float") {
+        $type_to_bin    = "?REL_TO_BIN";
+    }
+    else {
+        $type_to_bin    = "?LST_TO_BIN";
+    }
+
+    $dots = generate_char($name_len_max, strlen($field_name), ' ');
+    fwrite($file, "
+    {$field_name_up}{$dots} = {$type_to_bin}(Record #{$table_name}.{$field_name}),");
+}
+
 ?>

@@ -55,7 +55,7 @@ start (_Type, _Args) ->
     start_child(game_db_init_srv,   worker),        % 启动进程 --- 游戏数据库初始化
     game_db_init_srv:wait_for_loaded(),
 
-    % start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端
+    start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端
 
     % 启动玩法功能相关进程
     start_child(test_sup,           supervisor),    % 启动督程 --- 测试

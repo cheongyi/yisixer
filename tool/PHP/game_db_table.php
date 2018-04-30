@@ -115,5 +115,7 @@ get_all_template_table () ->
     ].
 
 ");
+
+    fclose($file);
 }
 ?>

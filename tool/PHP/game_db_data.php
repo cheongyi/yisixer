@@ -590,5 +590,7 @@ fetch_select(Table, MatchSpec, FragId, Return) ->
         NewReturn
     ).
 ");
+
+    fclose($file);
 }
 ?>

@@ -182,5 +182,7 @@ generate_update_sql ({$table_name}, Record, _Comma, [], Sql) ->");
 generate_update_sql (_Table, _Record, _Comma, _Changes, _Sql) ->
     <<>>.
 ");
+
+    fclose($file);
 }
 ?>

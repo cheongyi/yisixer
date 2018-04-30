@@ -29,8 +29,8 @@ start_link () ->
 %%% @doc    Process start callback.
 init ([]) ->
     ChildSpecs = [
-        {test_srv,  {test_srv,  start_link, []}, permanent, brutal_kill, worker, [test_srv]},
-        {test_proc, {test_proc, start_link, []}, permanent, brutal_kill, worker, [test_proc]}
+        {test_srv,  {test_srv,  start_link, []}, transient, brutal_kill, worker, [test_srv]},
+        {test_proc, {test_proc, start_link, []}, transient, brutal_kill, worker, [test_proc]}
     ],
     {ok, {{one_for_one, 10, 10}, ChildSpecs}}.
 

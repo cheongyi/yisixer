@@ -1,4 +1,0 @@
--define (ADMINISTRATION,                                  15).    % 行政
--define (PROGRAM,                                         16).    % 程序
--define (ADMIN,                                          999).    % 行政
--define (TEST,                                            51).    % 程序

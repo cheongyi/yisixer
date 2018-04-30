@@ -174,10 +174,12 @@ get_sql_file (FileName) ->
     ok = file:write(File, <<\"/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;\\n\\n\">>),
     File.
     ");
+
+    fclose($file);
 }
 
 
-// 写入表到文件
+// @todo   写入表到文件
 function write_dump_table_to_file ($file, $tables, $tables_fields_info) {
     fwrite($file, "
     File        = get_sql_file(FileName),

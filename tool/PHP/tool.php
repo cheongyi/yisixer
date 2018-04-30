@@ -2,11 +2,16 @@
     // 加载配置文件
     // require_once 'format.php';
 
+    // 数据库配置
     $db_sign        = 'localhost';
     if ($argc > 1) {
         $db_sign = $argv[1];
     }
-    $run            = true;
+
+    // 目录路径
+    $project_dir    = "../../";
+
+    // 选项打印
     $option_format  = "
 请选择一个操作：
   1 - 生成代码(服务端)
@@ -16,15 +21,16 @@
   x - 退出
 > ";
 
-    while ($run) {
+    while (true) {
         echo $option_format;
 
         $line = trim(fgets(STDIN));
 
         if ($line == "1") {
-            shell_exec('erl -noshell -pa ../server/ebin -s tool generate_server_protocol -s init stop');
-            shell_exec('php tool_db.php '.$db_sign);
-            // require 'tool_db.php';
+            // shell_exec('erl -noshell -pa ../server/ebin -s tool generate_server_protocol -s init stop');
+            // shell_exec('php tool_db.php '.$db_sign);
+            require 'tool_pt.php';
+            require 'tool_db.php';
         }
         elseif ($line == "2") {
 
