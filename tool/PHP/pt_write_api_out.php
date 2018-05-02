@@ -4,15 +4,12 @@
 function write_api_out () {
     global $protocol, $api_out_dir;
 
-    foreach ($protocol as $module_name => $protocol_module) {
-        if ($module_name == "enum") {
-            continue;
-        }
-
+    $protocol_module    = $protocol[C_MODULE];
+    foreach ($protocol_module as $module_name => $module) {
         // 变量声明、赋值、初始化
-        $module_id      = $protocol_module['module_id'];
-        $module_action  = $protocol_module['action'];
-        $module_class   = $protocol_module['class'];
+        $module_id      = $module['module_id'];
+        $module_action  = $module['action'];
+        $module_class   = $module['class'];
 
         $module_name    = "api_".$module_name."_out";
         $file           = fopen($api_out_dir.$module_name.".erl", 'w');
@@ -194,13 +191,14 @@ function write_non_num_field_to_binary ($file, $field_arr) {
         if ($field_type == 'string') {
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
-    {$field_name}_Bin    = list_to_binary({$field_name}),
-    {$field_name}_BinLen = size({$field_name}_Bin),");
+    {$field_name}_Bin     = list_to_binary({$field_name}),
+    {$field_name}_BinSize = size({$field_name}_Bin),");
         }
         elseif ($field_type == 'list') {
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
-    BinList{$field_name} = [");
+    {$field_name}_ListLen = length({$field_name}),
+    BinList{$field_name}  = [");
 
             if ($field_class) {
                 fwrite($file, "
@@ -215,8 +213,7 @@ function write_non_num_field_to_binary ($file, $field_arr) {
         || 
         {$field_name}_Element <- {$field_name}
     ], 
-    {$field_name}_Bin    = list_to_binary(BinList{$field_name}),
-    {$field_name}_BinLen = size({$field_name}_Bin),");
+    {$field_name}_Bin     = list_to_binary(BinList{$field_name}),");
         }
         elseif ($field_type == 'typeof') {
             fwrite($file, "
@@ -277,28 +274,28 @@ function get_field_to_binary ($field) {
     $field_name         = "_".$field_name."_".$field_line;
 
     if ($field_type == 'enum') {
-        $field_bin      = $field_name.":32/unsigned";
+        $field_bin      = $field_name.BT_ENUM;
     }
     elseif ($field_type == 'byte') {
-        $field_bin      = $field_name.":08/unsigned";
+        $field_bin      = $field_name.BT_BYTE;
     }
     elseif ($field_type == 'short') {
-        $field_bin      = $field_name.":16/unsigned";
+        $field_bin      = $field_name.BT_SHORT;
     }
     elseif ($field_type == 'int') {
-        $field_bin      = $field_name.":32/unsigned";
+        $field_bin      = $field_name.BT_INT;
     }
     elseif ($field_type == 'long') {
-        $field_bin      = $field_name.":64/unsigned";
+        $field_bin      = $field_name.BT_LONG;
     }
     elseif ($field_type == 'string') {
-        $field_bin      = $field_name."_BinLen:16/unsigned, ".$field_name."_Bin/binary";
+        $field_bin      = $field_name.BT_BIN_SIZE.", ".$field_name.BT_STRING;
     }
     elseif ($field_type == 'typeof') {
-        $field_bin      = $field_name."_Bin/binary";
+        $field_bin      = $field_name.BT_TYPEOF;
     }
     elseif ($field_type == 'list') {
-        $field_bin      = $field_name."_BinLen:16/unsigned, ".$field_name."_Bin/binary";
+        $field_bin      = $field_name.BT_LIST_LEN.", ".$field_name.BT_LIST;
     }
 
     return $field_bin;

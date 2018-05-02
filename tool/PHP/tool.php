@@ -1,7 +1,4 @@
 <?php
-    // 加载配置文件
-    // require_once 'format.php';
-
     // 数据库配置
     $db_sign        = 'localhost';
     if ($argc > 1) {
@@ -31,6 +28,7 @@
             // shell_exec('php tool_db.php '.$db_sign);
             require 'tool_pt.php';
             require 'tool_db.php';
+            break;
         }
         elseif ($line == "2") {
 

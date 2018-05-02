@@ -22,7 +22,7 @@ function read_protocol () {
             // 读取协议文本
             $protocol_module        = read_protocol_txt($filename);
             $module_name            = $protocol_module['module_name'];
-            $protocol[$module_name] = $protocol_module;
+            $protocol[C_MODULE][$module_name]   = $protocol_module;
         }
         closedir($dir);
         $protocol[C_ENUM]   = $module_enum;
