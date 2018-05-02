@@ -8,17 +8,8 @@ function db_enum() {
 
     $file       = fopen($game_db_hrl_file, 'w');
 
-// -date       ({".date("Y, m, d")."}).
-// -copyright  (\"Copyright © ".date("Y")." YiSiXEr\").
-// -copyright  (\"Copyright © 2018 YiSiXEr\").
-// -date       ({2018, 04, 08}).
-    $year   = date("Y");
-    $ymd    = date("Y, m, d");
+    write_attributes_note($file);
     fwrite($file, "
--copyright  (\"Copyright © 2017-{$year} YiSiXEr\").
--author     (\"CHEONGYI\").
--date       ({{$ymd}}).
-
 %%% ========== ======================================== ====================
 %%% database table rows to define
 %%% ========== ======================================== ====================

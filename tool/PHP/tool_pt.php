@@ -15,6 +15,8 @@
     $server_dir         = "{$project_dir}server/";
     $include_api_dir    = "{$server_dir}include/api/";
     $api_out_dir        = "{$server_dir}/src/api_out/";
+    is_dir($include_api_dir) OR mkdir($include_api_dir);
+    is_dir($api_out_dir)     OR mkdir($api_out_dir);
 
     // 文件名称
     $api_enum_file      = "{$include_api_dir}api_enum.hrl";
@@ -38,6 +40,7 @@
     $brace          = "";
     $note           = "";
 
+    // ========== ======================================== ====================
     // 读取协议
     $start_time = microtime(true);
     echo "协议文本读取 ........... ";
@@ -46,6 +49,7 @@
     $cost_time  = round($end_time - $start_time, 3);
     echo "done in {$cost_time}s\n";
 
+    // ========== ======================================== ====================
     // 协议文本生成服务端代码
     $start_time = microtime(true);
     echo "协议文本生成代码(服务端) [";

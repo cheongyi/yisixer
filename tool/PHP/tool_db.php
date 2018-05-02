@@ -29,6 +29,8 @@
     $server_dir         = "{$project_dir}server/";
     $include_gen_dir    = "{$server_dir}include/gen/";
     $src_gen_dir        = "{$server_dir}src/gen/";
+    is_dir($include_gen_dir) OR mkdir($include_gen_dir);
+    is_dir($src_gen_dir)     OR mkdir($src_gen_dir);
 
     // 文件名称
     $game_db_hrl_file   = "{$include_gen_dir}game_db.hrl";
@@ -62,6 +64,7 @@
     // print_r($tables_info);
     // print_r($tables_fields_info);
 
+    // ========== ======================================== ====================
     // 数据库表生成服务端代码
     $start_time = microtime(true);
     echo "数据库表生成代码(服务端) [";
