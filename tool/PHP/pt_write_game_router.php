@@ -56,7 +56,7 @@ route_relay ({$module_id}, _ActionId, _Args0, State) ->
             fwrite($file, "
         {$action_id} ->");
             if ($args_num > 1) {
-                write_field_bin_to_term($file, $action_in);
+                write_field_bin_to_term($file, $module_name, $action_in);
                 $field_name_arr = implode(", ", get_field_name_arr($action_in));
                 fwrite($file, "
             NewState = api_{$module_name}:{$action_name}($field_name_arr, State),");
@@ -87,7 +87,7 @@ route_relay (_ModuleId, _ActionId, _Args0, _State) ->
 }
 
 
-function write_field_bin_to_term ($file, $field_arr) {
+function write_field_bin_to_term ($file, $module_name, $field_arr) {
     $new_line   = "
             <<";
     $i  = 0;
@@ -116,16 +116,23 @@ function write_field_bin_to_term ($file, $field_arr) {
         }
         elseif ($field_type == 'string') {
             fwrite($file, 
-                $new_line."_{$field_line}".BT_BIN_LEN.", ".
-                "{$field_name}:_{$field_line}_BinLen/binary".
+                $new_line."_{$field_line}".BT_BIN_SIZE.", ".
+                "{$field_name}:_{$field_line}_BinSize/binary".
                 $rest
             );
         }
         elseif ($field_type == 'typeof') {
-            $field_bin      = $field_name.BT_TYPEOF;
+            fwrite($file, "
+            {{$field_name}, _Args{$j}} = tuple_parser({$module_name}, {$field_line}, _Args{$i}),");
         }
         elseif ($field_type == 'list') {
-            $field_bin      = $field_name.BT_BIN_LEN.", ".$field_name.BT_LIST;
+            fwrite($file, 
+                $new_line."_{$field_line}".BT_LIST_LEN.", ".
+                "{$field_name}_Bin/binary".
+                $rest
+            );
+            fwrite($file, "
+            {{$field_name}, _Args{$j}} = list_parser({$module_name}, {$field_line}, _{$field_line}_ListLen, {$field_name}_Bin, []),");
         }
 
         $i ++;

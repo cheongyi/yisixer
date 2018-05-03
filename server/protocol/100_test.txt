@@ -84,7 +84,10 @@ test = 100
     {
         in
         {
-
+            player_id_list          : list      // 玩家ID列表
+            {
+                player_id           : long      // 玩家ID
+            }
         }
 
         out
