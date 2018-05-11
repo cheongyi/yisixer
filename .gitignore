@@ -5,6 +5,7 @@
 *.dump
 
 protocol/
+!server/protocol
 
 server/data/*
 

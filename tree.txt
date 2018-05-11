@@ -1,0 +1,263 @@
+.
+├── README.md
+├── cheongyi.txt
+├── client
+├── createProject.sh
+├── database
+│   ├── backup
+│   │   └── 2018-03-02_16-52-13.php
+│   ├── change
+│   │   ├── 2018-03-02-16.php
+│   │   └── _2015-09-23-01.php
+│   ├── change_log
+│   ├── conf.php
+│   ├── get_template_data.sh
+│   ├── main.php
+│   ├── repair
+│   │   ├── loading_data.php
+│   │   └── test.php
+│   └── test_main.php
+├── delete_all.sql
+├── erl_crash.dump
+├── mysql_test.sh
+├── protocol
+├── server
+│   ├── build.sh
+│   ├── data
+│   │   ├── 2018_04_12
+│   │   │   ├── 18.sql
+│   │   │   ├── 19.sql
+│   │   │   ├── 20.sql
+│   │   │   ├── 21.sql
+│   │   │   ├── 22.sql
+│   │   │   └── 23.sql
+│   │   ├── 2018_04_13
+│   │   │   ├── 00.sql
+│   │   │   ├── 01.sql
+│   │   │   ├── 02.sql
+│   │   │   ├── 03.sql
+│   │   │   ├── 04.sql
+│   │   │   ├── 05.sql
+│   │   │   ├── 06.sql
+│   │   │   ├── 07.sql
+│   │   │   ├── 08.sql
+│   │   │   ├── 09.sql
+│   │   │   ├── 10.sql
+│   │   │   ├── 11.sql
+│   │   │   ├── 12.sql
+│   │   │   ├── 13.sql
+│   │   │   ├── 14.sql
+│   │   │   ├── 15.sql
+│   │   │   └── 16.sql
+│   │   ├── 2018_04_28
+│   │   │   ├── 15.sql
+│   │   │   ├── 16.sql
+│   │   │   ├── 17.sql
+│   │   │   └── 18.sql
+│   │   ├── perf
+│   │   │   └── 2018_04_13.times
+│   │   └── war_report
+│   ├── document.txt
+│   ├── ebin
+│   │   ├── Emakefile
+│   │   ├── api_hrl.beam
+│   │   ├── api_out.beam
+│   │   ├── api_test.beam
+│   │   ├── db_four_color.beam
+│   │   ├── erl_crash.dump
+│   │   ├── fifo_types.beam
+│   │   ├── four_color_auto_srv.beam
+│   │   ├── four_color_robot_srv.beam
+│   │   ├── four_color_srv.beam
+│   │   ├── four_color_sup.beam
+│   │   ├── game.app
+│   │   ├── game.beam
+│   │   ├── game_db_data.beam
+│   │   ├── game_db_dump.beam
+│   │   ├── game_db_init.beam
+│   │   ├── game_db_init_srv.beam
+│   │   ├── game_db_sync.beam
+│   │   ├── game_db_sync_srv.beam
+│   │   ├── game_db_sync_sup.beam
+│   │   ├── game_db_sync_to_db.beam
+│   │   ├── game_db_sync_to_file.beam
+│   │   ├── game_db_table.beam
+│   │   ├── game_ets.beam
+│   │   ├── game_log.beam
+│   │   ├── game_mysql.beam
+│   │   ├── game_mysql_auth.beam
+│   │   ├── game_mysql_conn.beam
+│   │   ├── game_mysql_recv.beam
+│   │   ├── game_perf.beam
+│   │   ├── game_router.beam
+│   │   ├── game_worker.beam
+│   │   ├── gen_router.beam
+│   │   ├── lib_ets.beam
+│   │   ├── lib_misc.beam
+│   │   ├── lib_mysql.beam
+│   │   ├── lib_time.beam
+│   │   ├── mod_four_color.beam
+│   │   ├── mod_four_color_srv.beam
+│   │   ├── mod_test.beam
+│   │   ├── release_check.beam
+│   │   ├── reloader.beam
+│   │   ├── server_protocol.beam
+│   │   ├── test.beam
+│   │   ├── test_proc.beam
+│   │   ├── test_record.beam
+│   │   ├── test_srv.beam
+│   │   ├── test_sup.beam
+│   │   └── tool.beam
+│   ├── include
+│   │   ├── api
+│   │   │   └── api_enum.hrl
+│   │   ├── define.hrl
+│   │   ├── emysql.hrl
+│   │   ├── gen
+│   │   │   └── game_db.hrl
+│   │   ├── mysql.hrl
+│   │   └── record.hrl
+│   ├── log
+│   │   ├── 2017_11_13.error.log
+│   │   ├── 2017_11_19.error.log
+│   │   ├── 2018_02_22.error.log
+│   │   ├── 2018_03_06.error.log
+│   │   ├── 2018_03_07.error.log
+│   │   ├── 2018_03_08.error.log
+│   │   ├── 2018_03_09.error.log
+│   │   ├── 2018_03_12.error.log
+│   │   ├── 2018_03_13.error.log
+│   │   ├── 2018_03_14.error.log
+│   │   ├── 2018_03_15.error.log
+│   │   ├── 2018_03_16.error.log
+│   │   ├── 2018_03_20.error.log
+│   │   ├── 2018_04_09.error.log
+│   │   ├── 2018_04_10.error.log
+│   │   ├── 2018_04_11.error.log
+│   │   ├── 2018_04_12.error.log
+│   │   ├── 2018_04_13.error.log
+│   │   ├── 2018_04_28.error.log
+│   │   ├── 2018_05_04.error.log
+│   │   └── 2018_05_07.error.log
+│   ├── make_erl_file.php
+│   ├── protocol
+│   │   ├── 100_code.txt
+│   │   ├── 999_test.txt
+│   │   ├── achievement.txt
+│   │   ├── activity.txt
+│   │   ├── award.txt
+│   │   ├── chat.txt
+│   │   ├── friend.txt
+│   │   ├── item.txt
+│   │   ├── mail.txt
+│   │   ├── notify.txt
+│   │   ├── player.txt
+│   │   ├── rank.txt
+│   │   ├── shop.txt
+│   │   ├── task.txt
+│   │   └── vip.txt
+│   ├── src
+│   │   ├── api
+│   │   │   └── api_test.erl
+│   │   ├── api_out
+│   │   │   └── api_test_out.erl
+│   │   ├── gen
+│   │   │   ├── code_db
+│   │   │   │   └── db_four_color.erl
+│   │   │   ├── game_db_data.erl
+│   │   │   ├── game_db_dump.erl
+│   │   │   ├── game_db_init.erl
+│   │   │   ├── game_db_sync.erl
+│   │   │   ├── game_db_table.erl
+│   │   │   └── game_router.erl
+│   │   ├── lib
+│   │   │   ├── lib_ets.erl
+│   │   │   ├── lib_misc.erl
+│   │   │   ├── lib_mysql.erl
+│   │   │   ├── lib_time.S
+│   │   │   └── lib_time.erl
+│   │   ├── mod
+│   │   │   ├── mod_four_color.erl
+│   │   │   ├── mod_four_color_srv.erl
+│   │   │   └── mod_test.erl
+│   │   ├── process
+│   │   │   ├── four_color
+│   │   │   │   ├── four_color_auto_srv.erl
+│   │   │   │   ├── four_color_robot_srv.erl
+│   │   │   │   ├── four_color_srv.erl
+│   │   │   │   └── four_color_sup.erl
+│   │   │   └── test
+│   │   │       ├── test_proc.erl
+│   │   │       ├── test_srv.erl
+│   │   │       └── test_sup.erl
+│   │   ├── release_check
+│   │   │   └── release_check.erl
+│   │   ├── system
+│   │   │   ├── game.erl
+│   │   │   ├── game_db_init_srv.erl
+│   │   │   ├── game_db_sync_srv.erl
+│   │   │   ├── game_db_sync_sup.erl
+│   │   │   ├── game_db_sync_to_db.erl
+│   │   │   ├── game_db_sync_to_file.erl
+│   │   │   ├── game_ets.erl
+│   │   │   ├── game_log.erl
+│   │   │   ├── game_mysql.erl
+│   │   │   ├── game_mysql_auth.erl
+│   │   │   ├── game_mysql_conn.erl
+│   │   │   ├── game_mysql_recv.erl
+│   │   │   ├── game_perf.erl
+│   │   │   ├── game_worker.erl
+│   │   │   ├── reloader.erl
+│   │   │   ├── socket_client_player.erl
+│   │   │   ├── socket_client_sender.erl
+│   │   │   ├── socket_client_srv.erl
+│   │   │   ├── socket_client_sup.erl
+│   │   │   ├── socket_server_acceptor.erl
+│   │   │   └── socket_server_sup.erl
+│   │   ├── test.erl
+│   │   └── test_record.erl
+│   └── start.sh
+├── tool
+│   ├── ERLANG
+│   │   ├── api_hrl.erl
+│   │   ├── api_out.erl
+│   │   ├── gen_router.erl
+│   │   ├── server_protocol.erl
+│   │   ├── tool.erl
+│   │   ├── tool.hrl
+│   │   └── wa_kuang.erl
+│   ├── PHP
+│   │   ├── conf.php
+│   │   ├── game_db_data.php
+│   │   ├── game_db_dump.php
+│   │   ├── game_db_hrl.php
+│   │   ├── game_db_init.php
+│   │   ├── game_db_sync.php
+│   │   ├── game_db_table.php
+│   │   ├── lib_misc.php
+│   │   ├── protocol_txt.log
+│   │   ├── pt_read.php
+│   │   ├── pt_write_api_hrl.php
+│   │   ├── pt_write_api_out.php
+│   │   ├── pt_write_game_router.php
+│   │   ├── tool.php
+│   │   ├── tool_db.php
+│   │   └── tool_pt.php
+│   ├── PYTHON
+│   │   ├── game_db.hrl
+│   │   ├── game_db_data.py
+│   │   ├── gamedb.py
+│   │   ├── main.py
+│   │   ├── update2.py
+│   │   └── zfile.py
+│   ├── api_hrl.beam
+│   ├── api_out.beam
+│   ├── erl_crash.dump
+│   ├── gen_router.beam
+│   ├── server_protocol.beam
+│   └── tool.beam
+├── tool.sh
+├── tree.txt
+└── web
+
+37 directories, 223 files

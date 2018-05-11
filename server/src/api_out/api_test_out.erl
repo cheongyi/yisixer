@@ -4,7 +4,7 @@
 
 -copyright  ("Copyright © 2017-2018 YiSiXEr").
 -author     ("CHEONGYI").
--date       ({2018, 05, 02}).
+-date       ({2018, 05, 11}).
 -vsn        ("1.0.0").
 
 -export ([
@@ -23,107 +23,107 @@
 %%% ========== ======================================== ====================
 %%% @doc    获取玩家信息
 get_player_info ({
-    _player_id_43,
-    _age_44,
-    _nickname_45,
-    _seat_number_46,
-    _job_number_47,
-    _department_48,
-    _player_info_list_53,
-    _player_rank_list_54
+    _player_id_74,
+    _age_75,
+    _nickname_76,
+    _seat_number_77,
+    _job_number_78,
+    _department_79,
+    _player_info_list_84,
+    _player_rank_list_85
 }) ->
     %%% ---------- ---------------------------------------- --------------------
-    _nickname_45_Bin     = list_to_binary(_nickname_45),
-    _nickname_45_BinSize = size(_nickname_45_Bin),
+    _nickname_76_Bin     = list_to_binary(_nickname_76),
+    _nickname_76_BinSize = size(_nickname_76_Bin),
     %%% ---------- ---------------------------------------- --------------------
-    _player_info_list_53_ListLen = length(_player_info_list_53),
-    BinList_player_info_list_53  = [
-        class_to_bin(info, _player_info_list_53_Element)
+    _player_info_list_84_ListLen = length(_player_info_list_84),
+    BinList_player_info_list_84  = [
+        class_to_bin(info, _player_info_list_84_Element)
         || 
-        _player_info_list_53_Element <- _player_info_list_53
+        _player_info_list_84_Element <- _player_info_list_84
     ], 
-    _player_info_list_53_Bin     = list_to_binary(BinList_player_info_list_53),
+    _player_info_list_84_Bin     = list_to_binary(BinList_player_info_list_84),
     %%% ---------- ---------------------------------------- --------------------
-    _player_rank_list_54_ListLen = length(_player_rank_list_54),
-    BinList_player_rank_list_54  = [
-        test:class_to_bin(info, _player_rank_list_54_Element)
+    _player_rank_list_85_ListLen = length(_player_rank_list_85),
+    BinList_player_rank_list_85  = [
+        test:class_to_bin(info, _player_rank_list_85_Element)
         || 
-        _player_rank_list_54_Element <- _player_rank_list_54
+        _player_rank_list_85_Element <- _player_rank_list_85
     ], 
-    _player_rank_list_54_Bin     = list_to_binary(BinList_player_rank_list_54),
+    _player_rank_list_85_Bin     = list_to_binary(BinList_player_rank_list_85),
     %%% ---------- ---------------------------------------- --------------------
     <<
-           100:16/unsigned,
+           999:16/unsigned,
         100001:16/unsigned,
-        _player_id_43:64/unsigned,
-        _age_44:08/unsigned,
-        _nickname_45_BinSize:16/unsigned, _nickname_45_Bin/binary,
-        _seat_number_46:16/unsigned,
-        _job_number_47:32/unsigned,
-        _department_48:32/unsigned,
-        _player_info_list_53_ListLen:16/unsigned, _player_info_list_53_Bin/binary,
-        _player_rank_list_54_ListLen:16/unsigned, _player_rank_list_54_Bin/binary
+        _player_id_74:64/unsigned,
+        _age_75:08/unsigned,
+        _nickname_76_BinSize:16/unsigned, _nickname_76_Bin/binary,
+        _seat_number_77:16/unsigned,
+        _job_number_78:32/unsigned,
+        _department_79:32/unsigned,
+        _player_info_list_84_ListLen:16/unsigned, _player_info_list_84_Bin/binary,
+        _player_rank_list_85_ListLen:16/unsigned, _player_rank_list_85_Bin/binary
     >>.
 
 
 %%% @doc    获取玩家信息
 get_other_player_info ({
-    _player_info_78
+    _player_info_110
 }) ->
     %%% ---------- ---------------------------------------- --------------------
-    _player_info_78_Bin = class_to_bin(info, _player_info_78),
+    _player_info_110_Bin = class_to_bin(info, _player_info_110),
     %%% ---------- ---------------------------------------- --------------------
     <<
-           100:16/unsigned,
+           999:16/unsigned,
         100002:16/unsigned,
-        _player_info_78_Bin/binary
+        _player_info_110_Bin/binary
     >>.
 
 
 %%% @doc    获取玩家信息
 get_all_player_info ({
-    _player_id_list_95,
-    _all_player_info1_99,
-    _all_player_info2_100
+    _player_id_list_129,
+    _all_player_info1_133,
+    _all_player_info2_134
 }) ->
     %%% ---------- ---------------------------------------- --------------------
-    _player_id_list_95_ListLen = length(_player_id_list_95),
-    BinList_player_id_list_95  = [
-        tuple_to_bin_95(_player_id_list_95_Element)
+    _player_id_list_129_ListLen = length(_player_id_list_129),
+    BinList_player_id_list_129  = [
+        tuple_to_bin_129(_player_id_list_129_Element)
         || 
-        _player_id_list_95_Element <- _player_id_list_95
+        _player_id_list_129_Element <- _player_id_list_129
     ], 
-    _player_id_list_95_Bin     = list_to_binary(BinList_player_id_list_95),
+    _player_id_list_129_Bin     = list_to_binary(BinList_player_id_list_129),
     %%% ---------- ---------------------------------------- --------------------
-    _all_player_info1_99_ListLen = length(_all_player_info1_99),
-    BinList_all_player_info1_99  = [
-        class_to_bin(new_info1, _all_player_info1_99_Element)
+    _all_player_info1_133_ListLen = length(_all_player_info1_133),
+    BinList_all_player_info1_133  = [
+        class_to_bin(new_info1, _all_player_info1_133_Element)
         || 
-        _all_player_info1_99_Element <- _all_player_info1_99
+        _all_player_info1_133_Element <- _all_player_info1_133
     ], 
-    _all_player_info1_99_Bin     = list_to_binary(BinList_all_player_info1_99),
+    _all_player_info1_133_Bin     = list_to_binary(BinList_all_player_info1_133),
     %%% ---------- ---------------------------------------- --------------------
-    _all_player_info2_100_ListLen = length(_all_player_info2_100),
-    BinList_all_player_info2_100  = [
-        class_to_bin(new_info2, _all_player_info2_100_Element)
+    _all_player_info2_134_ListLen = length(_all_player_info2_134),
+    BinList_all_player_info2_134  = [
+        class_to_bin(new_info2, _all_player_info2_134_Element)
         || 
-        _all_player_info2_100_Element <- _all_player_info2_100
+        _all_player_info2_134_Element <- _all_player_info2_134
     ], 
-    _all_player_info2_100_Bin     = list_to_binary(BinList_all_player_info2_100),
+    _all_player_info2_134_Bin     = list_to_binary(BinList_all_player_info2_134),
     %%% ---------- ---------------------------------------- --------------------
     <<
-           100:16/unsigned,
+           999:16/unsigned,
         100003:16/unsigned,
-        _player_id_list_95_ListLen:16/unsigned, _player_id_list_95_Bin/binary,
-        _all_player_info1_99_ListLen:16/unsigned, _all_player_info1_99_Bin/binary,
-        _all_player_info2_100_ListLen:16/unsigned, _all_player_info2_100_Bin/binary
+        _player_id_list_129_ListLen:16/unsigned, _player_id_list_129_Bin/binary,
+        _all_player_info1_133_ListLen:16/unsigned, _all_player_info1_133_Bin/binary,
+        _all_player_info2_134_ListLen:16/unsigned, _all_player_info2_134_Bin/binary
     >>.
 
 
 %%% @doc    标识功能开放提示已播放
 sign_play_player_function ({}) ->
     <<
-           100:16/unsigned,
+           999:16/unsigned,
         100004:16/unsigned
     >>.
 
@@ -131,7 +131,7 @@ sign_play_player_function ({}) ->
 %%% @doc    jiekou_test
 jiekou_test ({}) ->
     <<
-           100:16/unsigned,
+           999:16/unsigned,
         100099:16/unsigned
     >>.
 
@@ -139,50 +139,50 @@ jiekou_test ({}) ->
 %%% ========== ======================================== ====================
 %%% class_to_bin
 %%% ========== ======================================== ====================
-%%% @doc    信息
+%%% @doc    文字错误信息
 class_to_bin (info, {
-    _player_id_8,
-    _age_9,
-    _nickname_10,
-    _seat_number_11,
-    _job_number_12,
-    _department_13
+    _player_id_39,
+    _age_40,
+    _nickname_41,
+    _seat_number_42,
+    _job_number_43,
+    _department_44
 }) ->
     %%% ---------- ---------------------------------------- --------------------
-    _nickname_10_Bin     = list_to_binary(_nickname_10),
-    _nickname_10_BinSize = size(_nickname_10_Bin),
+    _nickname_41_Bin     = list_to_binary(_nickname_41),
+    _nickname_41_BinSize = size(_nickname_41_Bin),
     %%% ---------- ---------------------------------------- --------------------
     <<
-        _player_id_8:64/unsigned,
-        _age_9:08/unsigned,
-        _nickname_10_BinSize:16/unsigned, _nickname_10_Bin/binary,
-        _seat_number_11:16/unsigned,
-        _job_number_12:32/unsigned,
-        _department_13:32/unsigned
+        _player_id_39:64/unsigned,
+        _age_40:08/unsigned,
+        _nickname_41_BinSize:16/unsigned, _nickname_41_Bin/binary,
+        _seat_number_42:16/unsigned,
+        _job_number_43:32/unsigned,
+        _department_44:32/unsigned
     >>;
 %%% @doc    新信息1
 class_to_bin (new_info1, {
-    _addr_23
+    _addr_54
 }) ->
     %%% ---------- ---------------------------------------- --------------------
-    _addr_23_Bin     = list_to_binary(_addr_23),
-    _addr_23_BinSize = size(_addr_23_Bin),
+    _addr_54_Bin     = list_to_binary(_addr_54),
+    _addr_54_BinSize = size(_addr_54_Bin),
     %%% ---------- ---------------------------------------- --------------------
     <<
-        _addr_23_BinSize:16/unsigned, _addr_23_Bin/binary
+        _addr_54_BinSize:16/unsigned, _addr_54_Bin/binary
     >>;
 %%% @doc    新信息2
 class_to_bin (new_info2, {
-    _phone_29,
-    _addr_30
+    _phone_60,
+    _addr_61
 }) ->
     %%% ---------- ---------------------------------------- --------------------
-    _addr_30_Bin     = list_to_binary(_addr_30),
-    _addr_30_BinSize = size(_addr_30_Bin),
+    _addr_61_Bin     = list_to_binary(_addr_61),
+    _addr_61_BinSize = size(_addr_61_Bin),
     %%% ---------- ---------------------------------------- --------------------
     <<
-        _phone_29:64/unsigned,
-        _addr_30_BinSize:16/unsigned, _addr_30_Bin/binary
+        _phone_60:64/unsigned,
+        _addr_61_BinSize:16/unsigned, _addr_61_Bin/binary
     >>;
 %%% @doc    其他类|空类|通配
 class_to_bin (_ClassName, _Class) ->
@@ -193,12 +193,12 @@ class_to_bin (_ClassName, _Class) ->
 %%% tuple_to_bin_
 %%% ========== ======================================== ====================
 %%% @doc    玩家ID列表
-tuple_to_bin_95 ({
-    _player_id_97
+tuple_to_bin_129 ({
+    _player_id_131
 }) ->
     %%% ---------- ---------------------------------------- --------------------
     <<
-        _player_id_97:64/unsigned
+        _player_id_131:64/unsigned
     >>.
 
 

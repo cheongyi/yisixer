@@ -14,7 +14,12 @@ function read_protocol () {
             if ($filename == "." || $filename == ".." || $filename == "Readme.txt") {
                 continue;
             }
-            elseif ($filename != "100_test.txt") {
+            elseif ($filename == "100_code.txt") {
+                $protocol_module    = read_protocol_txt($filename);
+                $protocol[C_ENUM]   = $module_enum;
+                continue;
+            }
+            elseif ($filename != "100_code.txt" && $filename != "999_test.txt") {
                 continue;
             }
             // echo $filename."\n";
@@ -25,7 +30,6 @@ function read_protocol () {
             $protocol[C_MODULE][$module_name]   = $protocol_module;
         }
         closedir($dir);
-        $protocol[C_ENUM]   = $module_enum;
     }
 
     $log_file       = fopen("./protocol_txt.log", w);
@@ -74,6 +78,7 @@ function read_module_head ($file) {
     global $line, $brace;
 
     $protocol_module    = array();
+    $brace  = "";
     while (!feof($file)) {
         $content    = fgets($file);
         $content    = explode("//", $content);
@@ -106,8 +111,10 @@ function read_module_head ($file) {
 
 // @todo   读取模块主体
 function read_module_body ($file, $protocol_module) {
-    global $line, $brace, $note;
+    global $line, $brace, $note, $field_name_max;
 
+    $protocol_module[C_CLASS]   = array();
+    $protocol_module[C_ACTION]  = array();
     $brace  = C_MODULE;
     while (!feof($file)) {
         $content        = fgets($file);
@@ -126,7 +133,7 @@ function read_module_body ($file, $protocol_module) {
             continue;
         }
         // 主体大括号
-        elseif ($class_action == "{" && $brace == "") {
+        elseif ($class_action == "{" && $brace == C_MODULE) {
             continue;
         }
         elseif ($class_action == "}" && $brace == C_MODULE) {
@@ -161,12 +168,14 @@ function read_module_body ($file, $protocol_module) {
                 }
             }
             elseif (count($class_action) == 2) {
-                $module_action  = array();
-                $action_name    = $class_action[0];
-                $action_id      = $class_action[1];
-                $module_action['action_id']     = $action_id;
-                $module_action['action_note']   = get_note();
-                $module_action                  = read_action($file, $module_action);
+                $module_action      = array();
+                $field_name_max     = 0;
+                $action_name        = $class_action[0];
+                $action_id          = $class_action[1];
+                $module_action['action_id']         = $action_id;
+                $module_action['action_note']       = get_note();
+                $module_action                      = read_action($file, $module_action);
+                $module_action['field_name_max']    = $field_name_max;
                 $protocol_module[C_ACTION][$action_name]    = $module_action;
             }
         }
@@ -323,6 +332,7 @@ function read_action_in_out ($file) {
 // @todo   读取枚举
 function read_enum ($file, $old_brace) {
     global $line, $brace, $note, $module_enum;
+    $brace  = C_ENUM;
     while (!feof($file)) {
         $content    = fgets($file);
         $content    = explode("//", $content);
@@ -340,8 +350,7 @@ function read_enum ($file, $old_brace) {
             continue;
         }
         // 枚举定义大括号
-        elseif ($enum_def == "{" && $brace == $old_brace) {
-            $brace  = C_ENUM;
+        elseif ($enum_def == "{" && $brace == C_ENUM) {
             continue;
         }
         elseif ($enum_def == "}" && $brace == C_ENUM) {
@@ -428,7 +437,7 @@ function read_list ($file, $old_brace) {
 // ========== ======================================== ====================
 // @todo   解析字段定义
 function analysis_field_def ($file, $field_def) {
-    global $line, $brace, $note;
+    global $line, $brace, $note, $field_name_max;
 
     $field_def      = explode(":", $field_def);
     $field_name     = $field_def[0];
@@ -454,6 +463,10 @@ function analysis_field_def ($file, $field_def) {
     $field['field_type']    = $field_type;
     $field['field_module']  = $field_module;
     $field['field_class']   = $field_class;
+    $field_name_len         = strlen($field_name.$line) + 2;
+    if ($field_name_len > $field_name_max) {
+        $field_name_max     = $field_name_len;
+    }
     // 判断字段类型是否枚举
     $field_list = array();
     if ($field_type == "enum") {
