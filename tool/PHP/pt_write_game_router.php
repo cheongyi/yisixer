@@ -56,7 +56,7 @@ route_relay ({$module_id}, _ActionId, _Args0, State) ->
             fwrite($file, "
         {$action_id} ->");
             if ($args_num > 1) {
-                write_field_bin_to_term($file, $module_name, $action_in, $field_name_max);
+                write_field_bin_to_term($file, $module_name, $action_in, $field_name_max, "            ");
                 $field_name_arr = implode(", ", get_field_name_arr($action_in));
                 fwrite($file, "
             NewState = api_{$module_name}:{$action_name}($field_name_arr, State),");
@@ -94,6 +94,14 @@ route_relay (_ModuleId, _ActionId, _Args0, _State) ->
         foreach ($module_class as $class_name => $class) {
             fwrite($file, "
 tuple_parser ({$module_name}, {$class_name}, _Args0) ->");
+
+            $class_field    = $class['class_field'];
+            $field_name_max = $class['field_name_max'];
+            write_field_bin_to_term($file, $module_name, $class_field, $field_name_max, "    ");
+            $field_name_arr = implode(", ", get_field_name_arr($class_field));
+            $class_field_num= count($class_field);
+            fwrite($file, "
+    {{{$field_name_arr}}, _Args{$class_field_num}};");
         }
     }
     // 写入tuple_parser通配函数
@@ -107,6 +115,49 @@ tuple_parser (_Module, _Class, _Args) ->
 
 
     // 写入list_parser函数
+    foreach ($protocol_module as $module_name => $module) {
+        // 变量声明、赋值、初始化
+        $module_id      = $module['module_id'];
+        $module_action  = $module['action'];
+
+        foreach ($module_action as $action_name => $action) {
+            $action_in      = $action['action_in'];
+            $field_name_max = $action['field_name_max'];
+            foreach ($action_in as $field) {
+                $field_line         = $field['field_line'];
+                $field_name         = $field['field_name'];
+                $field_type         = $field['field_type'];
+                $field_class        = $field['field_class'];
+                $field_module       = $field['field_module'];
+                if ($field_module == "") {
+                    $field_module   = $module_name;
+                }
+                if ($field_type == 'list') {
+                    if ($field_class) {
+                        fwrite($file, "
+list_parser ({$field_module}, {$field_class}, 0, _Args0, Result) ->
+    {Result, _Args0};
+list_parser ({$field_module}, {$field_class}, ListLen, _Args0, Result) ->
+    {ListElement, _Args1} = tuple_parser({$field_module}, {$field_class}, _Args0),
+    list_parser({$field_module}, {$field_class}, ListLen - 1, _Args1, [ListElement | Result]);");
+                    }
+                    else {
+                        fwrite($file, "
+list_parser ({$field_module}, {$field_line}, 0, _Args0, Result) ->
+    {Result, _Args0};
+list_parser ({$field_module}, {$field_line}, ListLen, _Args0, Result) ->");
+                        $field_list     = $field['field_list'];
+                        write_field_bin_to_term($file, $module_name, $field_list, $field_name_max, "    ");
+                        $field_name_arr = implode(", ", get_field_name_arr($field_list));
+                        $field_list_num = count($field_list);
+                        fwrite($file, "
+    ListElement = {{$field_name_arr}},
+    list_parser({$field_module}, {$field_line}, ListLen - 1, _Args{$field_list_num}, [ListElement | Result]);");
+                    }
+                }
+            }
+        }
+    }
     // 写入list_parser通配函数
     fwrite($file, "
 list_parser (_Module, _Line, _ListLen, _Args, _Result) ->
@@ -118,9 +169,9 @@ list_parser (_Module, _Line, _ListLen, _Args, _Result) ->
 
 
 // @todo   写入字段
-function write_field_bin_to_term ($file, $module_name, $field_arr, $field_name_max) {
+function write_field_bin_to_term ($file, $module_name, $field_arr, $field_name_max, $indentation) {
     $new_line   = "
-            <<";
+{$indentation}<<";
     $i  = 0;
     foreach ($field_arr as $field) {
         $field_line         = $field['field_line'];
@@ -162,13 +213,16 @@ function write_field_bin_to_term ($file, $module_name, $field_arr, $field_name_m
         elseif ($field_type == 'string') {
             fwrite($file, 
                 $new_line.$dots."BinSize_{$field_line}".BT_SHORT.", ".
-                "{$field_name}:BinSize_{$field_line}/binary".
+                "{$field_name}_Bin:BinSize_{$field_line}/binary".
                 $rest
             );
+            fwrite($file, "
+{$indentation}{$field_name} = binary_to_list({$field_name}_Bin),");
         }
         elseif ($field_type == 'typeof') {
             fwrite($file, "
-            {{$field_name}, _Args{$j}} = tuple_parser({$field_module}, {$field_class}, _Args{$i}),");
+            {{$dots} {$field_name},             _Args{$j}}         = tuple_parser({$field_module}, {$field_class}, _Args{$i}),
+");
         }
         elseif ($field_type == 'list') {
             fwrite($file, 
@@ -176,13 +230,16 @@ function write_field_bin_to_term ($file, $module_name, $field_arr, $field_name_m
                 "{$field_name}_Bin/binary".
                 ">> = _Args{$i},"
             );
+            $dots  = generate_char($field_name_max, strlen($field_name), ' ');
             if ($field_class) {
                 fwrite($file, "
-            {{$field_name}, _Args{$j}} = list_parser({$field_module}, {$field_class}, ListLen_{$field_line}, {$field_name}_Bin, []),");
+            {{$dots} {$field_name},             _Args{$j}}         = list_parser({$field_module}, {$field_class}, ListLen_{$field_line}, {$field_name}_Bin, []),
+");
             }
             else {
                 fwrite($file, "
-            {{$field_name}, _Args{$j}} = list_parser({$field_module}, {$field_line}, ListLen_{$field_line}, {$field_name}_Bin, []),");
+            {{$dots} {$field_name},             _Args{$j}}         = list_parser({$field_module}, {$field_line}, ListLen_{$field_line}, {$field_name}_Bin, []),
+");
             }
         }
 

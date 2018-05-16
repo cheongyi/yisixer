@@ -42,10 +42,11 @@ function read_protocol () {
 
 // @todo   读取协议文本
 function read_protocol_txt ($filename) {
-    global $protocol_dir;
+    global $protocol_dir, $line;
 
     // 打开文件
     $file   = fopen($protocol_dir.$filename, 'r');
+    $line   = 0;
 
     // 读取模块头部
     $protocol_module    = read_module_head($file);
@@ -145,6 +146,7 @@ function read_module_body ($file, $protocol_module) {
             if (count($class_action) == 1) {
                 if (substr_compare($class_action[0], C_CLASS, 0, C_CLASS_LEN) === 0) {
                     $module_class   = array();
+                    $field_name_max = 0;
                     $class_head     = explode(":", substr($class_action[0], C_CLASS_LEN));
                     $class_name     = $class_head[0];
                     $extend_module  = "";
@@ -164,6 +166,7 @@ function read_module_body ($file, $protocol_module) {
                     $module_class['class_note']     = get_note();
                     $class_field                    = read_class($file);
                     $module_class['class_field']    = $class_field;
+                    $module_class['field_name_max'] = $field_name_max;
                     $protocol_module[C_CLASS][$class_name]  = $module_class;
                 }
             }
