@@ -28,10 +28,12 @@
             // shell_exec('php tool_db.php '.$db_sign);
             require 'tool_pt.php';
             require 'tool_db.php';
-            break;
+            echo "\n>>> 1 - 生成代码(服务端) Done <<<\n";
+            // break;
         }
         elseif ($line == "2") {
-
+            system("cd ../../server && ./build.sh");
+            echo "\n>>2 - 编译项目(服务端) Done <<\n";
         }
         elseif ($line == "3") {
 

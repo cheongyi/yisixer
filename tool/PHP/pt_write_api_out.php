@@ -5,9 +5,10 @@ function write_api_out () {
     global $protocol, $api_out_dir;
 
     $protocol_module    = $protocol[C_MODULE];
-    foreach ($protocol_module as $module_name => $module) {
+    foreach ($protocol_module as $module) {
         // 变量声明、赋值、初始化
         $module_id      = $module['module_id'];
+        $module_name    = $module['module_name'];
         $module_action  = $module['action'];
         $module_class   = $module['class'];
 

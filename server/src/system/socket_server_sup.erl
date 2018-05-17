@@ -34,12 +34,14 @@ start_link () ->
 init ([]) ->
     Listen      = listen(),
     ChildSpecs  = [
-        ChildId = list_to_atom("socket_server_srv_" ++ integer_to_list(AcceptorId)),
-        {
-            ChildId, 
-            {socket_server_acceptor, start_link, [ChildId, Listen]},
-            transient, ?SHUTDOWN_WORKER, worker, [socket_server_acceptor]
-        }
+        begin
+            ChildId = list_to_atom("socket_server_srv_" ++ integer_to_list(AcceptorId)),
+            {
+                ChildId, 
+                {socket_server_acceptor, start_link, [ChildId, Listen]},
+                transient, ?SHUTDOWN_WORKER, worker, [socket_server_acceptor]
+            }
+        end
         ||
         AcceptorId <- lists:seq(1, ?SOCKET_ACCEPTOR)
     ],

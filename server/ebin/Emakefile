@@ -2,8 +2,8 @@
     [
         '../src/*',
         '../src/api/*',
+        '../src/api_out/*',
         '../src/gen/*',
-        '../src/gen/api_out/*',
         '../src/gen/code_db/*',
         '../src/lib/*',
         '../src/mod/*',

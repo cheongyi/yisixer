@@ -17,6 +17,8 @@
 
 -define (SERVER, ?MODULE).
 
+-record (state, {}).
+
 -include ("define.hrl").
 % -include ("record.hrl").
 % -include ("gen/game_db.hrl").
@@ -51,7 +53,7 @@ get_state () ->
 %%% @spec   init([]) -> {ok, ClientState}.
 %%% @doc    gen_server init, opens the server in an initial state.
 init ([]) ->
-    {ok, #client_state{}}.
+    {ok, #state{}}.
 
 %%% @spec   handle_call(Args, From, ClientState) -> tuple().
 %%% @doc    gen_server callback.
@@ -94,5 +96,6 @@ code_change (_Vsn, ClientState, _Extra) ->
 %%% Internal   API
 %%% ========== ======================================== ====================
 start_connection (Socket, ClientState) ->
+    ok.
 
 

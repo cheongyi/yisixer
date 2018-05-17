@@ -36,10 +36,14 @@ route_request (_Pack = <<ModuleId:16/unsigned, ActionId:16/unsigned, Args/binary
 %%% @doc    路由转发");
 
     $protocol_module    = $protocol[C_MODULE];
-    foreach ($protocol_module as $module_name => $module) {
+    foreach ($protocol_module as $module) {
         // 变量声明、赋值、初始化
         $module_id      = $module['module_id'];
+        $module_name    = $module['module_name'];
         $module_action  = $module['action'];
+        if (count($module_action) == 0) {
+            continue;
+        }
 
         fwrite($file, "
 route_relay ({$module_id}, _ActionId, _Args0, State) ->
@@ -88,8 +92,9 @@ route_relay (_ModuleId, _ActionId, _Args0, _State) ->
 
 
     // 写入tuple_parser函数
-    foreach ($protocol_module as $module_name => $module) {
+    foreach ($protocol_module as $module) {
         $module_id      = $module['module_id'];
+        $module_name    = $module['module_name'];
         $module_class   = $module['class'];
         foreach ($module_class as $class_name => $class) {
             fwrite($file, "
@@ -106,6 +111,7 @@ tuple_parser ({$module_name}, {$class_name}, _Args0) ->");
     }
     // 写入tuple_parser通配函数
     fwrite($file, "
+
 tuple_parser (_Module, _Class, _Args) ->
     {null, _Args}.
 
@@ -115,9 +121,10 @@ tuple_parser (_Module, _Class, _Args) ->
 
 
     // 写入list_parser函数
-    foreach ($protocol_module as $module_name => $module) {
+    foreach ($protocol_module as $module) {
         // 变量声明、赋值、初始化
         $module_id      = $module['module_id'];
+        $module_name    = $module['module_name'];
         $module_action  = $module['action'];
 
         foreach ($module_action as $action_name => $action) {
@@ -135,7 +142,7 @@ tuple_parser (_Module, _Class, _Args) ->
                 if ($field_type == 'list') {
                     if ($field_class) {
                         fwrite($file, "
-list_parser ({$field_module}, {$field_class}, 0, _Args0, Result) ->
+list_parser ({$field_module}, {$field_class}, 0,       _Args0, Result) ->
     {Result, _Args0};
 list_parser ({$field_module}, {$field_class}, ListLen, _Args0, Result) ->
     {ListElement, _Args1} = tuple_parser({$field_module}, {$field_class}, _Args0),
@@ -143,7 +150,7 @@ list_parser ({$field_module}, {$field_class}, ListLen, _Args0, Result) ->
                     }
                     else {
                         fwrite($file, "
-list_parser ({$field_module}, {$field_line}, 0, _Args0, Result) ->
+list_parser ({$field_module}, {$field_line}, 0,       _Args0, Result) ->
     {Result, _Args0};
 list_parser ({$field_module}, {$field_line}, ListLen, _Args0, Result) ->");
                         $field_list     = $field['field_list'];
@@ -160,6 +167,7 @@ list_parser ({$field_module}, {$field_line}, ListLen, _Args0, Result) ->");
     }
     // 写入list_parser通配函数
     fwrite($file, "
+
 list_parser (_Module, _Line, _ListLen, _Args, _Result) ->
     {_Result, _Args}.
 ");

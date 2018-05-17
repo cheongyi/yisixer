@@ -71,7 +71,7 @@ handle_cast (Request, State) ->
 
 %%% @spec   handle_info(Info, State) -> tuple().
 %%% @doc    gen_server callback.
-handle_info (timeout, State #state{listen = Listen}) ->
+handle_info (timeout, State = #state{listen = Listen}) ->
     acceptor(Listen),
     {noreply, State, 0};
 handle_info (Info, State) ->

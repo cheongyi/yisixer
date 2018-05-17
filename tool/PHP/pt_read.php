@@ -19,18 +19,19 @@ function read_protocol () {
                 $protocol[C_ENUM]   = $module_enum;
                 continue;
             }
-            elseif ($filename != "100_code.txt" && $filename != "999_test.txt") {
-                continue;
-            }
+            // elseif ($filename != "100_code.txt" && $filename != "999_test.txt") {
+            //     continue;
+            // }
             // echo $filename."\n";
 
             // 读取协议文本
-            $protocol_module        = read_protocol_txt($filename);
-            $module_name            = $protocol_module['module_name'];
-            $protocol[C_MODULE][$module_name]   = $protocol_module;
+            $protocol_module                = read_protocol_txt($filename);
+            $module_id                      = $protocol_module['module_id'];
+            $protocol[C_MODULE][$module_id] = $protocol_module;
         }
         closedir($dir);
     }
+    ksort($protocol[C_MODULE]);
 
     $log_file       = fopen("./protocol_txt.log", w);
     fwrite($log_file, var_export($protocol, true));
@@ -350,6 +351,11 @@ function read_enum ($file, $old_brace) {
         $enum_def   = str_replace(" ", "", trim($content[0]));
         // 空行
         if ($enum_def == "") {
+            if (count($content) > 1) {
+                $enum               = array();
+                $enum['enum_note']  = get_note();
+                $module_enum[$line] = $enum;
+            }
             continue;
         }
         // 枚举定义大括号

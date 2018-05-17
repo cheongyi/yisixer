@@ -10,9 +10,15 @@ function write_api_hrl () {
     $enum_len_max   = 50;
     $module_enum    = $protocol[C_ENUM];
     foreach ($module_enum as $key => $value) {
+        $enum_note  = $value['enum_note'];
+        if (is_numeric($key)) {
+            fwrite($file, "%%% ");
+            fwrite($file, $enum_note);
+            fwrite($file, "\n");
+            continue;
+        }
         $enum_name  = $key;
         $enum_value = $value['enum_value'];
-        $enum_note  = $value['enum_note'];
 
         $dots  = generate_char($enum_len_max, strlen($enum_name.$enum_value), ' ');
         fwrite($file, "-define (");
