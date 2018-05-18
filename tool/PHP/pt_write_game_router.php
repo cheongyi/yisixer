@@ -4,7 +4,7 @@
 function write_game_router () {
     global $protocol, $game_router_dir, $game_router;
 
-
+    show_schedule(PF_PT_WRITE, PF_PT_WRITE_SCH, count(PF_PT_WRITE_SCH), false);
     $file           = fopen("{$game_router_dir}{$game_router}.erl", 'w');
 
     // 写入模块相关属性

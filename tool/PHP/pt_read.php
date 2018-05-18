@@ -5,7 +5,9 @@
 // ========== ======================================== ====================
 // @todo   读取协议文本
 function read_protocol () {
-    global $protocol_dir, $protocol, $module_enum;
+    global $protocol_dir, $protocol, $module_enum, $pt_file_num, $filename_max;
+
+    $filename_arr   = array();
     // 打开文件目录句柄
     if ($dir = opendir($protocol_dir)) {
         // 读取目录下文件名
@@ -14,22 +16,32 @@ function read_protocol () {
             if ($filename == "." || $filename == ".." || $filename == "Readme.txt") {
                 continue;
             }
-            elseif ($filename == "100_code.txt") {
-                $protocol_module    = read_protocol_txt($filename);
-                $protocol[C_ENUM]   = $module_enum;
-                continue;
-            }
             // elseif ($filename != "100_code.txt" && $filename != "999_test.txt") {
             //     continue;
             // }
             // echo $filename."\n";
-
-            // 读取协议文本
-            $protocol_module                = read_protocol_txt($filename);
-            $module_id                      = $protocol_module['module_id'];
-            $protocol[C_MODULE][$module_id] = $protocol_module;
+            $filename_max   = max($filename_max, strlen($filename));
+            $filename_arr[] = $filename;
         }
         closedir($dir);
+    }
+    $pt_file_num    = count($filename_arr);
+    foreach ($filename_arr as $filename) {
+        // 读取协议文本
+        $protocol_module    = read_protocol_txt($filename);
+        if ($filename == "100_code.txt") {
+            $protocol[C_ENUM]   = $module_enum;
+            continue;
+        }
+        // 判断是否模块ID冲突
+        $module_id          = $protocol_module['module_id'];
+        if (@array_key_exists($module_id, $protocol[C_MODULE])) {
+            $module_name    = $protocol[C_MODULE][$module_id]['module_name'];
+            die("
+Already exists module id({$module_id}) name({$module_name})!!!
+");
+        }
+        $protocol[C_MODULE][$module_id] = $protocol_module;
     }
     ksort($protocol[C_MODULE]);
 
@@ -43,8 +55,9 @@ function read_protocol () {
 
 // @todo   读取协议文本
 function read_protocol_txt ($filename) {
-    global $protocol_dir, $line;
+    global $protocol_dir, $line, $pt_file_num;
 
+    show_schedule(PF_PT_READ, $filename, $pt_file_num);
     // 打开文件
     $file   = fopen($protocol_dir.$filename, 'r');
     $line   = 0;

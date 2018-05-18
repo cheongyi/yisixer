@@ -4,6 +4,7 @@
 function db_enum() {
     global $mysqli, $enum_table, $game_db_hrl_file;
 
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH));
     $main_stime = microtime(true);
 
     $file       = fopen($game_db_hrl_file, 'w');
@@ -54,6 +55,7 @@ function db_enum() {
 function db_record () {
     global $tables_info, $tables_fields_info, $game_db_hrl_file;
 
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH));
     $file       = fopen($game_db_hrl_file, 'a');
 
     fwrite($file, "

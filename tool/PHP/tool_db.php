@@ -45,7 +45,14 @@
     $game_db_dump       = "game_db_dump";
     $game_db_dump_file  = "{$src_gen_dir}{$game_db_dump}.erl";
 
+    // 常量定义
+    define(PF_DB_READ_SCH,  array("table   ", "field"));
+    define(PF_DB_WRITE_SCH, array("define", "record", "hrl", "data", "dump", "init", "sync", "table"));
+    define(PF_DB_READ,      "数据库表读取 ....... ");
+    define(PF_DB_WRITE,     "数据生成代码(服务端) ");
+
     // 生成新的数据库连接对象
+    show_schedule(PF_DB_READ, 'start');
     $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
     if ($mysqli->connect_error) {
         die("Open '$db_name' failed (".$mysqli->connect_errno.".) ".$mysqli->connect_error.".\n");
@@ -57,34 +64,28 @@
         die("Open 'information_schema' failed (".$schema->connect_errno.".) ".$schema->connect_error.".\n");
     }
     $schema->query("SET NAMES utf8;");
+    show_schedule(PF_DB_READ, PF_DB_READ_SCH, count(PF_DB_READ_SCH), false);
     $tables_info        = get_tables_info();
+    show_schedule(PF_DB_READ, PF_DB_READ_SCH, count(PF_DB_READ_SCH), false);
     $tables_fields_info = get_tables_fields_info();
     $table_name_len_max = $tables_info['NAME_LEN_MAX'];
+    show_schedule(PF_DB_READ, 'end');
 
     // print_r($tables_info);
     // print_r($tables_fields_info);
 
     // ========== ======================================== ====================
     // 数据库表生成服务端代码
-    $start_time = microtime(true);
-    echo "数据库表生成代码(服务端) [";
+    show_schedule(PF_DB_WRITE, 'start');
     db_enum();
-    echo "define";
     db_record();
-    echo "|record";
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH));
     game_db_data();
-    echo "|data";
     game_db_dump();
-    echo "|dump";
     game_db_init();
-    echo "|init";
     game_db_sync();
-    echo "|sync";
     game_db_table();
-    echo "|table";
-    $end_time   = microtime(true);
-    $cost_time  = round($end_time - $start_time, 3);
-    echo "] done in {$cost_time}s\n";
+    show_schedule(PF_PT_READ, 'end');
 
     // 关闭数据库连接
     $mysqli->close();

@@ -4,6 +4,7 @@
 function write_api_hrl () {
     global $protocol, $api_enum_file;
 
+    show_schedule(PF_PT_WRITE, PF_PT_WRITE_SCH, count(PF_PT_WRITE_SCH), false);
     $file       = fopen($api_enum_file, 'w');
     write_attributes_note($file);
 

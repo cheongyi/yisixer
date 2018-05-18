@@ -4,6 +4,7 @@
 function write_api_out () {
     global $protocol, $api_out_dir;
 
+    show_schedule(PF_PT_WRITE, PF_PT_WRITE_SCH, count(PF_PT_WRITE_SCH), false);
     $protocol_module    = $protocol[C_MODULE];
     foreach ($protocol_module as $module) {
         // 变量声明、赋值、初始化

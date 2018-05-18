@@ -117,6 +117,7 @@ function get_table_fields_info ($table_name) {
 }
 
 
+// =========== ======================================== ====================
 // @todo   生成填补字符
 function generate_char ($max_length, $length, $char) {
     $space      = "";
@@ -129,6 +130,7 @@ function generate_char ($max_length, $length, $char) {
 }
 
 
+// =========== ======================================== ====================
 // @todo    写入属性注释
 function write_attributes_note($file) {
     $year   = date("Y");
@@ -160,6 +162,51 @@ function write_attributes($file) {
 }
 
 
+// =========== ======================================== ====================
+// @todo   显示进度条
+function show_schedule ($show_start, $schedule, $schedule_max = 0, $is_cover = true) {
+    global $schedule_i, $show_schedule, $start_time;
+
+    usleep(1000 * 500);
+    if (is_array($schedule)) {
+        $schedule  = $schedule[$schedule_i];
+    }
+
+    if ($schedule == 'start') {
+        $schedule_i     = 0;
+        $show_schedule  = "";
+        $start_time     = microtime(true);
+        echo "\033[?25l".$show_start;
+    }
+    elseif ($schedule == 'end') {
+        $end_time   = microtime(true);
+        $cost_time  = round($end_time - $start_time, 3);
+        // 显示光标
+        echo " done in {$cost_time}s\n\033[?25h";
+    }
+    else {
+        $schedule_i ++;
+        if ($is_cover) {
+            $show_schedule  = $schedule;
+        }
+        elseif ($show_schedule) {
+            $show_schedule  .= "|".$schedule;
+        }
+        else {
+            $show_schedule  = $schedule;
+        }
+        $dots  = generate_char(PF_SHOW_LEN_MAX, strlen($show_schedule), ' ');
+        printf("\r%s\033[42m[%s][\033[1m%d%%\033[0m\033[42m] %s\033[0m", 
+            $show_start,
+            PF_ROTATE[$schedule_i % 4],
+            $schedule_i / $schedule_max * 100,
+            $show_schedule.$dots
+        );
+    }
+}
+
+
+// =========== ======================================== ====================
 // @todo   写入 FieldValueBin = type_to_bin(FieldValue),
 function write_type_to_bin ($file, $table_name, $field, $name_len_max) {
     $field_name     = $field['COLUMN_NAME'];

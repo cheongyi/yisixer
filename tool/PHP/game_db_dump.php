@@ -4,6 +4,7 @@
 function game_db_dump () {
     global $tables_info, $tables_fields_info, $table_name_len_max, $game_db_dump, $game_db_dump_file;
 
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), false);
     $tables     = $tables_info['TABLES'];
 
     $file       = fopen($game_db_dump_file, 'w');

@@ -4,6 +4,7 @@
 function game_db_init () {
     global $tables_info, $game_db_init, $game_db_init_file, $tables_fields_info;
 
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), false);
     $file       = fopen($game_db_init_file, 'w');
 
     fwrite($file, "-module ($game_db_init).");

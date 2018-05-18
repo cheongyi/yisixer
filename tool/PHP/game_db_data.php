@@ -4,6 +4,7 @@
 function game_db_data () {
     global $tables_info, $tables_fields_info, $table_name_len_max, $game_db_data, $game_db_data_file;
 
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), false);
     $file       = fopen($game_db_data_file, 'w');
 
     fwrite($file, "-module ({$game_db_data}).");

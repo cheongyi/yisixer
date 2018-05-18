@@ -48,36 +48,35 @@
     define(BT_TYPEOF,       "_Bin/binary");
     define(BT_LIST,         "_Bin/binary");
 
+    define(PF_ROTATE,       array("|", "/", "-", "\\"));
+    define(PF_PT_WRITE_SCH, array("api_hrl ", "api_out", "game_router"));
+    define(PF_PT_READ,      "协议文本读取 ....... ");
+    define(PF_PT_WRITE,     "协议生成代码(服务端) ");
+
     // 变量初始化
     $protocol       = array();
     $module_enum    = array();
     $line           = 0;
     $brace          = "";
     $note           = "";
+    $pt_file_num    = 0;
     $field_name_max = 0;
+    $filename_max   = 0;
+    $schedule_i     = 0;
 // [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z].
 // [01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26].
 
     // ========== ======================================== ====================
     // 读取协议
-    $start_time = microtime(true);
-    echo "协议文本读取 ........... ";
+    show_schedule(PF_PT_READ, 'start');
     $protocol   = read_protocol();
-    $end_time   = microtime(true);
-    $cost_time  = round($end_time - $start_time, 3);
-    echo "done in {$cost_time}s\n";
+    show_schedule(PF_PT_READ, 'end');
 
     // ========== ======================================== ====================
     // 协议文本生成服务端代码
-    $start_time = microtime(true);
-    echo "协议文本生成代码(服务端) [";
+    show_schedule(PF_PT_WRITE, 'start');
     write_api_hrl();
-    echo "api_hrl";
     write_api_out();
-    echo "|api_out";
     write_game_router();
-    echo "|game_router";
-    $end_time   = microtime(true);
-    $cost_time  = round($end_time - $start_time, 3);
-    echo "] done in {$cost_time}s\n";
+    show_schedule(PF_PT_WRITE, 'end');
 ?>
