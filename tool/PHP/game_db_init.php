@@ -2,12 +2,12 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库初始化
 function game_db_init () {
-    global $tables_info, $game_db_init, $game_db_init_file, $tables_fields_info;
+    global $tables_info, $tables_fields_info;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), false);
-    $file       = fopen($game_db_init_file, 'w');
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    $file       = fopen(GAME_DB_INIT_FILE, 'w');
 
-    fwrite($file, "-module ($game_db_init).");
+    fwrite($file, '-module ('.GAME_DB_INIT.').');
     write_attributes($file);
     // ets:new(t_$table_name, [public, set, named_table, {keypos, 2}, compressed]),
     fwrite($file, "
@@ -28,7 +28,7 @@ function game_db_init () {
 
     // 写入init/0函数
     $tables = $tables_info['TABLES'];
-    fwrite($file, "init () ->
+    fwrite($file, 'init () ->
     cut_line(),
     [
         begin
@@ -43,7 +43,7 @@ function game_db_init () {
     ],
     cut_line(),
     cut_line().
-");
+');
 
     // 写入init/1函数
     foreach ($tables as $table_name) {
@@ -52,9 +52,10 @@ function game_db_init () {
         $frag_field     = $fields_info['FRAG_FIELD'];
         $is_log_table   = $fields_info['IS_LOG_TABLE'];
         if ($is_log_table) {
+            continue;
         }
 
-        $dots = generate_char(50, strlen($table_name), ' ');
+        $dots           = generate_char(50, strlen($table_name), SPACE_ONE);
         fwrite($file, "
 init ($table_name) ->
     ?FORMAT(\"game_db init : $table_name{$dots}| start~n\"),
@@ -79,7 +80,7 @@ init ($table_name) ->
 
         // 写入init结尾
         if ($is_log_table) {
-            $init_end = "ok;";
+            $init_end = 'ok;';
         } 
         else {
             // 判断是否建立ets分表
@@ -107,11 +108,11 @@ init ($table_name) ->
     }
 
     // 写入init通配分支函数
-    fwrite($file, "
+    fwrite($file, '
 init (_) ->
     ok.
 
-");
+');
 
     // 写入load/0函数
     foreach ($tables as $table_name) {
@@ -120,8 +121,8 @@ init (_) ->
         $is_log_table   = $fields_info['IS_LOG_TABLE'];
         $frag_field     = $fields_info['FRAG_FIELD'];
         $name_len_max   = $fields_info['NAME_LEN_MAX'];
-        $keyfind        = "";
-        $record         = "";
+        $keyfind        = '';
+        $record         = '';
         $primary        = array();
         if ($is_log_table) {
             continue;
@@ -152,13 +153,13 @@ load ($table_name) ->
             $field_name     = $field['COLUMN_NAME'];
             $field_key      = $field['COLUMN_KEY'];
             $field_name_up  = ucfirst($field_name);
-            if ($field_key == "PRI") {
-                $primary[] = $field_name_up;
+            if ($field_key == 'PRI') {
+                $primary[]  = $field_name_up;
             }
-            $dots = generate_char($name_len_max, strlen($field_name), ' ');
-            $keyfind    = $keyfind."
+            $dots           = generate_char($name_len_max, strlen($field_name), SPACE_ONE);
+            $keyfind        = $keyfind."
                     {{$field_name}, {$dots}{$field_name_up}}{$dots} = lists:keyfind({$field_name},{$dots}1, Row),";
-            $record     = $record."
+            $record         = $record."
                         {$field_name}{$dots} = {$field_name_up},";
         }
         $primary_arr = implode(", ", $primary);
@@ -176,7 +177,7 @@ load ($table_name) ->
             fwrite($file, "
                     EtsTab = t_$table_name,");
         }
-        $dots = generate_char(50, strlen($table_name), ' ');
+        $dots   = generate_char(50, strlen($table_name), SPACE_ONE);
         fwrite($file, "
                     ets:insert(EtsTab, Record)
                 end,
@@ -190,14 +191,14 @@ load ($table_name) ->
     }
 
     // 写入load通配分支函数
-    fwrite($file, "
+    fwrite($file, '
 load (_) ->
     ok.
 
 cut_line () ->
     ?FORMAT(?CUT_LINE).
 
-");
+');
 
     fclose($file);
 }

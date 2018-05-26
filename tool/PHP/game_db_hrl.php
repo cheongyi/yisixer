@@ -2,15 +2,15 @@
 // =========== ======================================== ====================
 // @todo   数据库枚举
 function db_enum() {
-    global $mysqli, $enum_table, $game_db_hrl_file;
+    global $mysqli, $enum_table;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH));
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
     $main_stime = microtime(true);
 
-    $file       = fopen($game_db_hrl_file, 'w');
+    $file       = fopen(GAME_DB_HRL_FILE, 'w');
 
     write_attributes_note($file);
-    fwrite($file, "
+    fwrite($file, '
 %%% ========== ======================================== ====================
 %%% database table rows to define
 %%% ========== ======================================== ====================
@@ -26,7 +26,7 @@ function db_enum() {
     80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
     90, 91, 92, 93, 94, 95, 96, 97, 98, 99
 ]).
-");
+');
     foreach ($enum_table as $table_name => $table) {
         $fields     = array(
             'id', 'sign', 'cname'
@@ -53,22 +53,22 @@ function db_enum() {
 
 // @todo   数据库记录
 function db_record () {
-    global $tables_info, $tables_fields_info, $game_db_hrl_file;
+    global $tables_info, $tables_fields_info;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH));
-    $file       = fopen($game_db_hrl_file, 'a');
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    $file       = fopen(GAME_DB_HRL_FILE, 'a');
 
-    fwrite($file, "
+    fwrite($file, '
 %%% ========== ======================================== ====================
 %%% database table create to record
 %%% ========== ======================================== ====================
-");
+');
     $tables = $tables_info['TABLES'];
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
         $fields         = $fields_info['FIELDS'];
         $primary        = $fields_info['PRIMARY'];
-        $primary_arr    = implode(", ", $primary);
+        $primary_arr    = implode(', ', $primary);
         fwrite($file, "-record (pk_{$table_name}, {{$primary_arr}}).
 -record ({$table_name}, {
     row_key,");
@@ -79,25 +79,25 @@ function db_record () {
             $field_default  = $field['COLUMN_DEFAULT'];
             $field_comment  = $field['COLUMN_COMMENT'];
             $dots = generate_char(20, strlen($field_name), ' ');
-            fwrite($file, "
-    ".$field_name.$dots);
+            fwrite($file, '
+    '.$field_name.$dots);
             $field_default_len = strlen($field_default);
-            if ($field_key == "PRI") {
-                fwrite($file, "= null");
+            if ($field_key == 'PRI') {
+                fwrite($file, '= null');
                 $field_default_len = 4;
             }
-            elseif ($field_default == "") {
+            elseif ($field_default == '') {
                 fwrite($file, "= \"\"");
                 $field_default_len = 2;
             }
-            elseif ($field_type == "tinyint" || $field_type == "int" || $field_type == "bigint") {
+            elseif ($field_type == 'tinyint' || $field_type == 'int' || $field_type == 'bigint') {
                 fwrite($file, "= {$field_default}");
             }
-            elseif ($field_type == "float") {
+            elseif ($field_type == 'float') {
                 fwrite($file, "= {$field_default}");
             }
             else {
-                fwrite($file, "= null");
+                fwrite($file, '= null');
                 $field_default_len = 4;
             }
             $dots = generate_char(10, $field_default_len, ' ');

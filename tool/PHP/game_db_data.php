@@ -2,12 +2,12 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库数据操作
 function game_db_data () {
-    global $tables_info, $tables_fields_info, $table_name_len_max, $game_db_data, $game_db_data_file;
+    global $tables_info, $tables_fields_info, $table_name_len_max;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), false);
-    $file       = fopen($game_db_data_file, 'w');
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    $file       = fopen(GAME_DB_DATA_FILE, 'w');
 
-    fwrite($file, "-module ({$game_db_data}).");
+    fwrite($file, '-module ('.GAME_DB_DATA.').');
     write_attributes($file);
     // 写入系统属性
     fwrite($file, "
@@ -93,8 +93,8 @@ fetch (Sql) ->
             $primary_key[]  = "{$field_name} = {$field_name_up}";
             $row_key_up[]   = $field_name_up;
         }
-        $primary_key_arr    = implode(", ", $primary_key);
-        $row_key_up_arr     = implode(", ", $row_key_up);
+        $primary_key_arr    = implode(', ', $primary_key);
+        $row_key_up_arr     = implode(', ', $row_key_up);
         if ($frag_field) {
             if (in_array($frag_field, $primary)) {
                 $ets_lookup  = "ets:lookup(
@@ -122,7 +122,7 @@ read (#pk_{$table_name}{{$primary_key_arr}}) ->
 
     // 写入 read/1 通配分支函数
     // 写入 select/2 函数
-    fwrite($file, "
+    fwrite($file, '
 read (Record) ->
     exit({?MODULE, read, {unkown_record, Record}}).
 
@@ -132,7 +132,7 @@ read (Record) ->
 %%% ========== ======================================== ====================
 select (Table, MatchSpec) ->
     select(Table, signle, MatchSpec).
-");
+');
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
         // 日志表不读
@@ -162,14 +162,14 @@ select ({$table_name}, _ModeOrFragId, MatchSpec) ->
     }
 
     // 写入 select/3 通配分支函数
-    fwrite($file, "
+    fwrite($file, '
 select (Table, ModeOrFragId, MatchSpec) ->
     exit({?MODULE, select, {unkown_info, Table, ModeOrFragId, MatchSpec}}).
 
 
 %%% ========== ======================================== ====================
 %%% write
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
 
 
@@ -198,22 +198,22 @@ write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
 ");
             continue;
         }
-        $fields_num     = count($fields);
-        $primary_key    = array();
-        $row_key_up     = array();
+        $fields_num         = count($fields);
+        $primary_key        = array();
+        $row_key_up         = array();
         foreach ($primary as $field_name) {
             $field_name_up  = ucfirst($field_name);
             $primary_key[]  = "{$field_name} = {$field_name_up}";
             $row_key_up[]   = $field_name_up;
         }
-        $primary_key_arr    = implode(", ", $primary_key);
-        $row_key_up_arr     = implode(", ", $row_key_up);
+        $primary_key_arr    = implode(', ', $primary_key);
+        $row_key_up_arr     = implode(', ', $row_key_up);
         // 判断是否分表
         if ($frag_field) {
-            $ets_table  = "game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
+            $ets_table      = "game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
         }
         else {
-            $ets_table  = "t_{$table_name}";
+            $ets_table      = "t_{$table_name}";
         }
         // 判断是否自增长
         if ($auto_increment == "") {
@@ -260,14 +260,14 @@ write (Record = #{$table_name}{row_key = RowKey, {$primary_key_arr}, row_ver = R
     }
 
     // 写入 write/1  通配分支函数
-    fwrite($file, "
+    fwrite($file, '
 write (Record) ->
     exit({?MODULE, write, {unkown_record, Record}}).
 
 
 %%% ========== ======================================== ====================
 %%% delete
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
 
 
@@ -342,7 +342,7 @@ delete_select ({$table_name}, _ModeOrFragId, MatchSpec) -> ?ENSURE_TRAN,
 
     // 写入 delete_select/3  通配分支函数
     // 写入 do_delete_select/2 函数
-    fwrite($file, "
+    fwrite($file, '
 delete_select (Table, ModeOrFragId, MatchSpec) ->
     exit({?MODULE, delete_select, {unkown_info, Table, ModeOrFragId, MatchSpec}}).
 
@@ -355,7 +355,7 @@ do_delete_select ([], Count) ->
 
 %%% ========== ======================================== ====================
 %%% delete_all
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
 
 
@@ -393,14 +393,14 @@ delete_all ({$table_name}) -> ?ENSURE_TRAN,
     }
 
     // 写入 delete_all/1 通配分支函数
-    fwrite($file, "
+    fwrite($file, '
 delete_all (Table) ->
     exit({?MODULE, delete_all, {unkown_table, Table}}).
 
 
 %%% ========== ======================================== ====================
 %%% count
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
 
     // 写入 count/1 函数
@@ -408,7 +408,7 @@ delete_all (Table) ->
         $fields_info    = $tables_fields_info[$table_name];
         $frag_field     = $fields_info['FRAG_FIELD'];
         if ($frag_field) {
-            $dots   = generate_char($table_name_len_max, strlen($table_name), ' ');
+            $dots       = generate_char($table_name_len_max, strlen($table_name), ' ');
             fwrite($file, "
 count ({$table_name}){$dots} -> count_frag({$table_name});");
         }
@@ -417,7 +417,7 @@ count ({$table_name}){$dots} -> count_frag({$table_name});");
     // 写入 count/1  通配分支函数
     // 写入 memory/0 函数
     // 写入 memory/2 函数
-    $dots = generate_char($table_name_len_max, strlen("Table"), ' ');
+    $dots = generate_char($table_name_len_max, strlen('Table'), ' ');
     fwrite($file, "
 count (Table){$dots} -> ets:info(game_db_table:ets_tab(Table), size).
 
@@ -444,7 +444,7 @@ memory ([], TotalMemory) ->
         $fields_info    = $tables_fields_info[$table_name];
         $frag_field     = $fields_info['FRAG_FIELD'];
         if ($frag_field) {
-            $dots   = generate_char($table_name_len_max, strlen($table_name), ' ');
+            $dots       = generate_char($table_name_len_max, strlen($table_name), ' ');
             fwrite($file, "
 memory ({$table_name}){$dots} -> memory_frag({$table_name});");
         }
@@ -464,10 +464,10 @@ memory_frag (Table) ->
 
 
     // 写入内部函数
-    fwrite($file, "
+    fwrite($file, '
 %%% ========== ======================================== ====================
 %%% Internal   API
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
     // 写入 validate_for_write 函数
     foreach ($tables as $table_name) {
@@ -480,8 +480,8 @@ validate_for_write (Record, Type) when is_record(Record, {$table_name}) ->");
             $field_extra    = $field['EXTRA'];
             $is_nullable    = $field['IS_NULLABLE'];
             $field_name     = $field['COLUMN_NAME'];
-            $dots   = generate_char($field_name_len_max, strlen($field_name), ' ');
-            if ($field_extra == "auto_increment" && $is_nullable == "NO") {
+            $dots           = generate_char($field_name_len_max, strlen($field_name), ' ');
+            if ($field_extra == 'auto_increment' && $is_nullable == 'NO') {
                 fwrite($file, "
     if  Type == update andalso 
         Record #{$table_name}.{$field_name}{$dots} == null -> exit({null_column, Type, {$table_name}, {$field_name}});{$dots} true -> ok end,");
@@ -498,17 +498,17 @@ validate_for_write (Record, Type) when is_record(Record, {$table_name}) ->");
     }
 
     // 写入 validate_for_write  通配分支函数
-        fwrite($file, "
+        fwrite($file, '
 validate_for_write (Record, Type) ->
     exit({validate_for_write, Type, Record}).
 
 
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
     foreach ($tables as $table_name) {
     }
 
     // 写入我也不知道怎么注释了
-    fwrite($file, "
+    fwrite($file, '
 ensure_tran () -> 
     case get(tran_action_list) of 
         undefined -> exit(need_gamedb_tran); 
@@ -590,7 +590,7 @@ fetch_select(Table, MatchSpec, FragId, Return) ->
         FragId + 1, 
         NewReturn
     ).
-");
+');
 
     fclose($file);
 }

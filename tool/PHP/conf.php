@@ -18,16 +18,13 @@ $db_argv = array(
 
 $enum_table = array(
     'item' => array(
-        'id'    => 'id',
-        'sign'  => 'sign',
-        'cname' => 'cname',
+        // 'id'    => 'id',
+        // 'sign'  => 'sign',
+        // 'cname' => 'cname',
         'prefix'=> 'II_',
         'note'  => '物品'
     ),
     'item_type' => array(
-        'id'    => 'id',
-        'sign'  => 'sign',
-        'cname' => 'cname',
         'prefix'=> 'IT_',
         'note'  => '物品类型'
     )

@@ -4,15 +4,15 @@
 function game_db_table () {
     global $tables_info, $tables_fields_info, $table_name_len_max, $game_db_table, $game_db_table_file;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), false);
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
     $tables     = $tables_info['TABLES'];
 
-    $file       = fopen($game_db_table_file, 'w');
+    $file       = fopen(GAME_DB_TABLE_FILE, 'w');
 
-    fwrite($file, "-module ({$game_db_table}).");
+    fwrite($file, '-module ('.GAME_DB_TABLE.').');
     write_attributes($file);
     // 写入系统属性
-    fwrite($file, "
+    fwrite($file, '
 -export ([
     ets_tab/1,          ets_tab/2,
 
@@ -24,7 +24,7 @@ function game_db_table () {
 
 %%% ========== ======================================== ====================
 %%% External   API
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
 
 
@@ -41,7 +41,7 @@ ets_tab ({$table_name}){$dots} -> t_{$table_name};");
     }
 
     // 写入 ets_tab/1  通配分支函数
-    $dots = generate_char($table_name_len_max, strlen("Table"), ' ');
+    $dots = generate_char($table_name_len_max, strlen('Table'), ' ');
     fwrite($file, "
 ets_tab (Table){$dots} -> exit({?MODULE, ets_tab, {unkown_table, Table}}).
 
@@ -93,12 +93,12 @@ ets_tab (Table, _FragId){$dots}-> exit({?MODULE, ets_tab, {unkown_table, Table}}
             $player_tables[]    = $table_name;
         }
     }
-    $tables_arr         = implode(",
-        ", $tables);
-    $player_tables_arr  = implode(",
-        ", $player_tables);
-    $template_tables_arr= implode(",
-        ", $template_tables);
+    $tables_arr         = implode(',
+        ', $tables);
+    $player_tables_arr  = implode(',
+        ', $player_tables);
+    $template_tables_arr= implode(',
+        ', $template_tables);
     fwrite($file, "
 get_all_table () ->
     [

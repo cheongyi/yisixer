@@ -2,9 +2,9 @@
 // =========== ======================================== ====================
 // @todo   写入api_out文件
 function write_api_out () {
-    global $protocol, $api_out_dir;
+    global $protocol, $api_out_dir, $pt_file_num;
 
-    show_schedule(PF_PT_WRITE, PF_PT_WRITE_SCH, count(PF_PT_WRITE_SCH), false);
+    // show_schedule(PF_PT_WRITE, PF_PT_WRITE_SCH, count(PF_PT_WRITE_SCH), false);
     $protocol_module    = $protocol[C_MODULE];
     foreach ($protocol_module as $module) {
         // 变量声明、赋值、初始化
@@ -13,20 +13,23 @@ function write_api_out () {
         $module_action  = $module['action'];
         $module_class   = $module['class'];
 
-        $module_name    = "api_".$module_name."_out";
-        $file           = fopen($api_out_dir.$module_name.".erl", 'w');
+        $module_name    = 'api_'.$module_name.'_out';
+        $filename       = $module_name.'.erl';
+        $file           = fopen(DIR_API_OUT.$filename, 'w');
+        show_schedule(PF_PT_WRITE, $filename, $pt_file_num);
 
         fwrite($file, "-module ({$module_name}).");
         write_attributes($file);
 
         // 写入函数导出
-        fwrite($file, "
--export ([");
-        foreach (array_keys($module_action) as $action_name) {
+        fwrite($file, '
+-export ([');
+        foreach ($module_action as $action) {
+            $action_name    = $action['action_name'];
             fwrite($file, "
     {$action_name}/1,");
         }
-        fwrite($file, "
+        fwrite($file, '
 
     class_to_bin/2
 ]).
@@ -34,11 +37,12 @@ function write_api_out () {
 
 %%% ========== ======================================== ====================
 %%% External   API
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
 
         // 写入api_out函数数据封装
-        foreach ($module_action as $action_name => $action) {
+        foreach ($module_action as $action) {
+            $action_name    = $action['action_name'];
             $action_id      = $action['action_id'];
             $action_out     = $action['action_out'];
             $action_note    = $action['action_note'];
@@ -58,8 +62,8 @@ function write_api_out () {
             }
 
             // 写入参数变量
-            $field_name_arr = implode(",
-    ", get_field_name_arr($action_out));
+            $field_name_arr = implode(',
+    ', get_field_name_arr($action_out));
             fwrite($file, "
 %%% @doc    {$action_note}
 {$action_name} ({
@@ -74,8 +78,8 @@ function write_api_out () {
             foreach ($action_out as $field) {
                 $field_bin_arr[]    = get_field_to_binary($field);
             }
-            $field_bin_arr  = implode(",
-        ", $field_bin_arr);
+            $field_bin_arr  = implode(',
+        ', $field_bin_arr);
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
     <<
@@ -89,10 +93,10 @@ function write_api_out () {
 
 
         // class_to_bin
-        fwrite($file, "
+        fwrite($file, '
 %%% ========== ======================================== ====================
 %%% class_to_bin
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
         foreach ($module_class as $class_name => $class) {
             $class_note     = $class['class_note'];
             $class_field    = $class['class_field'];
@@ -114,8 +118,8 @@ class_to_bin ({$class_name}, {
             foreach ($class_field as $field) {
                 $field_bin_arr[]    = get_field_to_binary($field);
             }
-            $field_bin_arr  = implode(",
-        ", $field_bin_arr);
+            $field_bin_arr  = implode(',
+        ', $field_bin_arr);
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
     <<
@@ -125,7 +129,7 @@ class_to_bin ({$class_name}, {
 
 
         // tuple_to_bin_
-        fwrite($file, "
+        fwrite($file, '
 %%% @doc    其他类|空类|通配
 class_to_bin (_ClassName, _Class) ->
     <<>>.
@@ -133,7 +137,7 @@ class_to_bin (_ClassName, _Class) ->
 
 %%% ========== ======================================== ====================
 %%% tuple_to_bin_
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
         foreach ($module_class as $class) {
             $class_field    = $class['class_field'];
             foreach ($class_field as $field) {
@@ -148,10 +152,10 @@ class_to_bin (_ClassName, _Class) ->
         }
 
         // end
-        fwrite($file, "
+        fwrite($file, '
 %%% ========== ======================================== ====================
 %%% end
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
         fclose($file);
     }
@@ -164,7 +168,7 @@ function get_field_name_arr ($field_arr) {
     foreach ($field_arr as $field) {
         $field_line         = $field['field_line'];
         $field_name         = $field['field_name'];
-        $field_name         = "_".$field_name."_".$field_line;
+        $field_name         = UNDER_LINE.$field_name.UNDER_LINE.$field_line;
         $field_name_arr[]   = $field_name;
     }
 
@@ -181,22 +185,22 @@ function write_non_num_field_to_binary ($file, $field_arr) {
         $field_type         = $field['field_type'];
         $field_module       = $field['field_module'];
         $field_class        = $field['field_class'];
-        $field_name         = "_".$field_name."_".$field_line;
+        $field_name         = UNDER_LINE.$field_name.UNDER_LINE.$field_line;
         if ($field_module) {
-            $module_colon   = $field_module.":";
+            $module_colon   = $field_module.':';
         }
         else {
-            $module_colon   = "";
+            $module_colon   = '';
         }
 
         // 非数值变量ToBin
-        if ($field_type == 'string') {
+        if     ($field_type == C_STRING){
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
     {$field_name}_Bin     = list_to_binary({$field_name}),
     {$field_name}_BinSize = size({$field_name}_Bin),");
         }
-        elseif ($field_type == 'list') {
+        elseif ($field_type == C_LIST)  {
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
     {$field_name}_ListLen = length({$field_name}),
@@ -217,7 +221,7 @@ function write_non_num_field_to_binary ($file, $field_arr) {
     ], 
     {$field_name}_Bin     = list_to_binary(BinList{$field_name}),");
         }
-        elseif ($field_type == 'typeof') {
+        elseif ($field_type == C_TYPEOF){
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
     {$field_name}_Bin = {$module_colon}class_to_bin({$field_class}, {$field_name}),");
@@ -232,14 +236,14 @@ function write_non_num_field_to_binary ($file, $field_arr) {
 function write_tuple_to_bin ($file, $field) {
     $field_type         = $field['field_type'];
     $field_class        = $field['field_class'];
-    if ($field_type == 'list' && $field_class == '') {
+    if ($field_type == C_LIST && $field_class == '') {
         $field_note     = $field['field_note'];
         $field_line     = $field['field_line'];
         $field_list     = $field['field_list'];
 
         // 写入参数变量
-        $field_name_arr = implode(",
-    ", get_field_name_arr($field_list));
+        $field_name_arr = implode(',
+    ', get_field_name_arr($field_list));
         fwrite($file, "
 %%% @doc    {$field_note}
 tuple_to_bin_{$field_line} ({
@@ -254,8 +258,8 @@ tuple_to_bin_{$field_line} ({
         foreach ($field_list as $field) {
             $field_bin_arr[]    = get_field_to_binary($field);
         }
-        $field_bin_arr  = implode(",
-        ", $field_bin_arr);
+        $field_bin_arr  = implode(',
+        ', $field_bin_arr);
         fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
     <<
@@ -273,31 +277,31 @@ function get_field_to_binary ($field) {
     $field_line         = $field['field_line'];
     $field_name         = $field['field_name'];
     $field_type         = $field['field_type'];
-    $field_name         = "_".$field_name."_".$field_line;
+    $field_name         = UNDER_LINE.$field_name.UNDER_LINE.$field_line;
 
-    if ($field_type == 'enum') {
+    if     ($field_type == C_ENUM)  {
         $field_bin      = $field_name.BT_ENUM;
     }
-    elseif ($field_type == 'byte') {
+    elseif ($field_type == C_BYTE)  {
         $field_bin      = $field_name.BT_BYTE;
     }
-    elseif ($field_type == 'short') {
+    elseif ($field_type == C_SHORT) {
         $field_bin      = $field_name.BT_SHORT;
     }
-    elseif ($field_type == 'int') {
+    elseif ($field_type == C_INT)   {
         $field_bin      = $field_name.BT_INT;
     }
-    elseif ($field_type == 'long') {
+    elseif ($field_type == C_LONG)  {
         $field_bin      = $field_name.BT_LONG;
     }
-    elseif ($field_type == 'string') {
-        $field_bin      = $field_name.BT_BIN_SIZE.", ".$field_name.BT_STRING;
+    elseif ($field_type == C_STRING){
+        $field_bin      = $field_name.BT_BIN_SIZE.', '.$field_name.BT_STRING;
     }
-    elseif ($field_type == 'typeof') {
+    elseif ($field_type == C_TYPEOF){
         $field_bin      = $field_name.BT_TYPEOF;
     }
-    elseif ($field_type == 'list') {
-        $field_bin      = $field_name.BT_LIST_LEN.", ".$field_name.BT_LIST;
+    elseif ($field_type == C_LIST)  {
+        $field_bin      = $field_name.BT_LIST_LEN.', '.$field_name.BT_LIST;
     }
 
     return $field_bin;

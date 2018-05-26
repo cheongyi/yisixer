@@ -2,20 +2,20 @@
 // =========== ======================================== ====================
 // @todo   获取表数据
 function get_table_data ($mysqli, $table_name, $fields) {
-    $fields_arr = implode("`, `", $fields);
+    $fields_arr = implode('`, `', $fields);
     $select_sql = "SELECT `{$fields_arr}` FROM `{$table_name}`;";
     // echo $select_sql;
     $result     = $mysqli->query($select_sql, MYSQLI_USE_RESULT);
     
     $table_data = array();
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-        $values = array();
+        $values         = array();
     
         foreach ($fields as $field) {
             $values[$field] = $mysqli->real_escape_string($row[$field]);
         }
         
-        $table_data[] = $values;
+        $table_data[]   = $values;
     }
 
     $result->close();
@@ -35,7 +35,7 @@ function get_tables_info () {
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $table_name              = $row['TABLE_NAME'];
         // 过滤掉不需要的表
-        if ($table_name == "db_version") {
+        if ($table_name == 'db_version') {
             // continue;
         }
         $tables_info['TABLES'][] = $table_name;
@@ -53,8 +53,8 @@ function get_tables_fields_info () {
     global $tables_info;
     $tables_fields_info = array();
     foreach ($tables_info['TABLES'] as $table_name) {
-        $fields = get_table_fields_info($table_name);
-        $tables_fields_info[$table_name] = $fields;
+        $fields                             = get_table_fields_info($table_name);
+        $tables_fields_info[$table_name]    = $fields;
     }
     return $tables_fields_info;
 }
@@ -67,33 +67,33 @@ function get_table_fields_info ($table_name) {
             `COLUMN_NAME`, `COLUMN_KEY`, `DATA_TYPE`, `EXTRA`, `COLUMN_DEFAULT`, `IS_NULLABLE`, `COLUMN_COMMENT`
         FROM  `COLUMNS`
         WHERE `TABLE_SCHEMA` = '$db_name' AND `TABLE_NAME` = '$table_name'";
-    $result     = $schema->query($sql);
-    $fields_info= array();
-    $name_len   = 0;
-    $primary    = array();
-    $auto_increment     = "";
-    $frag_field    = "";
+    $result         = $schema->query($sql);
+    $fields_info    = array();
+    $name_len       = 0;
+    $primary        = array();
+    $auto_increment = '';
+    $frag_field     = '';
     
     while($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $field_name             = $row['COLUMN_NAME'];
         $field_key              = $row['COLUMN_KEY'];
         $field_extra            = $row['EXTRA'];
         $name_len               = max($name_len, strlen($field_name));
-        if ($field_key == "PRI") {
-            $primary[]  = $field_name;
+        if ($field_key == 'PRI') {
+            $primary[]      = $field_name;
         }
-        if ($field_extra == "auto_increment") {
-            $auto_increment     = $field_name;
+        if ($field_extra == 'auto_increment') {
+            $auto_increment = $field_name;
         }
-        if ($field_name == "player_id") {
-            $frag_field = $field_name;
+        if ($field_name == 'player_id') {
+            $frag_field     = $field_name;
         }
         $fields_info['FIELDS'][$field_name] = $row;
     }
-    $player_start   = "player";
+    $player_start   = 'player';
     if (substr_compare($table_name, $player_start, 0, strlen($player_start)) === 0) {
         $is_temp_table  = false;
-        $log_end        = "_log";
+        $log_end        = '_log';
         if (substr_compare($table_name, $log_end, -strlen($log_end)) === 0) {
             $is_log_table   = true;
         } 
@@ -120,7 +120,7 @@ function get_table_fields_info ($table_name) {
 // =========== ======================================== ====================
 // @todo   生成填补字符
 function generate_char ($max_length, $length, $char) {
-    $space      = "";
+    $space      = '';
     $fill_len   = $max_length - $length;
     for ($i = 0; $i < $fill_len; $i ++) {
         $space .= $char;
@@ -133,8 +133,8 @@ function generate_char ($max_length, $length, $char) {
 // =========== ======================================== ====================
 // @todo    写入属性注释
 function write_attributes_note($file) {
-    $year   = date("Y");
-    $ymd    = date("Y, m, d");
+    $year   = date('Y');
+    $ymd    = date('Y, m, d');
     fwrite($file, "
 %%% ========== ======================================== ====================
 %%% -copyright  (\"Copyright © 2017-$year YiSiXEr\").
@@ -148,8 +148,8 @@ function write_attributes_note($file) {
 
 // @todo    写入属性
 function write_attributes($file) {
-    $year   = date("Y");
-    $ymd    = date("Y, m, d");
+    $year   = date('Y');
+    $ymd    = date('Y, m, d');
     fwrite($file, "
 
 %%% @doc    
@@ -174,7 +174,7 @@ function show_schedule ($show_start, $schedule, $schedule_max = 0, $is_cover = t
 
     if ($schedule == 'start') {
         $schedule_i     = 0;
-        $show_schedule  = "";
+        $show_schedule  = '';
         $start_time     = microtime(true);
         echo "\033[?25l".$show_start;
     }
@@ -190,17 +190,16 @@ function show_schedule ($show_start, $schedule, $schedule_max = 0, $is_cover = t
             $show_schedule  = $schedule;
         }
         elseif ($show_schedule) {
-            $show_schedule  .= "|".$schedule;
+            $show_schedule  .= '|'.$schedule;
         }
         else {
             $show_schedule  = $schedule;
         }
-        $dots  = generate_char(PF_SHOW_LEN_MAX, strlen($show_schedule), ' ');
-        printf("\r%s\033[42m[%s][\033[1m%d%%\033[0m\033[42m] %s\033[0m", 
+        printf("\r%s\033[42m %-30s[\033[1m%3d%%\033[0m\033[42m][%s]\033[0m", 
             $show_start,
-            PF_ROTATE[$schedule_i % 4],
+            $show_schedule,
             $schedule_i / $schedule_max * 100,
-            $show_schedule.$dots
+            PF_ROTATE[$schedule_i % 4]
         );
     }
 }
@@ -213,14 +212,14 @@ function write_type_to_bin ($file, $table_name, $field, $name_len_max) {
     $field_type     = $field['DATA_TYPE'];
     $field_name_up  = ucfirst($field_name);
 
-    if ($field_type == "tinyint" || $field_type == "int" || $field_type == "bigint") {
-        $type_to_bin    = "?INT_TO_BIN";
+    if ($field_type == 'tinyint' || $field_type == 'int' || $field_type == 'bigint') {
+        $type_to_bin    = '?INT_TO_BIN';
     }
-    elseif ($field_type == "float") {
-        $type_to_bin    = "?REL_TO_BIN";
+    elseif ($field_type == 'float') {
+        $type_to_bin    = '?REL_TO_BIN';
     }
     else {
-        $type_to_bin    = "?LST_TO_BIN";
+        $type_to_bin    = '?LST_TO_BIN';
     }
 
     $dots = generate_char($name_len_max, strlen($field_name), ' ');

@@ -1,7 +1,4 @@
 <?php
-    // 设定用于所有日期时间函数的默认时区
-    date_default_timezone_set("Asia/Shanghai");
-
     // 加载配置文件
     require_once 'conf.php';
     require_once 'lib_misc.php';
@@ -26,30 +23,39 @@
     $db_port = $db_argv[$db_sign]['port'];
 
     // 目录路径
-    $server_dir         = "{$project_dir}server/";
-    $include_gen_dir    = "{$server_dir}include/gen/";
-    $src_gen_dir        = "{$server_dir}src/gen/";
-    is_dir($include_gen_dir) OR mkdir($include_gen_dir);
-    is_dir($src_gen_dir)     OR mkdir($src_gen_dir);
 
     // 文件名称
-    $game_db_hrl_file   = "{$include_gen_dir}game_db.hrl";
-    $game_db_data       = "game_db_data";
-    $game_db_data_file  = "{$src_gen_dir}{$game_db_data}.erl";
-    $game_db_init       = "game_db_init";
-    $game_db_init_file  = "{$src_gen_dir}{$game_db_init}.erl";
-    $game_db_sync       = "game_db_sync";
-    $game_db_sync_file  = "{$src_gen_dir}{$game_db_sync}.erl";
-    $game_db_table      = "game_db_table";
-    $game_db_table_file = "{$src_gen_dir}{$game_db_table}.erl";
-    $game_db_dump       = "game_db_dump";
-    $game_db_dump_file  = "{$src_gen_dir}{$game_db_dump}.erl";
+    define(GAME_DB_DATA,            'game_db_data');
+    define(GAME_DB_DUMP,            'game_db_dump');
+    define(GAME_DB_INIT,            'game_db_init');
+    define(GAME_DB_SYNC,            'game_db_sync');
+    define(GAME_DB_TABLE,           'game_db_table');
+    define(GAME_DB_DATA_FILE_NAME,  GAME_DB_DATA.'.erl');
+    define(GAME_DB_DUMP_FILE_NAME,  GAME_DB_DUMP.'.erl');
+    define(GAME_DB_INIT_FILE_NAME,  GAME_DB_INIT.'.erl');
+    define(GAME_DB_SYNC_FILE_NAME,  GAME_DB_SYNC.'.erl');
+    define(GAME_DB_TABLE_FILE_NAME, GAME_DB_TABLE.'.erl');
+    define(GAME_DB_HRL_FILE_NAME,   'game_db.hrl');
+    define(GAME_DB_HRL_FILE,        DIR_INCLUDE_GEN.GAME_DB_HRL_FILE_NAME);
+    define(GAME_DB_DATA_FILE,       DIR_SRC_GEN.GAME_DB_DATA_FILE_NAME);
+    define(GAME_DB_DUMP_FILE,       DIR_SRC_GEN.GAME_DB_DUMP_FILE_NAME);
+    define(GAME_DB_INIT_FILE,       DIR_SRC_GEN.GAME_DB_INIT_FILE_NAME);
+    define(GAME_DB_SYNC_FILE,       DIR_SRC_GEN.GAME_DB_SYNC_FILE_NAME);
+    define(GAME_DB_TABLE_FILE,      DIR_SRC_GEN.GAME_DB_TABLE_FILE_NAME);
 
     // 常量定义
-    define(PF_DB_READ_SCH,  array("table   ", "field"));
-    define(PF_DB_WRITE_SCH, array("define", "record", "hrl", "data", "dump", "init", "sync", "table"));
-    define(PF_DB_READ,      "数据库表读取 ....... ");
-    define(PF_DB_WRITE,     "数据生成代码(服务端) ");
+    define(PF_DB_READ_SCH,  array('table   ', 'field'));
+    define(PF_DB_WRITE_SCH, array(
+        GAME_DB_HRL_FILE_NAME.'::define', 
+        GAME_DB_HRL_FILE_NAME.'::record', 
+        GAME_DB_DATA_FILE_NAME, 
+        GAME_DB_DUMP_FILE_NAME, 
+        GAME_DB_INIT_FILE_NAME, 
+        GAME_DB_SYNC_FILE_NAME, 
+        GAME_DB_TABLE_FILE_NAME
+    ));
+    define(PF_DB_READ,      '数据库表读取 ....... ');
+    define(PF_DB_WRITE,     '数据生成代码(服务端) ');
 
     // 生成新的数据库连接对象
     show_schedule(PF_DB_READ, 'start');
@@ -57,13 +63,13 @@
     if ($mysqli->connect_error) {
         die("Open '$db_name' failed (".$mysqli->connect_errno.".) ".$mysqli->connect_error.".\n");
     }
-    $mysqli->query("SET NAMES utf8;");
+    $mysqli->query('SET NAMES utf8;');
 
     $schema = new mysqli($db_host, $db_user, $db_pass, 'information_schema', $db_port);
     if ($schema->connect_error) {
         die("Open 'information_schema' failed (".$schema->connect_errno.".) ".$schema->connect_error.".\n");
     }
-    $schema->query("SET NAMES utf8;");
+    $schema->query('SET NAMES utf8;');
     show_schedule(PF_DB_READ, PF_DB_READ_SCH, count(PF_DB_READ_SCH), false);
     $tables_info        = get_tables_info();
     show_schedule(PF_DB_READ, PF_DB_READ_SCH, count(PF_DB_READ_SCH), false);
@@ -79,7 +85,6 @@
     show_schedule(PF_DB_WRITE, 'start');
     db_enum();
     db_record();
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH));
     game_db_data();
     game_db_dump();
     game_db_init();

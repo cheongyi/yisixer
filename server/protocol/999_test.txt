@@ -18,13 +18,13 @@ test = 999
     }
 
     // 新信息1
-    class new_info1  : test.info
+    class new_info1  :: test.info
     {
         addr                    : string    // 地址
     }
 
     // 新信息2
-    class new_info2  : info
+    class new_info2  :: info
     {
         phone                   : long      // 电话号码
         addr                    : string    // 地址

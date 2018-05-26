@@ -2,10 +2,10 @@
 // =========== ======================================== ====================
 // @todo   写入api头文件
 function write_api_hrl () {
-    global $protocol, $api_enum_file;
+    global $protocol, $pt_file_num;
 
-    show_schedule(PF_PT_WRITE, PF_PT_WRITE_SCH, count(PF_PT_WRITE_SCH), false);
-    $file       = fopen($api_enum_file, 'w');
+    show_schedule(PF_PT_WRITE, API_ENUM_FILE_NAME, $pt_file_num);
+    $file           = fopen(API_ENUM_FILE, 'w');
     write_attributes_note($file);
 
     $enum_len_max   = 50;

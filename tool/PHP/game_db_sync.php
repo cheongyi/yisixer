@@ -2,14 +2,14 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库表
 function game_db_sync () {
-    global $tables_info, $tables_fields_info, $table_name_len_max, $game_db_sync, $game_db_sync_file;
+    global $tables_info, $tables_fields_info, $table_name_len_max;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), false);
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
     $tables     = $tables_info['TABLES'];
 
-    $file       = fopen($game_db_sync_file, 'w');
+    $file       = fopen(GAME_DB_SYNC_FILE, 'w');
 
-    fwrite($file, "-module ({$game_db_sync}).");
+    fwrite($file, '-module ('.GAME_DB_SYNC.').');
     write_attributes($file);
     // 写入系统属性
     fwrite($file, "

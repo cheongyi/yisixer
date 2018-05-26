@@ -2,14 +2,12 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库表
 function game_db_dump () {
-    global $tables_info, $tables_fields_info, $table_name_len_max, $game_db_dump, $game_db_dump_file;
+    global $tables_info, $tables_fields_info, $table_name_len_max;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), false);
+    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    $file       = fopen(GAME_DB_DUMP_FILE, 'w');
     $tables     = $tables_info['TABLES'];
-
-    $file       = fopen($game_db_dump_file, 'w');
-
-    fwrite($file, "-module ({$game_db_dump}).");
+    fwrite($file, '-module ('.GAME_DB_DUMP.').');
     write_attributes($file);
     // 写入系统属性
     fwrite($file, "
@@ -49,18 +47,18 @@ backup () ->
 
 
     // 写入内部函数
-    fwrite($file, "
+    fwrite($file, '
 
 
 
 %%% ========== ======================================== ====================
 %%% Internal   API
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
     foreach ($tables as $table_name) {
-        $fields_info    = $tables_fields_info[$table_name];
-        $is_temp_table  = $fields_info['IS_TEMP_TABLE'];
-        $is_log_table   = $fields_info['IS_LOG_TABLE'];
+        $fields_info        = $tables_fields_info[$table_name];
+        $is_temp_table      = $fields_info['IS_TEMP_TABLE'];
+        $is_log_table       = $fields_info['IS_LOG_TABLE'];
         $table_name_len_max = $tables_info['NAME_LEN_MAX'];
         if ($is_temp_table || $is_log_table) {
             continue;
@@ -79,15 +77,15 @@ dump_{$table_name} (File) ->
         // 分表判断
         $frag_field     = $fields_info['FRAG_FIELD'];
         if ($frag_field) {
-            fwrite($file, "
+            fwrite($file, '
     lists:foldl(fun(FragId, {FragSum, FragNumber, FragL})->
         ets:foldl(fun(Record, {Sum, Number, L}) ->
-");
+');
         }
         else {
-            fwrite($file, "
+            fwrite($file, '
     ets:foldl(fun(Record, {Sum, Number, L}) ->
-");
+');
         }
 
         $fields         = $fields_info['FIELDS'];
@@ -105,10 +103,10 @@ dump_{$table_name} (File) ->
             $field_name_up  = ucfirst($field_name);
             $dots = generate_char($name_len_max, strlen($field_name), ' ');
             $insert_arr[]   = $field_name;
-            $value_arr[]    = $dots.$field_name_up."/binary, ";
+            $value_arr[]    = $dots.$field_name_up.'/binary, ';
         }
 
-        $insert_arr = implode("`, `", $insert_arr);
+        $insert_arr = implode('`, `', $insert_arr);
         $value_arr  = implode("\", \",
         ", $value_arr);
         fwrite($file, "
@@ -182,9 +180,9 @@ get_sql_file (FileName) ->
 
 // @todo   写入表到文件
 function write_dump_table_to_file ($file, $tables, $tables_fields_info) {
-    fwrite($file, "
+    fwrite($file, '
     File        = get_sql_file(FileName),
-");
+');
 
     foreach ($tables as $table_name) {
         $fields_info    = $tables_fields_info[$table_name];
@@ -197,9 +195,9 @@ function write_dump_table_to_file ($file, $tables, $tables_fields_info) {
     dump_{$table_name}(File),");
     }
 
-    fwrite($file, "
+    fwrite($file, '
 
-    ok = file:close(File).");
+    ok = file:close(File).');
 }
 
 ?>
