@@ -44,9 +44,9 @@ init () ->
 %%% ========== ======================================== ====================
 route_request (_Pack = <<ModuleId:16/unsigned, ActionId:16/unsigned, Args/binary>>, State) ->
     put(prev_request, {ModuleId, ActionId}),
-    TimeRecord  = game_perf:statistics_start(),
+    TimeRecord  = game_prof:statistics_start(),
     {Module, Fuction, ArgsNum, NewState} = route_relay(ModuleId, ActionId, Args, State),
-    game_perf:statistics_end({Module, Fuction, ArgsNum}, TimeRecord),
+    game_prof:statistics_end({Module, Fuction, ArgsNum}, TimeRecord),
     NewState.
 "),
     RouterFile.

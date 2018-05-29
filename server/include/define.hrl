@@ -21,7 +21,7 @@
 
 -define (GAME_LOG_DIR,  "./log/").          % 游戏日志存放路劲
 -define (GAME_DATA_DIR, "./data/").         % 游戏数据存放路劲
--define (GAME_PERF_DIR,  ?GAME_DATA_DIR ++ "perf/").        % 游戏性能分析存放路劲
+-define (GAME_PROF_DIR,  ?GAME_DATA_DIR ++ "prof/").        % 游戏性能分析存放路劲
 -define (WAR_REPORT_DIR, ?GAME_DATA_DIR ++ "war_report/").  % 战报数据存放路劲
 
 -define (SHUTDOWN_PLAYER,       36#14X2).           % 一个玩家进程将怎样被终止
@@ -79,6 +79,7 @@
 -define (HOUR_TO_SECOND, ?MINUTE_TO_SECOND * ?HOUR_TO_MINUTE).  % 时转秒
 -define (DAY_TO_SECOND,  ?DAY_TO_HOUR      * ?HOUR_TO_SECOND).  % 天转秒
 -define (WEEK_TO_SECOND, ?WEEK_TO_DAY      * ?DAY_TO_SECOND).   % 周转秒
+-define (SLEEP(TimeOut),     receive after TimeOut -> ok end).
 
 %%% 数据库相关
 -define (DELETE_OR_TRUNCATE_ROWS, 10000).   % 逐条删除或清空重建行数判定

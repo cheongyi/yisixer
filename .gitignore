@@ -19,5 +19,5 @@ server/log/*
 
 server/src/test.erl
 server/src/api_out/
-!server/src/api_out/api_test_out.erl
+server/src/api_out/api_test_out.erl
 server/src/gen/*

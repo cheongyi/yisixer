@@ -111,9 +111,9 @@ fetch (Sql) ->
         }
         fwrite($file, "
 read (#pk_{$table_name}{{$primary_key_arr}}) ->
-    TimeTuple   = game_perf:statistics_start(),
+    TimeTuple   = game_prof:statistics_start(),
     Return      = {$ets_lookup},
-    game_perf:statistics_end({?MODULE, 'read.{$table_name}', 1}, TimeTuple),
+    game_prof:statistics_end({?MODULE, 'read.{$table_name}', 1}, TimeTuple),
     Return;
 ");
     }
@@ -154,9 +154,9 @@ select (Table, MatchSpec) ->
         }
         fwrite($file, "
 select ({$table_name}, _ModeOrFragId, MatchSpec) ->
-    TimeTuple   = game_perf:statistics_start(),
+    TimeTuple   = game_prof:statistics_start(),
     {$record_select}
-    game_perf:statistics_end({?MODULE, 'select.{$table_name}', 3}, TimeTuple),
+    game_prof:statistics_end({?MODULE, 'select.{$table_name}', 3}, TimeTuple),
     Return;
 ");
     }
@@ -185,7 +185,7 @@ select (Table, ModeOrFragId, MatchSpec) ->
         if ($is_log_table) {
             fwrite($file, "
 write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
-    TimeTuple   = game_perf:statistics_start(),
+    TimeTuple   = game_prof:statistics_start(),
     validate_for_write(Record, insert),
     NewId        = ets:update_counter(auto_increment, {{$table_name}, id}, 1),
     InsertRecord = Record #{$table_name}{
@@ -193,7 +193,7 @@ write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
         row_key = {NewId}
     },
     add_tran_action({{$table_name}, insert, InsertRecord}),
-    game_perf:statistics_end({?MODULE, 'write.{$table_name}', 1}, TimeTuple),
+    game_prof:statistics_end({?MODULE, 'write.{$table_name}', 1}, TimeTuple),
     {ok, InsertRecord};
 ");
             continue;
@@ -233,7 +233,7 @@ write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
         }
         fwrite($file, "
 write (Record = #{$table_name}{row_key = RowKey, {$primary_key_arr}, row_ver = RowVer}) -> ?ENSURE_TRAN,
-    TimeTuple   = game_perf:statistics_start(),
+    TimeTuple   = game_prof:statistics_start(),
     EtsTable    = {$ets_table},
     Return      = case RowKey of
         undefined ->
@@ -254,7 +254,7 @@ write (Record = #{$table_name}{row_key = RowKey, {$primary_key_arr}, row_ver = R
             add_tran_action({{$table_name}, update, Record, Changes}),
             {ok, UpdateRecord}
     end,
-    game_perf:statistics_end({?MODULE, 'write.{$table_name}', 1}, TimeTuple),
+    game_prof:statistics_end({?MODULE, 'write.{$table_name}', 1}, TimeTuple),
     Return;
 ");
     }
@@ -288,12 +288,12 @@ write (Record) ->
         }
         fwrite($file, "
 delete (Record = #{$table_name}{row_key = RowKey}) -> ?ENSURE_TRAN,
-    TimeTuple   = game_perf:statistics_start(),
+    TimeTuple   = game_prof:statistics_start(),
     EtsTable    = {$ets_table},
     ets:delete(EtsTable, RowKey),
     add_tran_log({delete, EtsTable, Record}),
     add_tran_action({{$table_name}, delete, Record}),
-    game_perf:statistics_end({?MODULE, 'delete.{$table_name}', 1}, TimeTuple),
+    game_prof:statistics_end({?MODULE, 'delete.{$table_name}', 1}, TimeTuple),
     ok;
 ");
     }
@@ -313,11 +313,11 @@ delete_select (Table, MatchSpec) ->
     delete_select(Table, signle, MatchSpec).
 
 % delete_select (Table, _ModeOrFragId, MatchSpec) -> ?ENSURE_TRAN,
-%     TimeTuple   = game_perf:statistics_start(),
+%     TimeTuple   = game_prof:statistics_start(),
 %     RecordList  = select(Table, _ModeOrFragId, MatchSpec),
 %     Count       = do_delete_select(RecordList,  0),
 %     Action      = list_to_atom(\"delete_select.\" ++ atom_to_list(Table)),
-%     game_perf:statistics_end({game_db_data, Action, 3}, TimeTuple),
+%     game_prof:statistics_end({game_db_data, Action, 3}, TimeTuple),
 %     {ok, Count}.
 ");
 
@@ -332,10 +332,10 @@ delete_select (Table, MatchSpec) ->
         }
         fwrite($file, "
 delete_select ({$table_name}, _ModeOrFragId, MatchSpec) -> ?ENSURE_TRAN,
-    TimeTuple   = game_perf:statistics_start(),
+    TimeTuple   = game_prof:statistics_start(),
     RecordList  = select({$table_name}, _ModeOrFragId, MatchSpec),
     Count       = do_delete_select(RecordList,  0),
-    game_perf:statistics_end({?MODULE, 'delete_select.{$table_name}', 3}, TimeTuple),
+    game_prof:statistics_end({?MODULE, 'delete_select.{$table_name}', 3}, TimeTuple),
     {ok, Count};
 ");
     }
@@ -380,14 +380,14 @@ do_delete_select ([], Count) ->
         }
         fwrite($file, "
 delete_all ({$table_name}) -> ?ENSURE_TRAN,
-    TimeTuple   = game_perf:statistics_start(),
+    TimeTuple   = game_prof:statistics_start(),
     Size        = count({$table_name}),
     Return      = {$delete_all_objects},
     if 
         Size > 10000 -> add_tran_action({{$table_name}, bin_sql, <<   \"TRUNCATE `{$table_name}`;\">>});
         true         -> add_tran_action({{$table_name}, bin_sql, <<\"DELETE FROM `{$table_name}`;\">>})
     end,
-    game_perf:statistics_end({?MODULE, 'delete_all.{$table_name}', 1}, TimeTuple),
+    game_prof:statistics_end({?MODULE, 'delete_all.{$table_name}', 1}, TimeTuple),
     Return;
 ");
     }

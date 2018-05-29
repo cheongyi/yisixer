@@ -46,7 +46,7 @@ start (_Type, _Args) ->
 
     % 启动game系统相关进程
     start_child(game_log,           worker),        % 启动进程 --- 日志
-    start_child(game_perf,          worker),        % 启动进程 --- 性能分析
+    start_child(game_prof,          worker),        % 启动进程 --- 性能分析
     start_child(game_ets,           worker),        % 启动进程 --- 游戏内ets
     % start_child(mysql,              worker),        % 启动进程 --- 游戏内mysql
     start_child(game_mysql,         worker),        % 启动进程 --- 游戏内mysql
@@ -61,7 +61,7 @@ start (_Type, _Args) ->
     start_child(test_sup,           supervisor),    % 启动督程 --- 测试
     start_child(four_color_sup,     supervisor),    % 启动督程 --- 四色牌
 
-    % start_child(socket_server_sup,  supervisor),    % 启动督程 --- 套接字服务器
+    start_child(socket_server_sup,  supervisor),    % 启动督程 --- 套接字服务器
 
     start_child(reloader,           worker),        % 启动进程 --- 代码自动载入
 

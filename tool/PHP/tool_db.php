@@ -44,7 +44,7 @@
     define(GAME_DB_TABLE_FILE,      DIR_SRC_GEN.GAME_DB_TABLE_FILE_NAME);
 
     // 常量定义
-    define(PF_DB_READ_SCH,  array('table   ', 'field'));
+    define(PF_DB_READ_SCH,  array('table ', ' field'));
     define(PF_DB_WRITE_SCH, array(
         GAME_DB_HRL_FILE_NAME.'::define', 
         GAME_DB_HRL_FILE_NAME.'::record', 

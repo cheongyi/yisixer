@@ -1,4 +1,4 @@
--module (game_perf).
+-module (game_prof).
 
 %%% @doc    游戏性能分析
 
@@ -21,7 +21,7 @@
 -include ("define.hrl").
 
 -define (SERVER, ?MODULE).
--define (TABLE_NAME, game_perf_data).
+-define (TABLE_NAME, game_prof_data).
 
 -record (state, {}).
 -record (?TABLE_NAME, {
@@ -52,8 +52,8 @@ stop () ->
 %%% @spec   init([]) -> {ok, State}
 %%% @doc    gen_server init, opens the server in an initial state.
 init ([]) ->
-    filelib:ensure_dir(?GAME_PERF_DIR),
-    ets:new(?TABLE_NAME, [set, named_table, protected, {keypos, #game_perf_data.key}]),
+    filelib:ensure_dir(?GAME_PROF_DIR),
+    ets:new(?TABLE_NAME, [set, named_table, protected, {keypos, #game_prof_data.key}]),
     {ok, #state{}}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple()
@@ -65,7 +65,7 @@ handle_call ({get_info, Module}, _From, State) ->
     Result = lib_ets:select(
         ?TABLE_NAME, 
         [{
-            #game_perf_data{
+            #game_prof_data{
                 key = {Module, '_', '_'}, 
                 _ = '_'
                 }, 
@@ -78,7 +78,7 @@ handle_call ({get_info, Module, Fuction}, _From, State) ->
     Result = lib_ets:select(
         ?TABLE_NAME, 
         [{
-            #game_perf_data{
+            #game_prof_data{
                 key = {Module, Fuction, '_'}, 
                 _ = '_'
                 }, 
@@ -101,18 +101,18 @@ handle_call (Request, From, State) ->
 handle_cast ({set_info, Key, Runtime, Wallclock}, State) ->
     Date = case lib_ets:get(?TABLE_NAME, Key) of
         [] ->
-            #game_perf_data{};
+            #game_prof_data{};
         [TheDate] ->
             TheDate
     end,
     R = 
     lib_ets:insert(
         ?TABLE_NAME, 
-        Date #game_perf_data{
+        Date #game_prof_data{
             key       = Key,
-            times     = Date #game_perf_data.times     + 1,
-            runtime   = Date #game_perf_data.runtime   + Runtime,
-            wallclock = Date #game_perf_data.wallclock + Wallclock
+            times     = Date #game_prof_data.times     + 1,
+            runtime   = Date #game_prof_data.runtime   + Runtime,
+            wallclock = Date #game_prof_data.wallclock + Wallclock
         }, 
         replace
     ),
@@ -162,30 +162,30 @@ write (Mode) ->
     SortFun = fun(A, B) -> 
         case Mode of
             wallclock ->
-                RateA = A #game_perf_data.wallclock / A #game_perf_data.times,
-                RateB = B #game_perf_data.wallclock / B #game_perf_data.times,
+                RateA = A #game_prof_data.wallclock / A #game_prof_data.times,
+                RateB = B #game_prof_data.wallclock / B #game_prof_data.times,
                 RateA > RateB;
             runtime ->
-                RateA = A #game_perf_data.runtime / A #game_perf_data.times,
-                RateB = B #game_perf_data.runtime / B #game_perf_data.times,
+                RateA = A #game_prof_data.runtime / A #game_prof_data.times,
+                RateB = B #game_prof_data.runtime / B #game_prof_data.times,
                 RateA > RateB;
             times ->
-                RateA = A #game_perf_data.times,
-                RateB = B #game_perf_data.times,
+                RateA = A #game_prof_data.times,
+                RateB = B #game_prof_data.times,
                 RateA > RateB;
             total_wallclock ->
-                RateA = A #game_perf_data.wallclock,
-                RateB = B #game_perf_data.wallclock,
+                RateA = A #game_prof_data.wallclock,
+                RateB = B #game_prof_data.wallclock,
                 RateA > RateB;
             total_runtime ->
-                RateA = A #game_perf_data.runtime,
-                RateB = B #game_perf_data.runtime,
+                RateA = A #game_prof_data.runtime,
+                RateB = B #game_prof_data.runtime,
                 RateA > RateB
         end
     end,
     {perf, List}= gen_server:call(?SERVER, {get_info}),
     SortList    = lists:sort(SortFun, List),
-    FileName    = ?GAME_PERF_DIR ++ lib_time:ymd_tuple_to_cover0str(date(), "_") ++ "." ++ atom_to_list(Mode),
+    FileName    = ?GAME_PROF_DIR ++ lib_time:ymd_tuple_to_cover0str(date(), "_") ++ "." ++ atom_to_list(Mode),
     {ok, File}  = file:open(FileName, [write, raw]),
     file:write(File, io_lib:format("+--------------------+--------------------+--------------------+--------------------+--------------------+~n",[])),
     file:write(File, io_lib:format("| Module:Function/ArgsNum                                      |                    |                    |~n",[])),
@@ -203,7 +203,7 @@ write (Mode) ->
 %%% @doc    循环写入游戏性能分析文件
 loop_write (File, []) ->
     ok = file:close(File);
-loop_write (File, [#game_perf_data{key = {Module, Fuction, ArgsNum}, times = Times, runtime = Runtime, wallclock = Wallclock} | List]) ->
+loop_write (File, [#game_prof_data{key = {Module, Fuction, ArgsNum}, times = Times, runtime = Runtime, wallclock = Wallclock} | List]) ->
     ModuleFunctionArgsNum = atom_to_list(Module) ++ ":" ++ atom_to_list(Fuction) ++ "/" ++ integer_to_list(ArgsNum),
     % ModuleFunctionArgsLen = length(ModuleFunctionArgsNum),
     % if
