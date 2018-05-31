@@ -16,11 +16,6 @@
 
 -define (SERVER, ?MODULE).
 
--define (HASH_SHA(Data),             crypto:hash(sha, Data)).
--define (HASH_FINAL(Context),        crypto:hash_final(Context)).
--define (HASH_UPDATE(Context, Salt), crypto:hash_update(Context, Salt)).
--define (HASH_INIT(),                crypto:hash_init(sha)).
-
 -define (LONG_PASSWORD,             1).
 -define (FOUND_ROWS,                2).
 -define (LONG_FLAG,                 4).

@@ -90,7 +90,7 @@ function write_include($file) {
 % -include (\"define.hrl\").
 % -include (\"record.hrl\").
 % -include (\"gen/game_db.hrl\").
-% -include (\"api/api_code.hrl\").
+% -include (\"api/api_enum.hrl\").
 
 ");
 }

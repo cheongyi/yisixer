@@ -1,0 +1,176 @@
+// POSIX错误码对照表
+// 在module::file、inet等模块里可以找到
+// file:
+eacces          - permission denied         // 权限被拒绝
+eagain          - resource temporarily unavailable      // 资源暂时不可用
+ebadf           - bad file number           // 坏文件号
+ebusy           - file busy                 // 文件占线
+edquot          - disk quota exceeded       // 磁盘配额超标
+eexist          - file already exists       // 文件已经存在
+efault          - bad address in system call argument   // 系统调用参数中的地址错误
+efbig           - file too large            // 文件太大
+eintr           - interrupted system call   // 中断系统调用
+einval          - invalid argument          // 无效参数
+eio             - IO error                  // 输入输出错误
+eisdir          - illegal operation on a directory      // 非法操作目录
+eloop           - too many levels of symbolic links     // 符号链接的层次太多
+emfile          - too many open files       // 打开的文件太多
+emlink          - too many links            // 链接太多
+enametoolong    - file name too long        // 文件名过长
+enfile          - file table overflow       // 文件表溢出
+enodev          - no such device            // 没有这样的设备
+enoent          - no such file or directory // 没有这样的文件或目录
+enomem          - not enough memory         // 内存不足
+enospc          - no space left on device   // 设备空间不足
+enotblk         - block device required     // 需要块设备
+enotdir         - not a directory           // 不是目录
+enotsup         - operation not supported   // 操作不支持
+enxio           - no such device or address // 没有这样的设备或地址
+eperm           - not owner                 // 不是所有者
+epipe           - broken pipe               // 损坏管道
+erofs           - read-only file system     // 文件系统只读
+espipe          - invalid seek              // 无效查找
+esrch           - no such process           // 没有这个进程
+estale          - stale remote file handle  // 过时的远程文件句柄
+exdev           - cross-domain link         // 跨域链路
+
+
+// inet:
+e2big           - argument list too long        // 
+eacces          - permission denied             // 权限被拒绝
+eaddrinuse      - address already in use        // 
+eaddrnotavail   - cannot assign requested address       // 
+eadv            - advertise error                       // 
+eafnosupport    - address family not supported by protocol family   // 
+eagain          - resource temporarily unavailable      // 资源暂时不可用
+ealign          - EALIGN                        // 
+ealready        - operation already in progress // 
+ebade           - bad exchange descriptor       // 
+ebadf           - bad file number               // 坏文件号
+ebadfd          - file descriptor in bad state  // 
+ebadmsg         - not a data message            // 
+ebadr           - bad request descriptor        // 
+ebadrpc         - RPC structure is bad          // 
+ebadrqc         - bad request code              // 
+ebadslt         - invalid slot                  // 
+ebfont          - bad font file format          // 
+ebusy           - file busy                     // 文件占线
+echild          - no children                   // 
+echrng          - channel number out of range   // 
+ecomm           - communication error on send   // 
+econnaborted    - software caused connection abort      // 软件导致连接中止
+econnrefused    - connection refused            // 对等连接复位
+econnreset      - connection reset by peer      // 
+edeadlk         - resource deadlock avoided     // 
+edeadlock       - resource deadlock avoided     // 
+edestaddrreq    - destination address required  // 
+edirty          - mounting a dirty fs w/o force // 
+edom            - math argument out of range    // 
+edotdot         - cross mount point             // 
+edquot          - disk quota exceeded           // 磁盘配额超标
+eduppkg         - duplicate package name        // 
+eexist          - file already exists           // 文件已经存在
+efault          - bad address in system call argument   // 系统调用参数中的地址错误
+efbig           - file too large                // 
+ehostdown       - host is down                  // 
+ehostunreach    - host is unreachable           // 
+eidrm           - identifier removed            // 
+einit           - initialization error          // 
+einprogress     - operation now in progress     // 
+eintr           - interrupted system call       // 
+einval          - invalid argument              // 
+eio             - I/O error                     // 
+eisconn         - socket is already connected           // 
+eisdir          - illegal operation on a directory      // 
+eisnam          - is a named file               // 
+el2hlt          - level 2 halted                // 
+el2nsync        - level 2 not synchronized      // 
+el3hlt          - level 3 halted                // 
+el3rst          - level 3 reset                 // 
+elbin           - ELBIN                         // 
+elibacc         - cannot access a needed shared library // 
+elibbad         - accessing a corrupted shared library  // 
+elibexec        - cannot exec a shared library directly // 
+elibmax         - attempting to link in more shared libraries than system limit // 
+elibscn         - .lib section in a.out corrupted       // 
+elnrng          - link number out of range              // 
+eloop           - too many levels of symbolic links     // 
+emfile          - too many open files           // 打开的文件太多
+emlink          - too many links                // 
+emsgsize        - message too long              // 
+emultihop       - multihop attempted            // 
+enametoolong    - file name too long            // 
+enavail         - not available                 // 
+enet            - ENET                          // 
+enetdown        - network is down               // 
+enetreset       - network dropped connection on reset   // 
+enetunreach     - network is unreachable        // 
+enfile          - file table overflow           // 文件表溢出
+enoano          - anode table overflow          // 
+enobufs         - no buffer space available     // 
+enocsi          - no CSI structure available    // 
+enodata         - no data available             // 
+enodev          - no such device                // 
+enoent          - no such file or directory     // 
+enoexec         - exec format error             // 
+enolck          - no locks available            // 
+enolink         - link has be severed           // 
+enomem          - not enough memory             // 
+enomsg          - no message of desired type    // 
+enonet          - machine is not on the network // 
+enopkg          - package not installed         // 
+enoprotoopt     - bad proocol option            // 
+enospc          - no space left on device       // 
+enosr           - out of stream resources or not a stream device    // 
+enosym          - unresolved symbol name        // 
+enosys          - function not implemented      // 
+enotblk         - block device required         // 
+enotconn        - socket is not connected       // 
+enotdir         - not a directory               // 
+enotempty       - directory not empty           // 
+enotnam         - not a named file              // 
+enotsock        - socket operation on non-socket        // 
+enotsup         - operation not supported               // 
+enotty          - inappropriate device for ioctl        // 
+enotuniq        - name not unique on network            // 
+enxio           - no such device or address             // 
+eopnotsupp      - operation not supported on socket     // 
+eperm           - not owner                     // 
+epfnosupport    - protocol family not supported // 
+epipe           - broken pipe                   // 
+eproclim        - too many processes            // 
+eprocunavail    - bad procedure for program     // 
+eprogmismatch   - program version wrong         // 
+eprogunavail    - RPC program not available     // 
+eproto          - protocol error                // 
+eprotonosupport - protocol not supported        // 
+eprototype      - protocol wrong type for socket        // 
+erange          - math result unrepresentable   // 
+erefused        - EREFUSED                      // 
+eremchg         - remote address changed        // 
+eremdev         - remote device                 // 
+eremote         - pathname hit remote file system       // 
+eremoteio       - remote i/o error              // 
+eremoterelease  - EREMOTERELEASE                // 
+erofs           - read-only file system         // 
+erpcmismatch    - RPC version is wrong          // 
+erremote        - object is remote              // 
+eshutdown       - cannot send after socket shutdown     // 
+esocktnosupport - socket type not supported             // 
+espipe          - invalid seek                  // 
+esrch           - no such process               // 
+esrmnt          - srmount error                 // 
+estale          - stale remote file handle      // 
+esuccess        - Error 0                       // 
+etime           - timer expired                 // 
+etimedout       - connection timed out          // 
+etoomanyrefs    - too many references           // 
+etxtbsy         - text file or pseudo-device busy       // 
+euclean         - structure needs cleaning              // 
+eunatch         - protocol driver not attached          // 
+eusers          - too many users                // 
+eversion        - version mismatch              // 
+ewouldblock     - operation would block         // 
+exdev           - cross-domain link             // 
+exfull          - message tables full           // 
+nxdomain        - the hostname or domain name could not be found    // 

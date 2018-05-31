@@ -3,6 +3,7 @@
 *.log
 *.sql
 *.dump
+*.timer
 
 protocol/
 !server/protocol

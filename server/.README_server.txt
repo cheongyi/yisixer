@@ -158,28 +158,38 @@ bnot 2#1,
 
 
 %%% ========== ======================================== ====================
-(yisixer@127.0.0.1)46> erlang:term_to_binary('').
+46> erlang:term_to_binary('').
 <<131,100,0,0>>
-(yisixer@127.0.0.1)47> erlang:term_to_binary('a').              
+
+47> erlang:term_to_binary('a').
 <<131,100,0,1,97>>
-(yisixer@127.0.0.1)47> erlang:term_to_binary("").
+
+47> erlang:term_to_binary("").
 <<131,106>>
-(yisixer@127.0.0.1)47> erlang:term_to_binary("1").
+
+47> erlang:term_to_binary("1").
 <<131,107,0,1,49>>
-(yisixer@127.0.0.1)48> erlang:term_to_binary([]).
+
+48> erlang:term_to_binary([]).
 <<131,106>>
-(yisixer@127.0.0.1)54> erlang:term_to_binary(1).     
+
+54> erlang:term_to_binary(1).
 <<131,97,1>>
-(yisixer@127.0.0.1)49> erlang:term_to_binary({}).
+
+49> erlang:term_to_binary({}).
 <<131,104,0>>
-(yisixer@127.0.0.1)50> erlang:term_to_binary({1}).
+
+50> erlang:term_to_binary({1}).
 <<131,104,1,97,1>>
-(yisixer@127.0.0.1)60> erlang:term_to_binary(<<>>).
+
+60> erlang:term_to_binary(<<>>).
 <<131,109,0,0,0,0>>
-(yisixer@127.0.0.1)47> erlang:term_to_binary(fun erlang:time/0).
+
+47> erlang:term_to_binary(fun erlang:time/0).
 <<131,113,100,0,6,101,114,108,97,110,103,100,0,4,116,105,
   109,101,97,0>>
-(yisixer@127.0.0.1)47> erlang:term_to_binary(fun a:b/0).        
+  
+47> erlang:term_to_binary(fun a:b/0).
 <<131,113,100,0,1,97,100,0,1,98,97,0>>
 %%% ========== ======================================== ====================
 %%% 数据类型的大小比较

@@ -9,15 +9,6 @@
 -compile (export_all).
 
 -export ([
-    try_apply_to_online_player/4,               % 尝试同步给在线玩家应用MFA
-    try_async_apply_to_online_player/4,         % 尝试异步给在线玩家应用MFA
-    try_async_apply_to_online_player/5,         % 尝试异步给在线玩家应用MFA
-    try_apply/3                                 % 尝试应用MFA
-]).
--export ([
-    % key_index_of_record/2,                      % 获取键在记录的索引
-    index_of_tuple/2,                           % 获取元素在元组的索引
-    index_of_list/2                             % 获取元素在列表的索引
 ]).
 
 -include ("define.hrl").
@@ -28,18 +19,20 @@
 %%% ========== ======================================== ====================
 %%% @doc    定时发送消息
 send_after (Time, Dest, Msg) ->
-    if
-        is_pid(Dest) ->
-            erlang:send_after(Time, Dest, Msg);
-        true ->
-            erlang:send_after(Time, whereis(Dest), Msg)
-    end.
+    Pid     = if
+        is_pid(Dest) -> Dest;
+        true         -> whereis(Dest)
+    end,
+    Timer   = erlang:send_after(max(Time, 0), Pid, Msg),
+    ?TIMER({self(), {Pid, Dest}, Time, Msg}),
+    Timer.
 
 %%% @doc    定时应用MFA
 apply_after (Time, Module, Function, Arguments) ->
     timer:apply_after(max(Time, 0), Module, Function, Arguments).
 
 
+%%% ========== ======================================== ====================
 %%% @doc    尝试同步给在线玩家应用MFA(不在线则给游戏工作进程)
 try_apply_to_online_player (PlayerId, M, F, A) when
     is_number(PlayerId) andalso
@@ -106,6 +99,17 @@ try_apply (M, F, A) ->
     end.
 
 
+%%% ========== ======================================== ====================
+%%% @doc    设置玩家ID
+put_player_id (PlayerId) ->
+    put(?THE_PLAYER_ID, PlayerId).
+
+%%% @doc    获取玩家ID
+get_player_id () ->
+    get(?THE_PLAYER_ID).
+
+
+%%% ========== ======================================== ====================
 % %%% @doc    获取键在记录的索引
 % key_index_of_record (Key, Record) ->
 %     RecordName  = element(1, Record),
@@ -128,6 +132,8 @@ index_of_list_3 (Element, [_ | List], Index) ->
 index_of_list_3 (_Element, [], _Index) ->
     0.
 
+
+%%% ========== ======================================== ====================
 %%% @doc    list_to_binary
 lst_to_bin (null) ->
     <<"NULL">>;

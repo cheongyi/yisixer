@@ -32,7 +32,7 @@ start_link () ->
 %%% ========== ======================================== ====================
 %%% @doc    Process start callback.
 init ([]) ->
-    Listen      = listen(),
+    Listen      = tcp_listen(),
     ChildSpecs  = [
         begin
             ChildId = list_to_atom("socket_server_srv_" ++ integer_to_list(AcceptorId)),
@@ -52,7 +52,8 @@ init ([]) ->
 %%% ========== ======================================== ====================
 %%% Internal   API
 %%% ========== ======================================== ====================
-listen () ->
+%%% @doc    TCP监听
+tcp_listen () ->
     Opts = [
         binary, 
         {packet, 4}, 

@@ -38,7 +38,7 @@ start_connection (Socket) ->
     put(proc_start_time, RunTime),
     % erlang:send_after(5000, self(), {check_client}),
 
-    InitState = #client_state{sock = Socket, sender = Sender, sender_mon = SenderMon},
+    InitState = #client_state{sock = Socket, sender = Sender, sender_monitor = SenderMon},
     NewState  = send_flash_policy(Socket, InitState),
 
     % erlang:send_after(5000, self(), {check_client}),
@@ -61,7 +61,7 @@ start_connection (Socket) ->
     exit(Sender, main_loop_exit),
     ok.
 
-main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = Sender, sender_mon = SenderMon}) ->
+main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = Sender, sender_monitor = SenderMon}) ->
     
     inet:setopts(Socket, [{packet, 0}, {active, once}]),
     % inet:setopts(Socket, [{packet, 4}, {active, once}]),
@@ -170,6 +170,7 @@ send_flash_policy (Socket, State) ->
             State
     end.
 
+%% @todo   等待启动
 wait_for_start (Socket, State) ->
     inet:setopts(Socket, [{packet, 0}, {active, once}]),
     receive
@@ -194,6 +195,7 @@ wait_for_start (Socket, State) ->
             wait_for_start(Socket, State)
     end.
 
+%% @todo   握手或者请求
 handshake_or_request (Socket, RequestBin, State) ->
     RequestStr = binary_to_list(RequestBin),
     case string:str(RequestStr, "Upgrade: websocket") of
@@ -246,6 +248,7 @@ try_route_request (Request, State) ->
             handle_request_error(Request, {unknow_result, Result}, State)
     end.
     
+%% @todo   处理请求错误
 handle_request_error (Request, Reason, State) ->
     LastTime = get(last_error_time),
     {LocalTime, _} = statistics(wall_clock),

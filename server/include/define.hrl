@@ -19,10 +19,11 @@
 -endif.
  
 
--define (GAME_LOG_DIR,  "./log/").          % 游戏日志存放路劲
--define (GAME_DATA_DIR, "./data/").         % 游戏数据存放路劲
--define (GAME_PROF_DIR,  ?GAME_DATA_DIR ++ "prof/").        % 游戏性能分析存放路劲
--define (WAR_REPORT_DIR, ?GAME_DATA_DIR ++ "war_report/").  % 战报数据存放路劲
+-define (GAME_LOG_DIR,  "./log/").          % 游戏日志存放路径
+-define (GAME_DATA_DIR, "./data/").         % 游戏数据存放路径
+-define (GAME_TIMER_DIR, ?GAME_DATA_DIR ++ "timer/").       % 游戏定时器存放路径
+-define (GAME_PROF_DIR,  ?GAME_DATA_DIR ++ "prof/").        % 游戏性能分析存放路径
+-define (WAR_REPORT_DIR, ?GAME_DATA_DIR ++ "war_report/").  % 战报数据存放路径
 
 -define (SHUTDOWN_PLAYER,       36#14X2).           % 一个玩家进程将怎样被终止
 -define (SHUTDOWN_WORKER,       16#ABCDEF0).        % 一个工作进程将怎样被终止
@@ -70,16 +71,25 @@
     end
 )).
 
+%%% 加密处理
+-define (HASH_SHA(Data),             crypto:hash(sha, Data)).
+-define (HASH_FINAL(Context),        crypto:hash_final(Context)).
+-define (HASH_UPDATE(Context, Salt), crypto:hash_update(Context, Salt)).
+-define (HASH_INIT(),                crypto:hash_init(sha)).
+
+
 %%% 时间相关
 -define (MINUTE_TO_SECOND,  60).        % 分转秒
 -define (HOUR_TO_MINUTE,    60).        % 时转分
 -define (DAY_TO_HOUR,       24).        % 日转时
 -define (WEEK_TO_DAY,       7).         % 周转天
 -define (YEAR_TO_MONTH,     12).        % 年转月
--define (HOUR_TO_SECOND, ?MINUTE_TO_SECOND * ?HOUR_TO_MINUTE).  % 时转秒
--define (DAY_TO_SECOND,  ?DAY_TO_HOUR      * ?HOUR_TO_SECOND).  % 天转秒
--define (WEEK_TO_SECOND, ?WEEK_TO_DAY      * ?DAY_TO_SECOND).   % 周转秒
--define (SLEEP(TimeOut),     receive after TimeOut -> ok end).
+-define (HOUR_TO_SECOND,    ?MINUTE_TO_SECOND * ?HOUR_TO_MINUTE).  % 时转秒
+-define (DAY_TO_SECOND,     ?DAY_TO_HOUR      * ?HOUR_TO_SECOND).  % 天转秒
+-define (WEEK_TO_SECOND,    ?WEEK_TO_DAY      * ?DAY_TO_SECOND).   % 周转秒
+-define (SLEEP(TimeOut),    receive after TimeOut -> ok end).
+-define (TIMER(Data),       game_timer:write(Data)).    % 记录定时器
+
 
 %%% 数据库相关
 -define (DELETE_OR_TRUNCATE_ROWS, 10000).   % 逐条删除或清空重建行数判定
@@ -90,7 +100,8 @@
 -define (REL_TO_BIN(Value), lib_misc:rel_to_bin(Value)).
 
 
-
+%%% 玩家相关
+-define (THE_PLAYER_ID,     the_player_id). % 玩家进程字典Key - 玩家ID
 
 
 %%% 四色牌相关

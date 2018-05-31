@@ -40,11 +40,11 @@ start_child () ->
             supervisor:start_child(?SERVER, [])
     end.
 
-%%% @doc    启动子进程
+%%% @doc    统计子进程
 count_child () ->
     supervisor:count_children(?SERVER).
 
-%%% @doc    启动子进程
+%%% @doc    关闭子进程
 kill_all () ->
     [
         socket_client_srv:kill_for_game_stop(Pid)

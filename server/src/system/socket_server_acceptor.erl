@@ -72,7 +72,7 @@ handle_cast (Request, State) ->
 %%% @spec   handle_info(Info, State) -> tuple().
 %%% @doc    gen_server callback.
 handle_info (timeout, State = #state{listen = Listen}) ->
-    acceptor(Listen),
+    tcp_accept(Listen),
     {noreply, State, 0};
 handle_info (Info, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),
@@ -94,7 +94,7 @@ code_change (_Vsn, State, _Extra) ->
 %%% Internal   API
 %%% ========== ======================================== ====================
 %%% @doc    接收监听
-acceptor (Listen) ->
+tcp_accept (Listen) ->
     case (catch gen_tcp:accept(Listen, ?LISTEN_TIMEOUT)) of
         {ok, Socket} ->
             try_handle_connection(Socket);
@@ -124,19 +124,22 @@ handle_connection (Socket) ->
     end.
 
 %%% @doc    操作处理错误
-%%% Out of sockets...
-handle_error ({enfile, _})  -> sleep(200);
-%%% Too many open files -> Out of sockets...
-handle_error (emfile)       -> sleep(200);
 %%% Too many connection...
-handle_error (max_conn)     -> sleep(200);
-handle_error (econnaborted) -> ok;
-handle_error (timeout)      -> ok;
+handle_error (max_conn)     -> ?SLEEP(200);
+%%% file table overflow -> 文件表溢出
+handle_error ({enfile, _})  -> ?SLEEP(200);
+%%% Too many open files -> 打开的文件太多
+handle_error (emfile)       -> ?SLEEP(200);
 %% This will only happen when the client is terminated abnormaly
 %% and is not a problem for the server, so we want
 %% to terminate normal so that we can restart without any 
 %% error messages.
+%%% connection reset by peer -> 对等连接复位
 handle_error (econnreset)   -> exit(normal);
+%%%  software caused connection abort -> 软件导致连接中止
+handle_error (econnaborted) -> ok;
+%%%  timeout -> 超时
+handle_error (timeout)      -> ok;
 handle_error (closed) ->
     ?ERROR(
         "The accept socket was closed by " 
@@ -161,9 +164,6 @@ handle_error (Reason) ->
 %% @todo   接收失败处理
 accept_failed (String) ->
     ?ERROR(String, []),
-    exit({accept_failed, String}).    
-
-sleep (T) -> 
-    receive after T -> ok end.
+    exit({accept_failed, String}).
 
 

@@ -182,7 +182,7 @@ function show_schedule ($show_start, $schedule, $schedule_max = 0, $is_cover = t
         $end_time   = microtime(true);
         $cost_time  = round($end_time - $start_time, 3);
         // 显示光标
-        echo " done in {$cost_time}s\n\033[?25h";
+        echo "\n🍺 done in {$cost_time}s\n\033[?25h";
     }
     else {
         $schedule_i ++;

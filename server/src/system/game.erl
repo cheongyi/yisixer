@@ -48,6 +48,7 @@ start (_Type, _Args) ->
     start_child(game_log,           worker),        % 启动进程 --- 日志
     start_child(game_prof,          worker),        % 启动进程 --- 性能分析
     start_child(game_ets,           worker),        % 启动进程 --- 游戏内ets
+    start_child(game_timer,         worker),        % 启动进程 --- 游戏定时器
     % start_child(mysql,              worker),        % 启动进程 --- 游戏内mysql
     start_child(game_mysql,         worker),        % 启动进程 --- 游戏内mysql
     timer:sleep(1000),
@@ -96,12 +97,12 @@ start_child (Module, Type) ->
         supervisor  -> ?SHUTDOWN_SUPERVISOR
     end,
     start_child(Module, Module, Shutdown, Type).
-start_child (ChildId, Module, Type) ->
-    Shutdown = case Type of
-        worker      -> ?SHUTDOWN_WORKER;
-        supervisor  -> ?SHUTDOWN_SUPERVISOR
-    end,
-    start_child(ChildId, Module, Shutdown, Type).
+% start_child (ChildId, Module, Type) ->
+%     Shutdown = case Type of
+%         worker      -> ?SHUTDOWN_WORKER;
+%         supervisor  -> ?SHUTDOWN_SUPERVISOR
+%     end,
+%     start_child(ChildId, Module, Shutdown, Type).
 start_child (ChildId, Module, Shutdown, Type) ->
     StartFunc   = {Module, start_link, []},
     Restart     = permanent,
