@@ -24,7 +24,7 @@
 %%% ========== ======================================== ====================
 %% @todo   启动督程socket_server_sup
 start_link () ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 
 %%% ========== ======================================== ====================

@@ -11,16 +11,16 @@
     require_once 'conf.php';
 
     // 设定用于所有日期时间函数的默认时区
-    date_default_timezone_set("Asia/Shanghai");
+    date_default_timezone_set('Asia/Shanghai');
 
     // 目录路径
-    $change_log_dir = "change_log/";
-    $change_dir     = "change/";
-    $repair_dir     = "repair/";
-    $backup_dir     = "backup/";
+    $change_log_dir = 'change_log/';
+    $change_dir     = 'change/';
+    $repair_dir     = 'repair/';
+    $backup_dir     = 'backup/';
 
     // 文件名称
-    $temp_cron_file = "template_data.clone.php";
+    $temp_cron_file = 'template_data.clone.php';
 
     // 参数声明赋值
     $mode    = $argv[1];
@@ -38,52 +38,53 @@
 
     // 生成新的数据库连接对象
     $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
-    $mysqli->query("SET NAMES utf8;");
+    $mysqli->query('SET NAMES utf8;');
 
-    if ($mode == "change" || $mode == "renew") {
+    if ($mode == 'change' || $mode == 'renew') {
         // 变更数据结构|重新开始
         @unlink($temp_cron_file);
         change_db();
-    } else if ($mode == "export") {
+    } else if ($mode == 'export') {
         // 导出数据库模版
         change_db();
+        echo "\n\n";
         export_db(false);
-    } else if ($mode == "backup") {
+    } else if ($mode == 'backup') {
         // 备份所有数据
         change_db();
         export_db(true);
-    } else if ($mode == "restore") {
+    } else if ($mode == 'restore') {
         // 恢复备份数据
-        $backup_file = str_replace(".php", "", $argv[3]);
-        require_once($backup_dir.$backup_file.".php");
-    } else if ($mode == "repair") {
+        $backup_file = str_replace('.php', '', $argv[3]);
+        require_once($backup_dir.$backup_file.'.php');
+    } else if ($mode == 'repair') {
         // 执行修复脚本
         $main_stime   = microtime(true);
-        $repair_file = str_replace(".php", "", $argv[3]);
-        require_once($repair_dir.$repair_file.".php");
+        $repair_file = str_replace('.php', '', $argv[3]);
+        require_once($repair_dir.$repair_file.'.php');
         $main_etime = microtime(true);
         $dots = generate_char(20, strlen($db_name), '.');
         echo "\nRepair db:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
-    } else if ($mode == "clone") {
+    } else if ($mode == 'clone') {
         // 克隆数据库
         export_db(false);
-    } else if ($mode == "cloneback") {
+    } else if ($mode == 'cloneback') {
         // 恢复克隆的数据库
         $main_stime   = microtime(true);
         require_once($temp_cron_file);
         $main_etime = microtime(true);
         $dots = generate_char(20, strlen($db_name), '.');
         echo "\nCloneB db:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
-    } else if ($mode == "clean") {
+    } else if ($mode == 'clean') {
         // 清空数据
         $main_stime   = microtime(true);
-        $query_player = query_array("SELECT 1 FROM `player`;");
+        $query_player = query_array('SELECT 1 FROM `player`;');
         if (count($query_player) >= 20) {
-            echo "Too many player ".count($query_player)."! Cannt clean!\n";
+            echo 'Too many player '.count($query_player)."! Cannt clean!\n";
             exit();
         }
         
-        execute("SET FOREIGN_KEY_CHECKS=0;");
+        execute('SET FOREIGN_KEY_CHECKS=0;');
         $tables     = get_tables();
         $max_length = get_max_length($tables);
         foreach ($tables as $table_name) {
@@ -117,7 +118,7 @@ function query ($sql) {
     
     $result = $mysqli->query($sql, MYSQLI_USE_RESULT);
     if (!$result)
-        die("Query Error (" . $mysqli->errno . ") " . $mysqli->error."\n");
+        die('Query Error (' . $mysqli->errno . ') ' . $mysqli->error."\n");
     
     $rows = array();
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
@@ -136,7 +137,7 @@ function query_array ($sql) {
 
     $result = $mysqli->query($sql, MYSQLI_USE_RESULT);
     if (!$result)
-        die("Query Array Error (" . $mysqli->errno . ") " . $mysqli->error."\n");
+        die('Query Array Error (' . $mysqli->errno . ') ' . $mysqli->error."\n");
 
     $rows = array();
     while ($row = $result->fetch_array(MYSQLI_NUM)) {
@@ -155,7 +156,7 @@ function execute ($sql) {
 
     if(!$mysqli->multi_query($sql)){
         echo "\nSQL execute failure\n-----------------\n{$sql}\n-----------------\n";
-        die("Execute Error (" . $mysqli->errno . ") " . $mysqli->error."\n");
+        die('Execute Error (' . $mysqli->errno . ') ' . $mysqli->error."\n");
     }
 
     free_result();
@@ -195,20 +196,20 @@ function get_changes () {
 function get_files_from_dir ($dir, &$changes) {
     if ($handle = opendir($dir)) {
         while (FALSE !== ($file = readdir($handle))) {
-            if ($file == "." || $file == ".." || is_dir($file)) {
+            if ($file == '.' || $file == '..' || is_dir($file)) {
                 continue;
-            } else if (strrpos($file, ".php") == 13) {
+            } else if (strrpos($file, '.php') == 13) {
                 if (strlen($file) == 17) {
                     $name    = substr($file, 0, -4);
-                    $id      = (int)str_replace("-", "", $name);
+                    $id      = (int)str_replace('-', '', $name);
                     $is_dump = false;
                 } else {
                     continue;
                 }
-            } else if (strrpos($file, ".dump.php") == 13) {
+            } else if (strrpos($file, '.dump.php') == 13) {
                 if (strlen($file) == 22) {
                     $name    = substr($file, 0, -9);
-                    $id      = (int)str_replace("-", "", $name);
+                    $id      = (int)str_replace('-', '', $name);
                     $is_dump = true;
                 } else {
                     continue;
@@ -252,7 +253,7 @@ function get_max_length ($tables) {
 
 // @todo   生成填补字符
 function generate_char ($max_length, $length, $char) {
-    $space      = "";
+    $space      = '';
     $fill_len   = $max_length - $length;
     for ($i = 0; $i < $fill_len; $i ++) {
         $space .= $char;
@@ -308,18 +309,18 @@ function get_create_table_sql ($mysqli, $table_name) {
     $row    = $result->fetch_array(MYSQLI_ASSOC);
     // 剔除掉语句中的自增长字段值
     $create_table_sql = preg_replace("/AUTO_INCREMENT=\d{1,}/", "", $row['Create Table']);
-    $create_table_sql = preg_replace("/\\n  /", "\n            ", $create_table_sql);
-    $create_table_sql = preg_replace("/\\n\)/", "\n        )", $create_table_sql);
+    $create_table_sql = preg_replace("/\\n  /",   "\n            ", $create_table_sql);
+    $create_table_sql = preg_replace("/\\n\)/",      "\n        )", $create_table_sql);
     
     $result->close();
     
-    return "        ".$create_table_sql.";";
+    return '        '.$create_table_sql.';';
 }
 
 
 // @todo   获取表的数据插入语句
 function get_insert_into_sql ($mysqli, $table_name, $fields) {
-    $fields_arr = implode("`, `", $fields);
+    $fields_arr = implode('`, `', $fields);
     $insert_sql = "    INSERT INTO `{$table_name}` (`{$fields_arr}`) VALUES";
     $insert_arr = array();
         
@@ -339,10 +340,10 @@ function get_insert_into_sql ($mysqli, $table_name, $fields) {
 
     if (count($insert_arr) == 0){
         $result->close();
-        return "";
+        return '';
     }
     
-    $insert_sql .= implode(", ", $insert_arr).";\n";
+    $insert_sql .= implode(', ', $insert_arr).";\n";
     
     $result->close();
     
@@ -408,19 +409,19 @@ function prepare_db () {
             COLLATE       = 'utf8_general_ci';
             INSERT INTO `db_version` (`version`) VALUES (0);";
         if ($mysqli->multi_query($sql) === FALSE)
-            die("Prepare `db_version` fialed (" . $mysqli->errno . ') ' . $mysqli->error."\n");
+            die('Prepare `db_version` fialed (' . $mysqli->errno . ') ' . $mysqli->error."\n");
             
         $mysqli->close();
         $mysqli  = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
     }
     
-    $sql    = "SELECT `version` FROM `db_version`;";
+    $sql    = 'SELECT `version` FROM `db_version`;';
     $result = $mysqli->query($sql);
     $row    = $result->fetch_array(MYSQLI_ASSOC);
     $result->close();
     
     if ($row == false) { 
-        $mysqli->query("INSERT INTO `db_version` (`version`) VALUES (0);");
+        $mysqli->query('INSERT INTO `db_version` (`version`) VALUES (0);');
         $version = 0;
     } else {
         $version = $row['version'];
@@ -451,7 +452,7 @@ function change_db () {
             // 初始化则从最新的模版开始
             if ($version < $last_export_version)
                 continue;
-        } else if ($mode == "renew") {
+        } else if ($mode == 'renew') {
             // renew 是想引用最新模版数据和数据结构
             if ($version < $last_export_version || $version <= $db_version && $changes[$version]['is_dump'] == false)
                 continue;
@@ -468,13 +469,13 @@ function change_db () {
             die("Can not query:'UPDATE `db_version` SET `version` = {$version}'\n");
         
         if ($changes[$version]['is_dump'])
-            echo "apply  change: ".$changes[$version]['file']." ................... [done]";
+            echo 'apply  change: '.$changes[$version]['file'].' ................... [done]';
         else
-            echo " ........................ [done]";
+            echo ' ........................ [done]';
     }
     
     $main_etime = microtime(true);
-    echo "\n\nApply  change:".sprintf("%03d", $change_num)." ............. complete in ".round($main_etime - $main_stime, 2)."s\n";
+    echo "\n\nApply  change:".sprintf("%03d", $change_num).' ............. complete in '.round($main_etime - $main_stime, 2)."s\n";
 }
 
 
@@ -484,7 +485,7 @@ function export_db ($is_backup = false) {
     
     $main_stime = microtime(true);
         
-    if ($mode == "clone") {
+    if ($mode == 'clone') {
         $output_file = str_replace("\\", "/", getcwd())."/".$temp_cron_file;
     } else if ($is_backup) {
         $output_file = str_replace("\\", "/", getcwd())."/".$backup_dir.date("Y-m-d_H-i-s").".php";
@@ -496,15 +497,15 @@ function export_db ($is_backup = false) {
         while (true) {
             $i += 1;
             
-            $file_name  = date("Y-m-d") . "-" . sprintf("%02d", $i);
-            $version    = (int)str_replace("-", "", $file_name);
+            $file_name  = date('Y-m-d') . '-' . sprintf("%02d", $i);
+            $version    = (int)str_replace('-', '', $file_name);
             
             if ($version > $max_version) {
                 break;
             }
         }
 
-        $output_file = str_replace("\\", "/", getcwd())."/".$change_dir.$file_name.".dump.php";
+        $output_file = str_replace('\\', '/', getcwd()).'/'.$change_dir.$file_name.".dump.php";
     }
     
     $file       = fopen($output_file, 'c');
@@ -538,16 +539,16 @@ execute(\"
 
 ");
 
-    if ($mode == "clone") 
-        $echo_mode = "clone  ";
-    else if ($mode == "backup")
-        $echo_mode = "backup ";
-    else if ($mode == "export")
-        $echo_mode = "dump   ";
+    if ($mode == 'clone') 
+        $echo_mode = 'clone  ';
+    else if ($mode == 'backup')
+        $echo_mode = 'backup ';
+    else if ($mode == 'export')
+        $echo_mode = 'dump   ';
 
     foreach ($tables as $table_name) {
         $dots = generate_char($max_length, strlen($table_name), '.');
-        if ($table_name == "db_version") {
+        if ($table_name == 'db_version') {
             fwrite($file, 'if ($db_version == 0) {'."\n");
             fwrite($file, "    echo \"    {$table_name} {$dots}......... [ignore]\\n\";\n\n");
             fwrite($file, "}\n\n");
@@ -559,7 +560,7 @@ execute(\"
         $sql  = get_create_table_sql($mysqli, $table_name);
 
         fwrite($file, 'if ($db_version == 0) {'."\n");
-        fwrite($file, "    echo \"    {$table_name} {$dots}......... \";\n\n");
+        fwrite($file, "    echo '    {$table_name} {$dots}......... ';\n\n");
         
         fwrite($file, "    execute(\"\n");
         fwrite($file, $sql);
@@ -568,10 +569,10 @@ execute(\"
         fwrite($file, "    echo \"[created]\\n\"; \n"); 
         fwrite($file, "}\n\n");
         
-        if ($is_backup == false && (strpos($table_name, "player") === 0 
-            || $table_name == "server_state" 
-            || $table_name == "world_boss_state" 
-            || $table_name == "level_up_record" 
+        if ($is_backup == false && (strpos($table_name, 'player') === 0 
+            || $table_name == 'server_state' 
+            || $table_name == 'world_boss_state' 
+            || $table_name == 'level_up_record' 
             || $table_name == 'max_online' 
             || $table_name == 'friend_chat_times')) {
             echo "[ignore]\n";
@@ -581,9 +582,9 @@ execute(\"
         $fields = get_table_fields($mysqli, $table_name);
         $sql    = get_insert_into_sql($mysqli, $table_name, $fields);
         
-        fwrite($file, "echo \"    {$table_name} {$dots}......... \";\n\n");
-        fwrite($file, "execute(\"DELETE FROM `{$table_name}`;\");\n\n");
-        if ($sql != "") {
+        fwrite($file, "echo '    {$table_name} {$dots}......... ';\n\n");
+        fwrite($file, "execute('DELETE FROM `{$table_name}`;');\n\n");
+        if ($sql != '') {
             fwrite($file, "execute(\"\n");
             fwrite($file, $sql);
             fwrite($file, "\");\n\n");
@@ -595,12 +596,12 @@ execute(\"
     }
 
     fwrite($file, "
-execute(\"
+execute('
     /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
     /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
     /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
     /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-\");
+');
 
 ");
 
@@ -609,7 +610,7 @@ execute(\"
     
     fclose($file);
     
-    if ($mode == "export") {
+    if ($mode == 'export') {
         $sql = "UPDATE `db_version` SET `version` = {$version};";
 
         if ($mysqli->query($sql) === FALSE)
@@ -619,11 +620,11 @@ execute(\"
     $main_etime = microtime(true);
     
     $dots = generate_char(20, strlen($db_name), '.');
-    if ($mode == "clone") 
+    if ($mode == 'clone') 
         echo "\n\nClone  db:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
-    else if ($mode == "backup")
+    else if ($mode == 'backup')
         echo "\n\nBackup db:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
-    else if ($mode == "export")
+    else if ($mode == 'export')
         echo "\n\nExport db:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
 }
 
