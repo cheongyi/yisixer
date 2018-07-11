@@ -2,9 +2,8 @@
 // =========== ======================================== ====================
 // @todo   写入api_out文件
 function write_api_out () {
-    global $protocol, $api_out_dir, $pt_file_num;
+    global $protocol, $pt_file_num;
 
-    // show_schedule(PF_PT_WRITE, PF_PT_WRITE_SCH, count(PF_PT_WRITE_SCH), false);
     $protocol_module    = $protocol[C_MODULE];
     foreach ($protocol_module as $module) {
         // 变量声明、赋值、初始化
@@ -16,7 +15,7 @@ function write_api_out () {
         $module_name    = 'api_'.$module_name.'_out';
         $filename       = $module_name.'.erl';
         $file           = fopen(DIR_API_OUT.$filename, 'w');
-        show_schedule(PF_PT_WRITE, $filename, $pt_file_num);
+        show_schedule(PF_PTS_WRITE, $filename, $pt_file_num);
 
         fwrite($file, "-module ({$module_name}).");
         write_attributes($file);
@@ -53,8 +52,7 @@ function write_api_out () {
 %%% @doc    {$action_note}
 {$action_name} ({}) ->
     <<
-           {$module_id}:16/unsigned,
-        {$action_id}:16/unsigned
+        {$action_id}".BT_O_ACTION."
     >>.
 
 ");
@@ -83,8 +81,7 @@ function write_api_out () {
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
     <<
-           {$module_id}:16/unsigned,
-        {$action_id}:16/unsigned,
+        {$action_id}".BT_O_ACTION.",
         {$field_bin_arr}
     >>.
 
@@ -124,11 +121,18 @@ class_to_bin ({$class_name}, {
     %%% ---------- ---------------------------------------- --------------------
     <<
         {$field_bin_arr}
-    >>;");
+    >>;
+class_to_bin ({$class_name}, {{$class_name},
+    {$field_name_arr}
+}) ->
+    class_to_bin({$class_name}, {
+    {$field_name_arr}
+    });
+");
         }
 
 
-        // tuple_to_bin_
+        // class_to_bin通配|tuple_to_bin_
         fwrite($file, '
 %%% @doc    其他类|空类|通配
 class_to_bin (_ClassName, _Class) ->
@@ -186,6 +190,7 @@ function write_non_num_field_to_binary ($file, $field_arr) {
         $field_module       = $field['field_module'];
         $field_class        = $field['field_class'];
         $field_name         = UNDER_LINE.$field_name.UNDER_LINE.$field_line;
+        $field_name_bin     = $field_name.'_Bin';
         if ($field_module) {
             $module_colon   = $field_module.':';
         }
@@ -195,15 +200,19 @@ function write_non_num_field_to_binary ($file, $field_arr) {
 
         // 非数值变量ToBin
         if     ($field_type == C_STRING){
+            $bin_size       = 'BinSize_'.$field_line;
+            $dots_SizeLen   = generate_char(strlen($field_name_bin), strlen($bin_size), SPACE_ONE);
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
-    {$field_name}_Bin     = list_to_binary({$field_name}),
-    {$field_name}_BinSize = size({$field_name}_Bin),");
+    {$field_name_bin} = list_to_binary({$field_name}),
+    %% {$bin_size}{$dots_SizeLen} = size({$field_name_bin}),");
         }
         elseif ($field_type == C_LIST)  {
+            $list_len       = 'ListLen_'.$field_line;
+            $dots_SizeLen   = generate_char(strlen($field_name_bin), strlen($bin_size), SPACE_ONE);
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
-    {$field_name}_ListLen = length({$field_name}),
+    {$list_len} = length({$field_name}),
     BinList{$field_name}  = [");
 
             if ($field_class) {
@@ -219,12 +228,12 @@ function write_non_num_field_to_binary ($file, $field_arr) {
         || 
         {$field_name}_Element <- {$field_name}
     ], 
-    {$field_name}_Bin     = list_to_binary(BinList{$field_name}),");
+    {$field_name_bin}     = list_to_binary(BinList{$field_name}),");
         }
         elseif ($field_type == C_TYPEOF){
             fwrite($file, "
     %%% ---------- ---------------------------------------- --------------------
-    {$field_name}_Bin = {$module_colon}class_to_bin({$field_class}, {$field_name}),");
+    {$field_name_bin} = {$module_colon}class_to_bin({$field_class}, {$field_name}),");
     // %% {$field_note}
         }
     }
@@ -280,28 +289,32 @@ function get_field_to_binary ($field) {
     $field_name         = UNDER_LINE.$field_name.UNDER_LINE.$field_line;
 
     if     ($field_type == C_ENUM)  {
-        $field_bin      = $field_name.BT_ENUM;
+        $field_bin      = $field_name.BT_O_ENUM;
     }
     elseif ($field_type == C_BYTE)  {
-        $field_bin      = $field_name.BT_BYTE;
+        $field_bin      = $field_name.BT_O_BYTE;
     }
     elseif ($field_type == C_SHORT) {
-        $field_bin      = $field_name.BT_SHORT;
+        $field_bin      = $field_name.BT_O_SHORT;
     }
     elseif ($field_type == C_INT)   {
-        $field_bin      = $field_name.BT_INT;
+        $field_bin      = $field_name.BT_O_INT;
     }
     elseif ($field_type == C_LONG)  {
-        $field_bin      = $field_name.BT_LONG;
+        $field_bin      = $field_name.BT_O_LONG;
     }
     elseif ($field_type == C_STRING){
-        $field_bin      = $field_name.BT_BIN_SIZE.', '.$field_name.BT_STRING;
+        // $bin_size       = get_bin_size_field($field_line);
+        // $field_bin      = $bin_size.', '.$field_name.BT_STRING;
+        $field_bin      = $field_name.BT_O_STRING;
     }
     elseif ($field_type == C_TYPEOF){
         $field_bin      = $field_name.BT_TYPEOF;
     }
     elseif ($field_type == C_LIST)  {
-        $field_bin      = $field_name.BT_LIST_LEN.', '.$field_name.BT_LIST;
+        $list_len       = get_list_len_field($field_line);
+        $field_bin      = $list_len.', '.$field_name.BT_LIST;
+        // $field_bin      = $field_name.BT_LIST;
     }
 
     return $field_bin;

@@ -2,7 +2,7 @@
 
 %%% @doc    
 
--copyright  ("Copyright © 2017-2018 YiSiXEr").
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 04, 25}).
 -vsn        ("1.0.0").
@@ -81,8 +81,8 @@ handle_info ({inet_reply, Socket, ok},      State = #state{sock = Socket}) ->
     {noreply, State};
 handle_info ({inet_reply, Socket, _},       State = #state{sock = Socket}) ->
     {stop,    inet_reply_error, State};
-handle_info ({'DOWN', ParentMonitor, _, _, _}, State = #state{parentmonitor = ParentMonitor}) ->
-    {stop,    'DOWN',           State};
+handle_info ({'DOWN', ParentMonitor, _, _, Reason}, State = #state{parentmonitor = ParentMonitor}) ->
+    {stop,    Reason,           State};
 handle_info (main_loop_exit,                State) ->
     {stop,    main_loop_exit,   State};
 handle_info (Info, State) ->

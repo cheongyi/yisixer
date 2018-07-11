@@ -1,9 +1,9 @@
 -module (game_log).
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2017, 11, 09}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
 -behaviour  (gen_server).
 
@@ -96,7 +96,7 @@ code_change (_Vsn, State, _Extra) ->
 %%% ========== ======================================== ====================
 %%% @doc    打开对应日志文件
 open_log_file (Date) ->
-    FileName = ?GAME_LOG_DIR ++ lib_time:ymd_tuple_to_cover0str(Date, "_") ++ ".error.log",
+    FileName = ?GAME_LOG_DIR ++ lib_misc:ymd_tuple_to_cover0str(Date, "_") ++ ".error.log",
     file:open(FileName, [append, raw, {delayed_write, 1024 * 100, 2000}]).
 
 %%% @doc    打印log信息或写入日志文件
@@ -105,7 +105,7 @@ write_log ({info, PlayerId, Message, ArgumentList}, _) ->
 write_log ({LogType, PlayerId, Message, ArgumentList}, File) ->
     write_log_to_file (File, get_log_title(PlayerId), Message, ArgumentList),
     ?FORMAT(
-        lib_time:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ " [~p] from player ~p~n" 
+        lib_misc:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ " [~p] from player ~p~n" 
             ++ Message ++ "~n~n",
         [LogType, PlayerId | ArgumentList]
     );
@@ -114,7 +114,7 @@ write_log ({info, Message, ArgumentList}, _) ->
 write_log ({LogType, Message, ArgumentList}, File) ->
     write_log_to_file (File, get_log_title(), Message, ArgumentList),
     ?FORMAT(
-        lib_time:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ " [~p]~n" 
+        lib_misc:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ " [~p]~n" 
             ++ Message ++ "~n~n",
         [LogType | ArgumentList]
     ).
@@ -125,11 +125,11 @@ write_log_to_file (File, LogTitle, Message, ArgumentList) ->
     
 %%% @doc    获取日志标题
 get_log_title(PlayerId) ->
-    lib_time:ymdhms_tuple_to_cover0str(erlang:localtime())
+    lib_misc:ymdhms_tuple_to_cover0str(erlang:localtime())
         ++ " from player " ++ integer_to_list(PlayerId) ++ "~n".
     
 get_log_title() ->
-    lib_time:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ "~n".
+    lib_misc:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ "~n".
 
 
 

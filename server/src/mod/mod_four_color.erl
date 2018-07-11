@@ -1,6 +1,6 @@
 -module (mod_four_color).
 
--author ('Chen HongYi').
+-author     ("CHEONGYI").
 
 -compile (export_all).
 -export ([

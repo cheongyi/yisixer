@@ -76,6 +76,7 @@
 -define (HASH_FINAL(Context),        crypto:hash_final(Context)).
 -define (HASH_UPDATE(Context, Salt), crypto:hash_update(Context, Salt)).
 -define (HASH_INIT(),                crypto:hash_init(sha)).
+-define (PACKET_HEAD, 0).   % 协议包头
 
 
 %%% 时间相关
@@ -89,6 +90,9 @@
 -define (WEEK_TO_SECOND,    ?WEEK_TO_DAY      * ?DAY_TO_SECOND).   % 周转秒
 -define (SLEEP(TimeOut),    receive after TimeOut -> ok end).
 -define (TIMER(Data),       game_timer:write(Data)).    % 记录定时器
+-define (CHECK_CLIENT_TIME,    50000).
+-define (GEN_SERVER_TIME_OUT,   5000).  % gen_server 超时时间
+-define (KICKOUT_PLAYER_TIMEOUT, 300).  % 踢出玩家超时时间(秒)
 
 
 %%% 数据库相关
@@ -98,6 +102,16 @@
 -define (LST_TO_BIN(List),  lib_misc:lst_to_bin(List)).
 -define (INT_TO_BIN(Value), lib_misc:int_to_bin(Value)).
 -define (REL_TO_BIN(Value), lib_misc:rel_to_bin(Value)).
+
+-define (ETS_TAB(Table),            game_db_table:ets_tab(Table)).          % 数据库表对应的ets table name
+-define (ETS_TAB(Table, FragId),    game_db_table:ets_tab(Table, FragId)).  % 数据库表对应的ets table name
+
+-define (INGOT_OP_REASON,   ingot_op_reason).   % 金币操作原因
+-define (GKEY_OP_REASON,    gkey_op_reason).    % 金钥操作原因
+
+%% 比率参数
+-define (PARAMETER,         10000).
+-define (INIT_PACK_EXPAND_ID,   1).             % 初始仓库扩容ID
 
 
 %%% 玩家相关
@@ -134,7 +148,7 @@
         ?CARD_STYLE_BING
     ]
 ).
-
+ 
 -define (FOUR_COLOR_SRV,                   four_color_srv).     % 四色牌进程
 -define (FOUR_COLOR_AUTO_SRV,         four_color_auto_srv).     % 四色牌自动进程
 -define (FOUR_COLOR_PLAYER_SRV_A, four_color_player_srv_a).     % 四色牌玩家进程A

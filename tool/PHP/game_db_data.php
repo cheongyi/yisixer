@@ -2,15 +2,15 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库数据操作
 function game_db_data () {
-    global $tables_info, $tables_fields_info, $table_name_len_max;
+    global $tables_info, $tables_fields_info, $table_name_len_max, $PF_DB_WRITE_SCH;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    show_schedule(PF_DB_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
     $file       = fopen(GAME_DB_DATA_FILE, 'w');
 
     fwrite($file, '-module ('.GAME_DB_DATA.').');
     write_attributes($file);
     // 写入系统属性
-    fwrite($file, "
+    fwrite($file, '
 -export ([
     do/1,
     fetch/1,
@@ -26,7 +26,8 @@ function game_db_data () {
     memory/0,           memory/1
 ]).
 
--include (\"gen/game_db.hrl\").
+-include ("define.hrl").
+-include ("gen/game_db.hrl").
 
 -define (ENSURE_TRAN, ensure_tran()).
 
@@ -40,12 +41,12 @@ do (Tran) ->
             do_tran_put_init(),
 
             case catch Tran() of
-                {'EXIT', {aborted, Reason}} -> 
+                {\'EXIT\', {aborted, Reason}} -> 
                     rollback(get(tran_log)),
                     do_tran_erase(),
                     exit(Reason);
 
-                {'EXIT', Reason} -> 
+                {\'EXIT\', Reason} -> 
                     rollback(get(tran_log)),
                     do_tran_erase(),
                     exit(Reason);
@@ -71,7 +72,7 @@ fetch (Sql) ->
 
 %%% ========== ======================================== ====================
 %%% read
-%%% ========== ======================================== ====================");
+%%% ========== ======================================== ====================');
 
 
 
@@ -98,7 +99,7 @@ fetch (Sql) ->
         if ($frag_field) {
             if (in_array($frag_field, $primary)) {
                 $ets_lookup  = "ets:lookup(
-        game_db_table:ets_tab({$table_name}, {$field_name_up} rem 100), 
+        ?ETS_TAB({$table_name}, {$field_name_up} rem 100), 
         {{$row_key_up_arr}}
     )";
             }
@@ -146,7 +147,7 @@ select (Table, MatchSpec) ->
         slow    -> 
             fetch_select({$table_name}, MatchSpec);
         _FragId ->
-            ets:select(game_db_table:ets_tab({$table_name}, _FragId rem 100), MatchSpec)
+            ets:select(?ETS_TAB({$table_name}, _FragId rem 100), MatchSpec)
     end,";
         }
         else {
@@ -210,7 +211,7 @@ write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
         $row_key_up_arr     = implode(', ', $row_key_up);
         // 判断是否分表
         if ($frag_field) {
-            $ets_table      = "game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
+            $ets_table      = "?ETS_TAB({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
         }
         else {
             $ets_table      = "t_{$table_name}";
@@ -231,6 +232,23 @@ write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
                 row_key = {NewId}
             },";
         }
+        // 预防操作
+        if ($table_name == 'player_data') {
+            $prevent_op = '
+            if
+                OldRecord #player_data.ingot        =/= Record #player_data.ingot orelse
+                OldRecord #player_data.charge_ingot =/= Record #player_data.charge_ingot ->
+                    case get(?INGOT_OP_REASON) of
+                        undefined -> exit(unknow_ingot_op_reason);
+                        _ -> ok
+                    end;
+                true ->
+                    ok
+            end,';
+        }
+        else {
+            $prevent_op = '';
+        }
         fwrite($file, "
 write (Record = #{$table_name}{row_key = RowKey, {$primary_key_arr}, row_ver = RowVer}) -> ?ENSURE_TRAN,
     TimeTuple   = game_prof:statistics_start(),
@@ -246,7 +264,7 @@ write (Record = #{$table_name}{row_key = RowKey, {$primary_key_arr}, row_ver = R
         _ ->
             validate_for_write(Record, update),
             [OldRecord]  = ets:lookup(EtsTable, RowKey),
-            if OldRecord #{$table_name}.row_ver =:= RowVer -> ok end,
+            if OldRecord #{$table_name}.row_ver =:= RowVer -> ok end,{$prevent_op}
             Changes      = get_changes({$fields_num}, Record, OldRecord),
             UpdateRecord = Record #{$table_name}{row_ver = RowVer + 1},
             ets:insert(EtsTable, UpdateRecord),
@@ -281,7 +299,7 @@ write (Record) ->
         }
         $frag_field     = $fields_info['FRAG_FIELD'];
         if ($frag_field) {
-            $ets_table  = "game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
+            $ets_table  = "?ETS_TAB({$table_name}, Record #{$table_name}.{$frag_field} rem 100)";
         }
         else {
             $ets_table  = "t_{$table_name}";
@@ -370,7 +388,7 @@ do_delete_select ([], Count) ->
         $frag_field     = $fields_info['FRAG_FIELD'];
         if ($frag_field) {
             $delete_all_objects  = "[
-        ets:delete_all_objects(game_db_table:ets_tab({$table_name}, FragId)) 
+        ets:delete_all_objects(?ETS_TAB({$table_name}, FragId)) 
         || 
         FragId <- ?FRAG_ID_LIST
     ]";
@@ -419,10 +437,10 @@ count ({$table_name}){$dots} -> count_frag({$table_name});");
     // 写入 memory/2 函数
     $dots = generate_char($table_name_len_max, strlen('Table'), ' ');
     fwrite($file, "
-count (Table){$dots} -> ets:info(game_db_table:ets_tab(Table), size).
+count (Table){$dots} -> ets:info(?ETS_TAB(Table), size).
 
 count_frag (Table) ->
-    lists:sum([ets:info(game_db_table:ets_tab(Table, FragId), size) || FragId <- ?FRAG_ID_LIST]).
+    lists:sum([ets:info(?ETS_TAB(Table, FragId), size) || FragId <- ?FRAG_ID_LIST]).
 
 
 %%% ========== ======================================== ====================
@@ -453,10 +471,10 @@ memory ({$table_name}){$dots} -> memory_frag({$table_name});");
     // 写入 memory/1  通配分支函数
     $dots = generate_char($table_name_len_max, strlen("Table"), ' ');
     fwrite($file, "
-memory (Table){$dots} -> ets:info(game_db_table:ets_tab(Table), memory).
+memory (Table){$dots} -> ets:info(?ETS_TAB(Table), memory).
 
 memory_frag (Table) ->
-    lists:sum([ets:info(game_db_table:ets_tab(Table, FragId), memory) || FragId <- ?FRAG_ID_LIST]).
+    lists:sum([ets:info(?ETS_TAB(Table, FragId), memory) || FragId <- ?FRAG_ID_LIST]).
 
 
 %%% ========== ======================================== ====================");
@@ -568,7 +586,7 @@ fetch_lookup(Table, Key) ->
 fetch_lookup(_, _, 100) ->
     [];
 fetch_lookup(Table, Key, FragId) ->
-    case ets:lookup(game_db_table:ets_tab(Table, FragId), Key) of
+    case ets:lookup(?ETS_TAB(Table, FragId), Key) of
         [] -> fetch_lookup(Table, Key, FragId + 1);
         R  -> R
     end.
@@ -580,7 +598,7 @@ fetch_select(Table, MatchSpec) ->
 fetch_select(_, _, 100, Return) ->
     lists:concat(Return);
 fetch_select(Table, MatchSpec, FragId, Return) ->
-    NewReturn   = case ets:select(game_db_table:ets_tab(Table, FragId), MatchSpec) of
+    NewReturn   = case ets:select(?ETS_TAB(Table, FragId), MatchSpec) of
         []      -> Return;
         Result  -> Result ++ Return
     end,

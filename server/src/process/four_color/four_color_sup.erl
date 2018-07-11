@@ -1,6 +1,6 @@
 -module (four_color_sup).
 
--author ('Chen HongYi').
+-author     ("CHEONGYI").
 
 -behaviour (supervisor).
 

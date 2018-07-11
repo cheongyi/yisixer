@@ -1,9 +1,9 @@
 -module (reloader).
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2017, 11, 09}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
 -behaviour (gen_server).
 

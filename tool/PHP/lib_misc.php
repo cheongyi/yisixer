@@ -27,19 +27,23 @@ function get_table_data ($mysqli, $table_name, $fields) {
 function get_tables_info () {
     global $schema, $db_name;
     
-    $sql            = "SELECT `TABLE_NAME` FROM `TABLES` WHERE `TABLE_SCHEMA` = '{$db_name}';";
+    $sql            = "SELECT `TABLE_NAME`, `TABLE_COMMENT` FROM `TABLES` WHERE `TABLE_SCHEMA` = '{$db_name}';";
     $result         = $schema->query($sql);
-    $tables_info    = array();
-    $name_len       = 0;
+    $tables_info            = array();
+    $tables_info['TABLES']  = array();
+    $tables_info['COMMENT'] = array();
+    $name_len               = 0;
     
     while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
         $table_name              = $row['TABLE_NAME'];
         // 过滤掉不需要的表
         if ($table_name == 'db_version') {
-            // continue;
+            continue;
         }
         $tables_info['TABLES'][] = $table_name;
         $name_len                = max($name_len, strlen($table_name));
+        $table_comment           = $row['TABLE_COMMENT'];
+        $tables_info['COMMENT'][$table_name]    = $table_comment;
     }
     $tables_info['NAME_LEN_MAX'] = $name_len;
     
@@ -137,7 +141,7 @@ function write_attributes_note($file) {
     $ymd    = date('Y, m, d');
     fwrite($file, "
 %%% ========== ======================================== ====================
-%%% -copyright  (\"Copyright © 2017-$year YiSiXEr\").
+%%% -copyright  (\"Copyright © 2017-$year Tools@YiSiXEr\").
 %%% -author     (\"CHEONGYI\").
 %%% -date       ({{$ymd}}).
 %%% -vsn        (\"1.0.0\").
@@ -154,7 +158,7 @@ function write_attributes($file) {
 
 %%% @doc    
 
--copyright  (\"Copyright © 2017-$year YiSiXEr\").
+-copyright  (\"Copyright © 2017-$year Tools@YiSiXEr\").
 -author     (\"CHEONGYI\").
 -date       ({{$ymd}}).
 -vsn        (\"1.0.0\").
@@ -165,9 +169,9 @@ function write_attributes($file) {
 // =========== ======================================== ====================
 // @todo   显示进度条
 function show_schedule ($show_start, $schedule, $schedule_max = 0, $is_cover = true) {
-    global $schedule_i, $show_schedule, $start_time;
+    global $schedule_i, $show_schedule, $start_time, $PF_ROTATE;
 
-    usleep(1000 * 500);
+    usleep(1000 * 50);
     if (is_array($schedule)) {
         $schedule  = $schedule[$schedule_i];
     }
@@ -176,13 +180,13 @@ function show_schedule ($show_start, $schedule, $schedule_max = 0, $is_cover = t
         $schedule_i     = 0;
         $show_schedule  = '';
         $start_time     = microtime(true);
-        echo "\033[?25l".$show_start;
+        echo $show_start;
     }
     elseif ($schedule == 'end') {
         $end_time   = microtime(true);
         $cost_time  = round($end_time - $start_time, 3);
         // 显示光标
-        echo "\n🍺 done in {$cost_time}s\n\033[?25h";
+        echo " done in {$cost_time}s\n";
     }
     else {
         $schedule_i ++;
@@ -195,11 +199,11 @@ function show_schedule ($show_start, $schedule, $schedule_max = 0, $is_cover = t
         else {
             $show_schedule  = $schedule;
         }
-        printf("\r%s\033[42m %-30s[\033[1m%3d%%\033[0m\033[42m][%s]\033[0m", 
+        printf(SCHEDULE, 
             $show_start,
             $show_schedule,
             $schedule_i / $schedule_max * 100,
-            PF_ROTATE[$schedule_i % 4]
+            $PF_ROTATE[$schedule_i % 4]
         );
     }
 }
@@ -225,6 +229,16 @@ function write_type_to_bin ($file, $table_name, $field, $name_len_max) {
     $dots = generate_char($name_len_max, strlen($field_name), ' ');
     fwrite($file, "
     {$field_name_up}{$dots} = {$type_to_bin}(Record #{$table_name}.{$field_name}),");
+}
+
+// @todo    字段转成binary数据格式
+function get_bin_size_field ($field_line) {
+    return 'BinSize_'.$field_line.BT_BIN_SIZE;
+}
+
+// @todo    字段转成binary数据格式
+function get_list_len_field ($field_line) {
+    return 'ListLen_'.$field_line.BT_O_LIST_LEN;
 }
 
 ?>

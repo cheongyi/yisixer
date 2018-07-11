@@ -1,17 +1,11 @@
 #!/bin/sh
-cd ./ebin
-if [ $# -gt 0 ]; then
-    if [ $# == 1 ]; then
-    # if [ $# -eq 1 ]; then
-        erl -noshell -s make files ../$1 -s init stop
-    else
-        for i in $*;
-        do erl -noshell -s make files ../$i -s init stop;
-        done
-    fi
+# ./rebar g-d
+cp -r /home/git/deps .
+if [ $# -ge 1 ]; then
+    cd ebin
+    for var in $*; do
+        erl -noshell -s make files ../$var -s init stop
+    done
 else
-    erl -noshell -s make all -s init stop
+    ./rebar compile
 fi
-
-
-

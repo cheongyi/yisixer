@@ -1,9 +1,9 @@
 -module (game).
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2017, 11, 09}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
 -behaviour  (application).
 -behaviour  (supervisor).
@@ -35,6 +35,7 @@ restart () ->
 %%% ========== ======================================== ====================
 %%% callbacks  function
 %%% ========== ======================================== ====================
+%%% @doc    启动应用
 start (_Type, _Args) ->
     Result = supervisor:start_link({local, ?SERVER}, ?MODULE, []),
 
@@ -45,16 +46,18 @@ start (_Type, _Args) ->
     inets:start(),
 
     % 启动game系统相关进程
+    start_child(game_timer,         worker),        % 启动进程 --- 游戏定时器
     start_child(game_log,           worker),        % 启动进程 --- 日志
     start_child(game_prof,          worker),        % 启动进程 --- 性能分析
-    start_child(game_ets,           worker),        % 启动进程 --- 游戏内ets
-    start_child(game_timer,         worker),        % 启动进程 --- 游戏定时器
     % start_child(mysql,              worker),        % 启动进程 --- 游戏内mysql
     start_child(game_mysql,         worker),        % 启动进程 --- 游戏内mysql
     timer:sleep(1000),
     start_child(game_db_sync_sup,   supervisor),    % 启动督程 --- 游戏数据同步
     start_child(game_db_init_srv,   worker),        % 启动进程 --- 游戏数据库初始化
     game_db_init_srv:wait_for_loaded(),
+    start_child(game_ets,           worker),        % 启动进程 --- 游戏内ets
+
+    build_code_db(),
 
     start_child(socket_client_sup,  supervisor),    % 启动督程 --- 套接字客户端
 
@@ -69,9 +72,11 @@ start (_Type, _Args) ->
     ?INFO("========== Game start ==============~n", []),
     Result.
 
+%%% @doc    关闭应用
 stop (_State) ->
     ok.
 
+%%% @doc    初始化应用
 init ([]) ->
     {ok, {{one_for_one, 10, 10}, []}}.
 
@@ -79,6 +84,7 @@ init ([]) ->
 %%% ========== ======================================== ====================
 %%% Internal   API
 %%% ========== ======================================== ====================
+%%% @doc    关停服务
 stop (TimeOutOffline, TimeOutSync) ->
     % 中断socket链接
     % supervisor:terminate_child(?SERVER, socket_server_sup),
@@ -111,6 +117,15 @@ start_child (ChildId, Module, Shutdown, Type) ->
     SupervisorName      = ?SERVER,
     {ok, _}     = supervisor:start_child(SupervisorName, ChildSpecification).
 
+
+%%% @doc    生成代码模版数据
+build_code_db () ->
+    case ?GET_ENV(build_code_db, false) of
+        true ->
+            code_db:create();
+        _ ->
+            ok
+    end.
 
 
 

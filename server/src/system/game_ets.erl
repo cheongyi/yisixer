@@ -1,9 +1,9 @@
 -module (game_ets).
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2017, 11, 09}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
 -export ([start_link/0]).
 -export ([stop/0]).
@@ -14,8 +14,10 @@
 
 -include ("define.hrl").
 -include ("record.hrl").
+-include ("gen/game_db.hrl").
 
 -define (SERVER, ?MODULE).
+-define (DEFAULT_KEYPOS, 1).
 
 -record (state, {}).
 
@@ -46,6 +48,10 @@ create_table (TableName, KetPos) ->
 init ([]) ->
     do_create_table(player_four_color_card, #player_four_color_card.player_id),
     do_create_table(system_four_color_card, #system_four_color_card.owner),
+    do_create_table(player_username_index, ?DEFAULT_KEYPOS),
+    do_create_table(player_nickname_index, ?DEFAULT_KEYPOS),
+    create_player_index(ets:first(?ETS_TAB(player))),
+    do_create_table(online_player,      #online_player.player_id),
     {ok, #state{}}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple().
@@ -91,6 +97,15 @@ do_create_table (TableName, KetPos) ->
     ets:new(TableName, [set, named_table, public, {keypos, KetPos}]).
 
 
+%%% @doc    创建玩家相关索引
+create_player_index ('$end_of_table') ->
+    ok;
+create_player_index (Key) ->
+    [Row]   = ets:lookup(?ETS_TAB(player), Key),
+    lib_ets:insert(player_username_index, {Row #player.username, Row #player.id}),
+    lib_ets:insert(player_nickname_index, {Row #player.nickname, Row #player.id}),
+    Next    = ets:next(?ETS_TAB(player), Key),
+    create_player_index(Next).
 
 
 

@@ -1,8 +1,8 @@
 -module (lib_mysql).
 
--copyright  ("Copyright © 2018 YiSiXEr").
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
--date       ({2018, 03, 20}).
+-date       ({2018, 07, 11}).
 -vsn        ("1.0.0").
 
 % -compile (export_all).

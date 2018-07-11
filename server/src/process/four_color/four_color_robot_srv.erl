@@ -1,6 +1,6 @@
 -module (four_color_robot_srv).
 
--author ('Chen HongYi').
+-author     ("CHEONGYI").
 
 -compile (export_all).
 -export ([

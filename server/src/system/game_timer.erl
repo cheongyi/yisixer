@@ -2,7 +2,7 @@
 
 %%% @doc    
 
--copyright  ("Copyright © 2017-2018 YiSiXEr").
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 05, 30}).
 -vsn        ("1.0.0").
@@ -13,6 +13,9 @@
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
     write/1,                    % 写入数据
+
+    game_mysql_hold_ping/0,     % 数据库保持连接
+
     get_state/0
 ]).
 
@@ -28,9 +31,8 @@
 }).
 
 -include ("define.hrl").
-% -include ("record.hrl").
-% -include ("gen/game_db.hrl").
-% -include ("api/api_enum.hrl").
+
+-define (MYSQL_WAIT_TIMEOUT,   (8 * ?HOUR_TO_SECOND - 60) * 1000).   % 关闭连接最大时限
 
 
 %%% ========== ======================================== ====================
@@ -58,6 +60,10 @@ get_state () ->
 write (Data) ->
     ?SERVER ! {data, lib_misc:get_player_id(), Data}.
 
+%%% @doc    数据库保持连接
+game_mysql_hold_ping () ->
+    lib_misc:apply_after(?MYSQL_WAIT_TIMEOUT, ?MODULE, game_mysql_hold_ping, []).
+
 
 %%% ========== ======================================== ====================
 %%% callback
@@ -68,7 +74,7 @@ init ([]) ->
     filelib:ensure_dir(?GAME_TIMER_DIR),
     Date        = date(),
     {ok, File}  = open_log_file(Date),
-    {ok, #state{date = Date, file = File}}.
+    {ok, #state{date = Date, file = File}, 0}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple().
 %%% @doc    gen_server callback.
@@ -111,6 +117,9 @@ handle_info ({data, PlayerId, Data}, State = #state{date = Date, file = File}) -
             ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {write_log_failed, Reason}])
     end,
     {noreply, NewState};
+handle_info (timeout, State) ->
+    game_mysql_hold_ping(),
+    {noreply, State};
 handle_info (Info, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),
     {noreply, State}.
@@ -132,7 +141,7 @@ code_change (_Vsn, State, _Extra) ->
 %%% ========== ======================================== ====================
 %%% @doc    打开对应日志文件
 open_log_file (Date) ->
-    FileName = ?GAME_TIMER_DIR ++ lib_time:ymd_tuple_to_cover0str(Date, "_") ++ ".timer",
+    FileName = ?GAME_TIMER_DIR ++ lib_misc:ymd_tuple_to_cover0str(Date, "_") ++ ".timer",
     file:open(FileName, [append, raw, {delayed_write, 1024 * 100, 2000}]).
 
 write_to_file (File, Data) ->

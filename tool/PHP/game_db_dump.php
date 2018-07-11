@@ -2,22 +2,22 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库表
 function game_db_dump () {
-    global $tables_info, $tables_fields_info, $table_name_len_max;
+    global $tables_info, $tables_fields_info, $table_name_len_max, $PF_DB_WRITE_SCH;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    show_schedule(PF_DB_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
     $file       = fopen(GAME_DB_DUMP_FILE, 'w');
     $tables     = $tables_info['TABLES'];
     fwrite($file, '-module ('.GAME_DB_DUMP.').');
     write_attributes($file);
     // 写入系统属性
-    fwrite($file, "
+    fwrite($file, '
 -export ([
     run/0,
     backup/0
 ]).
 
--include (\"define.hrl\").
--include (\"gen/game_db.hrl\").
+-include ("define.hrl").
+-include ("gen/game_db.hrl").
 
 
 %%% ========== ======================================== ====================
@@ -25,8 +25,8 @@ function game_db_dump () {
 %%% ========== ======================================== ====================
 run () ->
     supervisor:terminate_child(game, socket_server_sup),
-    mod_online:wait_all_online_player_exit(300),
-    FileName    = \"./game_db.sql\",");
+    mod_online:wait_all_online_player_exit(?KICKOUT_PLAYER_TIMEOUT),
+    FileName    = "./game_db.sql",');
 
     // 写入 run/0 剩余
     write_dump_table_to_file($file, $tables, $tables_fields_info);
@@ -34,12 +34,12 @@ run () ->
 
 
     // 写入 backup/0 开头
-    fwrite($file, "
+    fwrite($file, '
 
 
 %%% ========== ======================================== ====================
 backup () ->
-    FileName    = \"./game_db_backup.sql\",");
+    FileName    = "./game_db_backup.sql",');
 
     // 写入 backup/0 剩余
     write_dump_table_to_file($file, $tables, $tables_fields_info);
@@ -129,7 +129,7 @@ dump_{$table_name} (File) ->
         fwrite($file, "
             end,    % ets:foldl
             {FragSum, FragNumber, FragL}, 
-            game_db_table:ets_tab({$table_name}, FragId)
+            ?ETS_TAB({$table_name}, FragId)
         )
         end,    % lists:foldl
         {1, 1, []}, 

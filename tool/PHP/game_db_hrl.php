@@ -2,9 +2,9 @@
 // =========== ======================================== ====================
 // @todo   数据库枚举
 function db_enum() {
-    global $mysqli, $enum_table;
+    global $mysqli, $enum_table, $PF_DB_WRITE_SCH;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    show_schedule(PF_DB_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
     $main_stime = microtime(true);
 
     $file       = fopen(GAME_DB_HRL_FILE, 'w');
@@ -31,18 +31,26 @@ function db_enum() {
         $fields     = array(
             'id', 'sign', 'cname'
         );
-        $enum_note  = $table['note'];
+        if ($table['value']) {
+            $fields[]   = $table['value'];
+        }
         $enum_prefix= $table['prefix'];
+        $enum_note  = $table['note'];
         fwrite($file, "%%% {$table_name}\n");
         $table_data = get_table_data($mysqli, $table_name, $fields);
         foreach ($table_data as $row) {
-            $id     = $row['id'];
+            if ($table['value']) {
+                $value  = $row[$table['value']];
+            }
+            else {
+                $value  = $row['id'];
+            }
             $sign   = $row['sign'];
             $cname  = $row['cname'];
-            $dots   = generate_char(50, strlen($sign.$id), ' ');
+            $dots   = generate_char(50, strlen($enum_prefix.$sign.$value), SPACE_ONE);
             fwrite($file, "-define ({$enum_prefix}"
                 .strtoupper($sign)
-                .",{$dots}{$id}).    %% {$enum_note} - {$cname}\n");
+                .",{$dots}{$value}).    %% {$enum_note} - {$cname}\n");
         }
         fwrite($file, "\n");
     }
@@ -53,9 +61,9 @@ function db_enum() {
 
 // @todo   数据库记录
 function db_record () {
-    global $tables_info, $tables_fields_info;
+    global $tables_info, $tables_fields_info, $PF_DB_WRITE_SCH;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    show_schedule(PF_DB_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
     $file       = fopen(GAME_DB_HRL_FILE, 'a');
 
     fwrite($file, '
@@ -63,13 +71,16 @@ function db_record () {
 %%% database table create to record
 %%% ========== ======================================== ====================
 ');
-    $tables = $tables_info['TABLES'];
+    $tables     = $tables_info['TABLES'];
+    $comment    = $tables_info['COMMENT'];
     foreach ($tables as $table_name) {
+        $table_comment  = $comment[$table_name];
         $fields_info    = $tables_fields_info[$table_name];
         $fields         = $fields_info['FIELDS'];
         $primary        = $fields_info['PRIMARY'];
         $primary_arr    = implode(', ', $primary);
-        fwrite($file, "-record (pk_{$table_name}, {{$primary_arr}}).
+        fwrite($file, "%%% {$table_comment}
+-record (pk_{$table_name}, {{$primary_arr}}).
 -record ({$table_name}, {
     row_key,");
         foreach ($fields as $field) {

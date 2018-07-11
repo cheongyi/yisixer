@@ -13,12 +13,46 @@
         -- COLLATE       = 'utf8_general_ci';
 
         -- 模版数据表
+        -- ----------------------------------------------------------------------------------------
+        DROP TABLE IF EXISTS `award`;
+        CREATE TABLE `award`
+        (
+            `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
+            `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
+            `cname`                 VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '中文名称',
+            `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
+            CONSTRAINT `pk_award` PRIMARY KEY (`id`)
+        )
+        COMMENT       = '奖励'
+        ENGINE        = 'InnoDB'
+        CHARACTER SET = 'utf8'
+        COLLATE       = 'utf8_general_ci';
+
+        DROP TABLE IF EXISTS `award_info`;
+        CREATE TABLE `award_info`
+        (
+            `award_id`              INTEGER     NOT NULL                COMMENT '奖励ID',
+            `item_id`               INTEGER     NOT NULL                COMMENT '物品ID',
+            `number`                INTEGER     NOT NULL DEFAULT 0      COMMENT '物品数量',
+            `log_type`              INTEGER     NOT NULL DEFAULT 0      COMMENT '日志类型',
+            `random_prob`           INTEGER     NOT NULL DEFAULT 0      COMMENT '随机概率',
+            `sort`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '排序',
+            CONSTRAINT `pk_award_info` PRIMARY KEY (`award_id`, `item_id`)
+        )
+        COMMENT       = '奖励信息'
+        ENGINE        = 'InnoDB'
+        CHARACTER SET = 'utf8'
+        COLLATE       = 'utf8_general_ci';
+
+
+        -- ----------------------------------------------------------------------------------------
         DROP TABLE IF EXISTS `constant`;
         CREATE TABLE `constant`
         (
             `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
             `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
             `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
+            `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
             `data`                  FLOAT       NOT NULL DEFAULT 0      COMMENT '数值',
             CONSTRAINT `pk_constant` PRIMARY KEY (`id`)
         )
@@ -27,22 +61,39 @@
         CHARACTER SET = 'utf8'
         COLLATE       = 'utf8_general_ci';
 
+
+        -- ----------------------------------------------------------------------------------------
+        DROP TABLE IF EXISTS `game_function`;
+        CREATE TABLE `game_function`
+        (
+            `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
+            `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
+            `cname`                 VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '中文名称',
+            `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
+            `unlock_lv`             INTEGER     NOT NULL DEFAULT 0      COMMENT '解锁等级',
+            `description`           INTEGER     NOT NULL DEFAULT 0      COMMENT '提示文本',
+            CONSTRAINT `pk_game_function` PRIMARY KEY (`id`)
+        )
+        COMMENT       = '游戏功能'
+        ENGINE        = 'InnoDB'
+        CHARACTER SET = 'utf8'
+        COLLATE       = 'utf8_general_ci';
+
+
+        -- ----------------------------------------------------------------------------------------
         DROP TABLE IF EXISTS `item`;
         CREATE TABLE `item`
         (
-            `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT '物品ID',
-            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
+            `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
             `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
+            `cname`                 VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '中文名称',
             `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
-            `description`           INTEGER     NOT NULL DEFAULT 0      COMMENT '描述',
             `type`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '类型',
-            `color`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '颜色:4绿5青6蓝7紫1红2橙3黄',
             `level`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '等级',
-            `icon`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '图标',
-            `price`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '价格',
-            `stack`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '堆叠',
+            `quality`               INTEGER     NOT NULL DEFAULT 0      COMMENT '品质',
+            `description`           INTEGER     NOT NULL DEFAULT 0      COMMENT '描述',
             `sort`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '排序',
-            `expire_time`           INTEGER     NOT NULL DEFAULT 0      COMMENT '过期时间',
+            `expire_time`           INTEGER     NOT NULL DEFAULT 0      COMMENT '过期时间(秒)',
             `day_get_limit`         INTEGER     NOT NULL DEFAULT 0      COMMENT '每日获得上限',
             CONSTRAINT `pk_item` PRIMARY KEY (`id`)
         )
@@ -54,9 +105,9 @@
         DROP TABLE IF EXISTS `item_type`;
         CREATE TABLE `item_type`
         (
-            `id`                    INTEGER     NOT NULL DEFAULT 0      COMMENT '物品类型ID',
-            `cname`                 VARCHAR(32) NOT NULL DEFAULT ''     COMMENT '中文名称',
+            `id`                    INTEGER     NOT NULL                COMMENT 'ID',
             `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
+            `cname`                 VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '中文名称',
             `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
             CONSTRAINT `pk_item_type` PRIMARY KEY (`id`)
         )
@@ -64,22 +115,9 @@
         ENGINE        = 'InnoDB'
         CHARACTER SET = 'utf8'
         COLLATE       = 'utf8_general_ci';
-        INSERT INTO `item_type` (`id`, `sign`, `cname`) VALUES
-            (1000,  'resource', '资源'),  -- 资源:经验体力木粮石铁币
-            (2000,  'helmet',   '头盔'),  -- 头盔
-            (3000,  'armour',   '盔甲'),  -- 盔甲
-            (4000,  'caliga',   '战靴'),  -- 战靴
-            (5000,  'weapon',   '武器'),  -- 武器
-            (6000,  'shield',   '护盾'),  -- 护盾
-            (7000,  'amulet',   '护符'),  -- 护符
-            (8000,  'dress',    '时装'),  -- 时装
-            (11000, 'corps',    '士兵'),  -- 士兵
-            (12000, 'dragon',   '龙宠'),  -- 龙宠
-            (13000, 'building', '建筑'),  -- 建筑
-            (14000, 'mount',    '坐骑'),  -- 坐骑
-            (15000, 'gift',     '礼包'),  -- 礼包
-            (26000, 'role',     '伙伴');  -- 伙伴
 
+
+        -- ----------------------------------------------------------------------------------------
         DROP TABLE IF EXISTS `log_type`;
         CREATE TABLE `log_type`
         (
@@ -95,74 +133,37 @@
         CHARACTER SET = 'utf8'
         COLLATE       = 'utf8_general_ci';
 
-        -- 玩家表
-        DROP TABLE IF EXISTS `player`;
-        CREATE TABLE `player`
+
+        -- ----------------------------------------------------------------------------------------
+        DROP TABLE IF EXISTS `platform`;
+        CREATE TABLE `platform`
         (
-            `id`                    BIGINT(25)  NOT NULL AUTO_INCREMENT COMMENT '玩家ID',
-            `username`              VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '用户名',
-            `nickname`              VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '昵称',
-            `vip_level`             INTEGER     NOT NULL DEFAULT 0      COMMENT 'vip等级',
-            `disable_login`         INTEGER     NOT NULL DEFAULT 0      COMMENT '屏蔽截止时间',
-            `disable_talk`          INTEGER     NOT NULL DEFAULT 0      COMMENT '禁言截止时间',
-            `is_tester`             INTEGER     NOT NULL DEFAULT 0      COMMENT '是否是测试号',
-            `regdate`               INTEGER     NOT NULL DEFAULT 0      COMMENT '注册时间',
-            `test_disable`          INTEGER     NOT NULL DEFAULT 0      COMMENT '是否因为测试号被封号 0否 1是',
-            `disable_type`          INTEGER     NOT NULL DEFAULT 0      COMMENT '封号类型',
-            `server_id`             INTEGER     NOT NULL DEFAULT 0      COMMENT '服务器ID',
-            CONSTRAINT `pk_player` PRIMARY KEY (`id`)
+            `id`                    INTEGER     NOT NULL                COMMENT 'ID',
+            `sign`                  VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '标识',
+            `cname`                 VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '中文名称',
+            `name`                  INTEGER     NOT NULL DEFAULT 0      COMMENT '名称',
+            `private_key`           TEXT                                COMMENT '私钥',
+            CONSTRAINT `pk_platform` PRIMARY KEY (`id`)
         )
-        COMMENT       = '玩家物品'
+        COMMENT       = '平台'
         ENGINE        = 'InnoDB'
         CHARACTER SET = 'utf8'
         COLLATE       = 'utf8_general_ci';
 
-        -- 玩家数据表
-        DROP TABLE IF EXISTS `player_data`;
-        CREATE TABLE `player_data`
+
+        -- ----------------------------------------------------------------------------------------
+        DROP TABLE IF EXISTS `words_log`;
+        CREATE TABLE `words_log`
         (
-            `player_id`             BIGINT(25)  NOT NULL                COMMENT '玩家ID',
-            `ingot`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '金币',
-            `charge_ingot`          INTEGER     NOT NULL DEFAULT 0      COMMENT '充值金币',
-            `coins`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '铜钱',
-            CONSTRAINT `pk_player_data` PRIMARY KEY (`player_id`)
+            `id`                    INTEGER     NOT NULL                COMMENT 'ID',
+            `information`           TEXT                                COMMENT '信息',
+            `language`              INTEGER     NOT NULL DEFAULT 0      COMMENT '语言',
+            CONSTRAINT `pk_words_log` PRIMARY KEY (`id`)
         )
-        COMMENT       = '玩家数据'
+        COMMENT       = '文字表'
         ENGINE        = 'InnoDB'
         CHARACTER SET = 'utf8'
         COLLATE       = 'utf8_general_ci';
 
-        DROP TABLE IF EXISTS `player_item`;
-        CREATE TABLE `player_item`
-        (
-            `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
-            `player_id`             BIGINT(25)  NOT NULL                COMMENT '玩家ID',
-            `item_id`               INTEGER     NOT NULL DEFAULT 0      COMMENT '物品ID',
-            `number`                INTEGER     NOT NULL DEFAULT 0      COMMENT '数量',
-            `expire_time`           INTEGER     NOT NULL DEFAULT 0      COMMENT '过期时间',
-            CONSTRAINT `pk_player_item` PRIMARY KEY (`id`)
-        )
-        COMMENT       = '玩家物品'
-        ENGINE        = 'InnoDB'
-        CHARACTER SET = 'utf8'
-        COLLATE       = 'utf8_general_ci';
-
-        DROP TABLE IF EXISTS `player_item_log`;
-        CREATE TABLE `player_item_log`
-        (
-            `id`                    INTEGER     NOT NULL AUTO_INCREMENT COMMENT 'ID',
-            `player_id`             BIGINT(25)  NOT NULL                COMMENT '玩家ID',
-            `player_item_id`        INTEGER     NOT NULL DEFAULT 0      COMMENT '玩家物品ID',
-            `item_id`               INTEGER     NOT NULL DEFAULT 0      COMMENT '物品ID',
-            `value`                 INTEGER     NOT NULL DEFAULT 0      COMMENT '值',
-            `after_value`           INTEGER     NOT NULL DEFAULT 0      COMMENT '操作后的值',
-            `op_type`               INTEGER     NOT NULL DEFAULT 0      COMMENT '操作类型',
-            `op_time`               INTEGER     NOT NULL DEFAULT 0      COMMENT '操作时间',
-            CONSTRAINT `pk_player_item_log` PRIMARY KEY (`id`)
-        )
-        COMMENT       = '玩家物品日志'
-        ENGINE        = 'InnoDB'
-        CHARACTER SET = 'utf8'
-        COLLATE       = 'utf8_general_ci';
     ");
 ?>

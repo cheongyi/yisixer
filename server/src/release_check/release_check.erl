@@ -2,12 +2,15 @@
 
 %%%         打包检查,根据这个模块的beam文件是否存在来判断前面的编译是否失败
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2017, 11, 09}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
--compile (export_all).
+% -compile(export_all).
+-export ([
+    start/0
+]).
 
 % -include("define.hrl").
 

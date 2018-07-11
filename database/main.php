@@ -40,7 +40,7 @@
     $mysqli = new mysqli($db_host, $db_user, $db_pass, $db_name, $db_port);
     $mysqli->query("SET NAMES utf8;");
 
-    if ($mode == "change" || $mode == "renew") {
+    if ($mode == "change" || $mode == "update" || $mode == "renew") {
         // 变更数据结构|重新开始
         @unlink($temp_cron_file);
         change_db();
@@ -66,6 +66,7 @@
         echo "\nRepair db:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
     } else if ($mode == "clone") {
         // 克隆数据库
+        echo "\n\n";
         export_db(false);
     } else if ($mode == "cloneback") {
         // 恢复克隆的数据库
@@ -73,7 +74,7 @@
         require_once($temp_cron_file);
         $main_etime = microtime(true);
         $dots = generate_char(20, strlen($db_name), '.');
-        echo "\nCloneB db:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
+        echo "\nCloneBack:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
     } else if ($mode == "clean") {
         // 清空数据
         $main_stime   = microtime(true);
@@ -101,7 +102,8 @@
         $dots = generate_char(20, strlen($db_name), '.');
         echo "\nClean  db:{$db_name} {$dots} complete in ".round($main_etime - $main_stime, 2)."s\n";
     } else {
-        echo "Unknown mode {$mode}!\n";
+        echo "Unknown mode {$mode}!
+Try : change|export|repair\n";
     }
 
     // 关闭数据库连接
@@ -399,7 +401,7 @@ function prepare_db () {
         $sql = "CREATE TABLE `db_version` 
             (
                 `version`   INTEGER     NOT NULL DEFAULT 0      COMMENT '版本号:{$version}',
-                `release`   VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '发布号:R001',
+                `release`   VARCHAR(64) NOT NULL DEFAULT ''     COMMENT '发布号:f001',
                 CONSTRAINT `pk_db_version` PRIMARY KEY (`version`)
             )
             COMMENT       = '数据库版本'

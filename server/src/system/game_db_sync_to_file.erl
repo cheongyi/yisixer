@@ -1,6 +1,6 @@
 -module (game_db_sync_to_file).
 
--copyright  ("Copyright © 2018 YiSiXEr").
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 03, 19}).
 -vsn        ("1.0.0").
@@ -144,10 +144,10 @@ code_change (_Vsn, State, _Extra) ->
 %%% @doc    获取日志文件
 get_sql_file ({Y, M, D, H}) ->
     FileName = ?GAME_DATA_DIR 
-        ++ lib_time:ymdhms_integer_to_cover0str(Y) ++ "_" 
-        ++ lib_time:ymdhms_integer_to_cover0str(M) ++ "_" 
-        ++ lib_time:ymdhms_integer_to_cover0str(D) ++ "/" 
-        ++ lib_time:ymdhms_integer_to_cover0str(H) ++ ".sql",
+        ++ lib_misc:ymdhms_integer_to_cover0str(Y) ++ "_" 
+        ++ lib_misc:ymdhms_integer_to_cover0str(M) ++ "_" 
+        ++ lib_misc:ymdhms_integer_to_cover0str(D) ++ "/" 
+        ++ lib_misc:ymdhms_integer_to_cover0str(H) ++ ".sql",
     case filelib:is_file(FileName) of
         true  -> ok;
         false -> ok = filelib:ensure_dir(FileName)

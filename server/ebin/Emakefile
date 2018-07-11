@@ -1,25 +1,12 @@
-{
-    [
-        '../src/*',
-        '../src/api/*',
-        '../src/api_out/*',
-        '../src/gen/*',
-        '../src/gen/code_db/*',
-        '../src/lib/*',
-        '../src/mod/*',
-        '../src/process/*',
-        '../src/process/test/*',
-        '../src/process/four_color/*',
-        '../src/system/*',
-        '../src/release_check/*'
-    ],
-    [
-        debug_info,
-        {d, debug},
-        {outdir, "./"},
-        {i, "../include"}
-    ]
-}.
-
-
+{[
+    '../src/*',
+    '../src/*/*',
+    '../src/*/*/*'
+],[
+    debug_info,
+    {d, debug},
+    {d, branch_cn},
+    {i,      "../include"},
+    {outdir, "./"}
+]}.
 

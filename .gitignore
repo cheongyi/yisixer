@@ -5,14 +5,16 @@
 *.dump
 *.timer
 
-protocol/
-!server/protocol
+protocol
+
+server/.rebar
+server/deps
 
 server/data/*
 
 server/ebin/*.beam
+server/ebin/game.app
 
-server/include/api/*
 !server/include/api/api_test.hrl
 server/include/gen/*
 

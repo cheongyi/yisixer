@@ -2,10 +2,10 @@
 
 %%% @doc    游戏工作进程代理
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 03, 07}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2018 YiSiXEr").
 
 -behaviour (gen_server).
 

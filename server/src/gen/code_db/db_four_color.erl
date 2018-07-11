@@ -1,9 +1,9 @@
 -module (db_four_color).
 
--author     ("WhoAreYou").
--date       ({2017, 11, 09}).
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
+-author     ("CHEONGYI").
+-date       ({2018, 07, 11}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
 -compile (export_all).
 -export ([

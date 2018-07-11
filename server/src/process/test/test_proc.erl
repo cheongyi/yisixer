@@ -1,9 +1,9 @@
 -module (test_proc).
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("WhoAreYou").
 -date       ({2017, 11, 13}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2017 YiSiXEr").
 
 -export ([start_link/0]).
 -export ([init/0]).

@@ -2,29 +2,29 @@
 // =========== ======================================== ====================
 // @todo   游戏数据库初始化
 function game_db_init () {
-    global $tables_info, $tables_fields_info;
+    global $tables_info, $tables_fields_info, $PF_DB_WRITE_SCH;
 
-    show_schedule(PF_DB_WRITE, PF_DB_WRITE_SCH, count(PF_DB_WRITE_SCH), true);
+    show_schedule(PF_DB_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
     $file       = fopen(GAME_DB_INIT_FILE, 'w');
 
     fwrite($file, '-module ('.GAME_DB_INIT.').');
     write_attributes($file);
     // ets:new(t_$table_name, [public, set, named_table, {keypos, 2}, compressed]),
-    fwrite($file, "
+    fwrite($file, '
 -export ([init/0, init/1, load/1]).
 
--include (\"define.hrl\").
--include (\"gen/game_db.hrl\").
+-include ("define.hrl").
+-include ("gen/game_db.hrl").
 
 -define (CUT_LINE, 
-    \"-------------+---------------------------------------------------+----------~n\"
+    "-------------+---------------------------------------------------+----------~n"
 ).
 
 
 %%% ========== ======================================== ====================
 %%% External   API
 %%% ========== ======================================== ====================
-");
+');
 
     // 写入init/0函数
     $tables = $tables_info['TABLES'];
@@ -57,19 +57,19 @@ function game_db_init () {
 
         $dots           = generate_char(50, strlen($table_name), SPACE_ONE);
         fwrite($file, "
-init ($table_name) ->
-    ?FORMAT(\"game_db init : $table_name{$dots}| start~n\"),
+init ({$table_name}) ->
+    ?FORMAT(\"game_db init : {$table_name}{$dots}| start~n\"),
 ");
 
         // 判断是否自增长
         foreach ($fields as $field) {
             $field_extra    = $field['EXTRA'];
-            if ($field_extra == "auto_increment") {
+            if ($field_extra == 'auto_increment') {
                 $field_name = $field['COLUMN_NAME'];
                 fwrite($file, "
     {data, AutoIncResultId} = game_mysql:fetch(
         gamedb, 
-        [<<\"SELECT IFNULL(MAX(`$field_name`), 0) AS `max_id` FROM `$table_name`;\">>]
+        [<<\"SELECT IFNULL(MAX(`{$field_name}`), 0) AS `max_id` FROM `{$table_name}`;\">>]
     ),
     [AutoIncResult] = lib_mysql:get_rows(AutoIncResultId),
     {max_id, AutoIncStart} = lists:keyfind(max_id, 1, AutoIncResult),
@@ -88,7 +88,7 @@ init ($table_name) ->
         fwrite($file, "
     [
         ets:new(
-            game_db_table:ets_tab({$table_name}, FragId), 
+            ?ETS_TAB({$table_name}, FragId), 
             [public, set, named_table, {keypos, 2}]
         ) 
         || 
@@ -97,10 +97,10 @@ init ($table_name) ->
             } 
             else {
                 fwrite($file, "
-    ets:new(t_$table_name, [public, set, named_table, {keypos, 2}]),");
+    ets:new(t_{$table_name}, [public, set, named_table, {keypos, 2}]),");
             }
 
-            $init_end = "load($table_name);";
+            $init_end = "load({$table_name});";
         }
         fwrite($file, "
     $init_end
@@ -130,10 +130,10 @@ init (_) ->
 
         // 写入load开头
         fwrite($file, "
-load ($table_name) ->
+load ({$table_name}) ->
     {data, NumResultId} = game_mysql:fetch(
         gamedb, 
-        [<<\"SELECT count(1) AS num FROM `$table_name`\">>]
+        [<<\"SELECT count(1) AS num FROM `{$table_name}`\">>]
     ),
     {num, RecordNumber} = lists:keyfind(num, 1, hd(lib_mysql:get_rows(NumResultId))),
 
@@ -143,7 +143,7 @@ load ($table_name) ->
             RowsStartBin     = integer_to_binary((Page - 1) * ?SELECT_LIMIT_ROWS),
             {data, ResultId} = game_mysql:fetch(
                 gamedb, 
-                [<<\"SELECT * FROM `$table_name` LIMIT \", RowsStartBin/binary, \", \", RowsBin/binary>>]
+                [<<\"SELECT * FROM `{$table_name}` LIMIT \", RowsStartBin/binary, \", \", RowsBin/binary>>]
             ),
             Rows = lib_mysql:get_rows(ResultId),
             
@@ -171,7 +171,7 @@ load ($table_name) ->
                     },");
         if ($frag_field) {
             fwrite($file, "
-                    EtsTab = game_db_table:ets_tab({$table_name}, Record #{$table_name}.{$frag_field} rem 100),");
+                    EtsTab = ?ETS_TAB({$table_name}, Record #{$table_name}.{$frag_field} rem 100),");
         }
         else {
             fwrite($file, "
@@ -186,7 +186,7 @@ load ($table_name) ->
         end,
         lists:seq(1, ceil(RecordNumber / ?SELECT_LIMIT_ROWS))
     ),
-    ?FORMAT(\"game_db init : $table_name{$dots}| finished~n\");
+    ?FORMAT(\"game_db init : {$table_name}{$dots}| finished~n\");
 ");
     }
 

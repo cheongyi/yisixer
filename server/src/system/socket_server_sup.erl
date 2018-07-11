@@ -2,7 +2,7 @@
 
 %%% @doc    
 
--copyright  ("Copyright © 2017-2018 YiSiXEr").
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 04, 14}).
 -vsn        ("1.0.0").
@@ -56,7 +56,7 @@ init ([]) ->
 tcp_listen () ->
     Opts = [
         binary, 
-        {packet, 4}, 
+        {packet, ?PACKET_HEAD}, 
         {packet_size, 1024 * 1024},
         {reuseaddr, true},
         {backlog, 1024},

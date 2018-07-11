@@ -4,36 +4,47 @@
 function write_game_router () {
     global $protocol, $pt_file_num;
 
-    show_schedule(PF_PT_WRITE, GAME_ROUTER_FILE_NAME, $pt_file_num);
+    show_schedule(PF_PTS_WRITE, GAME_ROUTER_FILE_NAME, $pt_file_num);
     $file   = fopen(GAME_ROUTER_FILE, 'w');
 
     // 写入模块相关属性
     fwrite($file, '-module ('.GAME_ROUTER.').');
     write_attributes($file);
 
-    fwrite($file, "
+    fwrite($file, '
 -export ([
     route_request/2
 ]).
 
-% -include (\"game.hrl\").
-% -include (\"gen/game_db.hrl\").
+-include ("define.hrl").
+-include ("record.hrl").
+
+-define (DATA_LEN_SIZE, 2).     % 数据长度占字节数
 
 
 %%% ========== ======================================== ====================
 %%% External   API
 %%% ========== ======================================== ====================
 %%% @doc    路由请求
-route_request (_Pack = <<ModuleId:16/unsigned, ActionId:16/unsigned, Args/binary>>, State) ->
-    put(prev_request, {ModuleId, ActionId}),
+%%% route_request (_Pack = <<ModuleId:16/unsigned, ActionId:16/unsigned, Args/binary>>, State) ->
+route_request (_Pack = <<ActionId'.BT_ACTION.', Args/binary>>, State) ->
+    put(prev_request, ActionId),
     TimeRecord  = game_prof:statistics_start(),
-    {Module, Fuction, ArgsNum, NewState} = route_relay(ModuleId, ActionId, Args, State),
+    {Module, Fuction, ArgsNum, NewState, OutBin} = route_relay(ActionId, Args, State),
+    case OutBin of
+        <<>> ->
+            noop;
+        _ ->
+            ClientData  = build_client_data(OutBin),
+            % ?DEBUG("~p~n", [ClientData]),
+            lib_misc:tcp_send(NewState #client_state.sock, ClientData)
+    end,
     game_prof:statistics_end({Module, Fuction, ArgsNum}, TimeRecord),
     NewState.
 
 
 %%% ========== ======================================== ====================
-%%% @doc    路由转发");
+%%% @doc    路由转发');
 
     $protocol_module    = $protocol[C_MODULE];
     foreach ($protocol_module as $module) {
@@ -45,11 +56,6 @@ route_request (_Pack = <<ModuleId:16/unsigned, ActionId:16/unsigned, Args/binary
             continue;
         }
 
-        fwrite($file, "
-route_relay ({$module_id}, _ActionId, _Args0, State) ->
-    case _ActionId of");
-
-        $semicolon      = '';
         foreach ($module_action as $action) {
             $action_name    = $action['action_name'];
             $action_id      = $action['action_id'];
@@ -57,34 +63,27 @@ route_relay ({$module_id}, _ActionId, _Args0, State) ->
             $field_name_max = $action['field_name_max'];
             $args_num       = count($action_in) + 1;
 
-            fwrite($file, $semicolon);
             fwrite($file, "
-        {$action_id} ->");
+route_relay ({$action_id}, _Args00, State) ->");
             if ($args_num > 1) {
-                write_field_bin_to_term($file, $module_name, $action_in, $field_name_max, SPACE_08);
+                write_field_bin_to_term($file, $module_name, $action_in, $field_name_max, SPACE_04);
                 $field_name_arr = implode(', ', get_field_name_arr($action_in));
                 fwrite($file, "
-            NewState = api_{$module_name}:{$action_name}($field_name_arr, State),");
+    {NewState, OutBin} = api_{$module_name}:{$action_name}($field_name_arr, State),");
             }
             else {
                 fwrite($file, "
-            NewState = api_{$module_name}:{$action_name}(State),");
+    {NewState, OutBin} = api_{$module_name}:{$action_name}(State),");
 
             }
             fwrite($file, "
-            {{$module_name}, {$action_name}, {$args_num}, NewState}");
-
-            $semicolon  = ';';
+    {{$module_name}, {$action_name}, {$args_num}, NewState, OutBin};");
         }
-
-        fwrite($file, '
-    end;
-');
     }
 
     // 写入route_relay通配函数
     fwrite($file, '
-route_relay (_ModuleId, _ActionId, _Args0, _State) ->
+route_relay (_ActionId, _Args00, _State) ->
     ok.
 
 
@@ -99,15 +98,15 @@ route_relay (_ModuleId, _ActionId, _Args0, _State) ->
         $module_class   = $module['class'];
         foreach ($module_class as $class_name => $class) {
             fwrite($file, "
-tuple_parser ({$module_name}, {$class_name}, _Args0) ->");
+tuple_parser ({$module_name}, {$class_name}, _Args00) ->");
 
             $class_field    = $class['class_field'];
             $field_name_max = $class['field_name_max'];
             write_field_bin_to_term($file, $module_name, $class_field, $field_name_max, SPACE_04);
             $field_name_arr = implode(', ', get_field_name_arr($class_field));
-            $class_field_num= count($class_field);
+            $class_field_num= sprintf("%02d", count($class_field));
             fwrite($file, "
-    {{{$field_name_arr}}, _Args{$class_field_num}};");
+    {{{$class_name}, {$field_name_arr}}, _Args{$class_field_num}};");
         }
     }
     // 写入tuple_parser通配函数
@@ -144,21 +143,21 @@ tuple_parser (_Module, _Class, _Args) ->
                 if ($field_type == C_LIST) {
                     if ($field_class) {
                         fwrite($file, "
-list_parser ({$field_module}, {$field_class}, 0,       _Args0, Result) ->
-    {Result, _Args0};
-list_parser ({$field_module}, {$field_class}, ListLen, _Args0, Result) ->
-    {ListElement, _Args1} = tuple_parser({$field_module}, {$field_class}, _Args0),
-    list_parser({$field_module}, {$field_class}, ListLen - 1, _Args1, [ListElement | Result]);");
+list_parser ({$field_module}, {$field_class}, 0,       _Args00, Result) ->
+    {Result, _Args00};
+list_parser ({$field_module}, {$field_class}, ListLen, _Args00, Result) ->
+    {ListElement, _Args01} = tuple_parser({$field_module}, {$field_class}, _Args00),
+    list_parser({$field_module}, {$field_class}, ListLen - 1, _Args01, [ListElement | Result]);");
                     }
                     else {
                         fwrite($file, "
-list_parser ({$field_module}, {$field_line}, 0,       _Args0, Result) ->
-    {Result, _Args0};
-list_parser ({$field_module}, {$field_line}, ListLen, _Args0, Result) ->");
+list_parser ({$field_module}, {$field_line}, 0,       _Args00, Result) ->
+    {Result, _Args00};
+list_parser ({$field_module}, {$field_line}, ListLen, _Args00, Result) ->");
                         $field_list     = $field['field_list'];
                         write_field_bin_to_term($file, $module_name, $field_list, $field_name_max, SPACE_04);
                         $field_name_arr = implode(', ', get_field_name_arr($field_list));
-                        $field_list_num = count($field_list);
+                        $field_list_num = sprintf("%02d", count($field_list));
                         fwrite($file, "
     ListElement = {{$field_name_arr}},
     list_parser({$field_module}, {$field_line}, ListLen - 1, _Args{$field_list_num}, [ListElement | Result]);");
@@ -172,6 +171,36 @@ list_parser ({$field_module}, {$field_line}, ListLen, _Args0, Result) ->");
 
 list_parser (_Module, _Line, _ListLen, _Args, _Result) ->
     {_Result, _Args}.
+
+
+%%% ========== ======================================== ====================
+%%% @doc    字符串剖析
+string_parser (Args) ->
+    string_parser(Args, <<>>).
+
+string_parser (<<         0, Rest/binary >>, Acc) -> {Rest, << Acc/binary         >>};
+string_parser (<< Str:08, 0, Rest/binary >>, Acc) -> {Rest, << Acc/binary, Str:08 >>};
+string_parser (<< Str:16, 0, Rest/binary >>, Acc) -> {Rest, << Acc/binary, Str:16 >>};
+string_parser (<< Str:24, 0, Rest/binary >>, Acc) -> {Rest, << Acc/binary, Str:24 >>};
+string_parser (<< Str:32, 0, Rest/binary >>, Acc) -> {Rest, << Acc/binary, Str:32 >>};
+string_parser (<< Str:32,    Rest/binary >>, Acc) -> string_parser(Rest, << Acc/binary, Str:32 >>).
+
+
+%%% ========== ======================================== ====================
+%%% @doc    构建客户端数据|130二进制
+build_client_data (Data) ->
+    DataLen = size(Data) + ?DATA_LEN_SIZE, % 包括自己
+    Body    = <<DataLen'.BT_O_DATA_LEN.', Data/binary>>,
+    BodyLen = size(Body),
+    BinLen  = payload_length_to_binary(BodyLen),
+    << 1:1, 0:3, 2:4, 0:1, BinLen/bits, Body/binary >>.
+
+payload_length_to_binary (Len) ->
+    case Len of
+        Len when Len =< 125                 -> << Len:7         >>;
+        Len when Len =< 16#FFFF             -> << 126:7, Len:16 >>;
+        Len when Len =< 16#7FFFFFFFFFFFFFFF -> << 127:7, Len:64 >>
+    end.
 ');
 
     fclose($file);
@@ -194,61 +223,58 @@ function write_field_bin_to_term ($file, $module_name, $field_arr, $field_name_m
         }
         $field_name         = UNDER_LINE.$field_name.UNDER_LINE.$field_line;
         if     ($field_type == C_STRING){
-            $dots  = generate_char($field_name_max, strlen("BinSize_{$field_line}"), SPACE_ONE);
+            $dots_SizeLen   = generate_char($field_name_max, strlen("BinSize_{$field_line}"), SPACE_ONE);
         }
         elseif ($field_type == C_LIST)  {
-            $dots  = generate_char($field_name_max, strlen("ListLen_{$field_line}"), SPACE_ONE);
+            $dots_SizeLen   = generate_char($field_name_max, strlen("ListLen_{$field_line}"), SPACE_ONE);
         }
-        else {
-            $dots  = generate_char($field_name_max, strlen($field_name), SPACE_ONE);
-        }
+        $dots  = generate_char($field_name_max, strlen($field_name), SPACE_ONE);
 
-        $j  = $i + 1;
-        $rest   = ", _Args{$j}/binary>> = _Args{$i},";
+        $j      = $i + 1;
+        $i_str  = sprintf("%02d", $i);
+        $j_str  = sprintf("%02d", $j);
+        $rest   = ", _Args{$j_str}/binary>> = _Args{$i_str},";
         if     ($field_type == C_ENUM)  {
-            fwrite($file, $new_line.$dots.$field_name.BT_ENUM. $rest);
+            fwrite($file, $new_line.$dots.$field_name.BT_ENUM. '  '.$rest);
         }
         elseif ($field_type == C_BYTE)  {
-            fwrite($file, $new_line.$dots.$field_name.BT_BYTE. $rest);
+            fwrite($file, $new_line.$dots.$field_name.BT_BYTE. '  '.$rest);
         }
         elseif ($field_type == C_SHORT) {
-            fwrite($file, $new_line.$dots.$field_name.BT_SHORT.$rest);
+            fwrite($file, $new_line.$dots.$field_name.BT_SHORT.'  '.$rest);
         }
         elseif ($field_type == C_INT)   {
-            fwrite($file, $new_line.$dots.$field_name.BT_INT . $rest);
+            fwrite($file, $new_line.$dots.$field_name.BT_INT . '  '.$rest);
         }
         elseif ($field_type == C_LONG)  {
-            fwrite($file, $new_line.$dots.$field_name.BT_LONG. $rest);
+            fwrite($file, $new_line.$dots.$field_name.BT_LONG. '  '.$rest);
         }
         elseif ($field_type == C_STRING){
-            fwrite($file, 
-                $new_line.$dots."BinSize_{$field_line}".BT_SHORT.', '.
-                "{$field_name}_Bin:BinSize_{$field_line}/binary".
-                $rest
-            );
             fwrite($file, "
-{$indentation}{$field_name} = binary_to_list({$field_name}_Bin),");
+{$indentation}{_Args{$j_str}, {$field_name}_Bin}{$dots} = string_parser(_Args{$i_str}),");
+            fwrite($file, "
+{$indentation}{$field_name}{$dots}                = binary_to_list({$field_name}_Bin),");
         }
         elseif ($field_type == C_TYPEOF) {
             fwrite($file, "
-            {{$dots} {$field_name},             _Args{$j}}         = tuple_parser({$field_module}, {$field_class}, _Args{$i}),
+            {{$dots} {$field_name},             _Args{$j_str}}         = tuple_parser({$field_module}, {$field_class}, _Args{$i_str}),
 ");
         }
         elseif ($field_type == C_LIST) {
+            $list_len       = get_list_len_field($field_line);
             fwrite($file, 
-                $new_line.$dots."ListLen_{$field_line}".BT_SHORT.', '.
+                $new_line.$dots_SizeLen.$list_len.', '.
                 "{$field_name}_Bin/binary".
-                ">> = _Args{$i},"
+                ">> = _Args{$i_str},"
             );
-            $dots  = generate_char($field_name_max, strlen($field_name), SPACE_ONE);
             if ($field_class) {
                 fwrite($file, "
-            {{$dots} {$field_name},             _Args{$j}}         = list_parser({$field_module}, {$field_class}, ListLen_{$field_line}, {$field_name}_Bin, []),
+            {{$dots} {$field_name},             _Args{$j_str}}         = list_parser({$field_module}, {$field_class}, ListLen_{$field_line}, {$field_name}_Bin, []),
 ");
             }
             else {
                 fwrite($file, "
-            {{$dots} {$field_name},             _Args{$j}}         = list_parser({$field_module}, {$field_line}, ListLen_{$field_line}, {$field_name}_Bin, []),
+            {{$dots} {$field_name},             _Args{$j_str}}         = list_parser({$field_module}, {$field_line}, ListLen_{$field_line}, {$field_name}_Bin, []),
 ");
             }
         }

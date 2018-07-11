@@ -13,7 +13,7 @@ function read_protocol () {
         // 读取目录下文件名
         while (false !== ($filename = readdir($dir))) {
             // 过滤不要的文件
-            if ($filename == '.' || $filename == '..' || $filename == 'Readme.txt') {
+            if ($filename == '.' || $filename == '..' || $filename == '.svn' || $filename == '.git' || $filename == 'README_protocol.txt') {
                 continue;
             }
             // elseif ($filename != '100_code.txt' && $filename != '999_test.txt') {
@@ -25,31 +25,66 @@ function read_protocol () {
         }
         closedir($dir);
     }
-    $pt_file_num    = count($filename_arr);
+    $protocol[C_MODULE] = array();
+    $protocol[C_ENUM]   = array();
+    $protocol[C_CLASS]  = array();
+    $pt_file_num        = count($filename_arr);
     foreach ($filename_arr as $filename) {
         // 读取协议文本
         $protocol_module    = read_protocol_txt($filename);
-        if ($filename == '100_code.txt') {
+        $module_id          = $protocol_module['module_id'];
+        if ($module_id == '100') {
             $protocol[C_ENUM]   = $module_enum;
             continue;
         }
         // 判断是否模块ID冲突
-        $module_id          = $protocol_module['module_id'];
-        if (@array_key_exists($module_id, $protocol[C_MODULE])) {
-            $module_name        = $protocol[C_MODULE][$module_id]['module_name'];
+        $module_name          = $protocol_module['module_name'];
+        if (@array_key_exists($module_name, $protocol[C_MODULE])) {
             die("\nAlready exists module id({$module_id}) name({$module_name})!!!\n");
         }
-        $protocol[C_MODULE][$module_id] = $protocol_module;
+        $protocol[C_MODULE][$module_name] = $protocol_module;
     }
     ksort($protocol[C_MODULE]);
 
-    $log_file       = fopen('./protocol_txt.log', w);
-    fwrite($log_file, var_export($protocol, true));
-    fclose($log_file);
+    // 统计类
+    $protocol_module    = $protocol[C_MODULE];
+    foreach ($protocol_module as $module) {
+        $module_name    = $module['module_name'];
+        $module_class   = $module['class'];
+        foreach ($module_class as $class_name => $class) {
+            $class_field    = get_class_field($module_name, $class);
+            $protocol[C_CLASS][$module_name][$class_name]   = $class_field;
+        }
+    }
+
+    // $log_file       = fopen('./protocol_txt.log', w);
+    // fwrite($log_file, var_export($protocol, true));
+    // fclose($log_file);
 
     return $protocol;
 }
 
+
+// @todo   获取类字段
+function get_class_field ($module_name, $class) {
+    global $protocol;
+
+    $extend_field   = array();
+    $extend_module  = $class['extend_module'];
+    $extend_class   = $class['extend_class'];
+    if ($extend_class) {
+        if (!$extend_module) {
+            $extend_module  = $module_name;
+        }
+        $protocol_module    = $protocol[C_MODULE];
+        $module             = $protocol_module[$extend_module];
+        $module_class       = $module['class'];
+        $class_extend       = $module_class[$extend_class];
+        $extend_field       = get_class_field($extend_module, $class_extend);
+    }
+
+    return array_merge($extend_field, $class['class_field']);
+}
 
 // @todo   读取协议文本
 function read_protocol_txt ($filename) {
@@ -100,7 +135,7 @@ function read_module_head ($file) {
         }
 
         // 读取正文定义
-        $name_id    = str_replace(' ', '', trim($content[0]));
+        $name_id    = remove_space_or_tab($content[0]);
         // 空行
         if ($name_id == '') {
             continue;
@@ -130,7 +165,7 @@ function read_module_body ($file, $protocol_module) {
         $content        = get_line_content($file);  // 获取行内容
         set_note($content);     // 设置注释
         // 读取正文定义
-        $class_action   = str_replace(' ', '', trim($content[0]));
+        $class_action   = remove_space_or_tab($content[0]);
         // 空行
         if ($class_action == '') {
             continue;
@@ -211,7 +246,7 @@ function read_class ($file) {
         $content    = get_line_content($file);  // 获取行内容
         set_note($content);     // 设置注释
         // 读取正文定义
-        $field_def  = str_replace(' ', '', trim($content[0]));
+        $field_def  = remove_space_or_tab($content[0]);
         // 空行
         if ($field_def == '') {
             continue;
@@ -246,7 +281,7 @@ function read_action ($file, $module_action) {
         $content    = get_line_content($file);  // 获取行内容
         set_note($content);     // 设置注释
         // 读取正文定义
-        $field_def  = str_replace(' ', '', trim($content[0]));
+        $field_def  = remove_space_or_tab($content[0]);
         // 空行
         if ($field_def == '') {
             continue;
@@ -285,7 +320,7 @@ function read_action_in_out ($file) {
         $content    = get_line_content($file);  // 获取行内容
         set_note($content);     // 设置注释
         // 读取正文定义
-        $field_def  = str_replace(' ', '', trim($content[0]));
+        $field_def  = remove_space_or_tab($content[0]);
         // 空行
         if ($field_def == '') {
             continue;
@@ -328,7 +363,7 @@ function read_enum ($file, $old_brace) {
         $content    = get_line_content($file);  // 获取行内容
         set_note($content);     // 设置注释
         // 读取正文定义
-        $enum_def   = str_replace(' ', '', trim($content[0]));
+        $enum_def   = remove_space_or_tab($content[0]);
         // 空行
         if ($enum_def == '') {
             if (count($content) > 1) {
@@ -352,16 +387,21 @@ function read_enum ($file, $old_brace) {
             $enum_value = 0;
             $enum_name  = $enum_def[0];
             if (count($enum_def) > 1) {
-                $enum_value     = $enum_def[1];
+                $enum['enum_type']  = 'DEFINE';
+                $enum_value         = $enum_def[1];
+            }
+            else {
+                $enum['enum_type']  = 'SYSTEM';
+                $enum_value         = $line;
             }
 
             // 判断是否重复定义枚举值
             if ($module_enum[$enum_name]['enum_value']) {
                 $old_enum_value = $module_enum[$enum_name]['enum_value'];
-                if ($enum_value == 0) {
+                if ($enum['enum_type'] == 'SYSTEM' && $module_enum[$enum_name]['enum_value'] == 'DEFINE') {
                     $enum_value = $old_enum_value;
                 }
-                elseif ($old_enum_value > 0 && $old_enum_value != $enum_value) {
+                if ($enum['enum_type'] == 'DEFINE' && $module_enum[$enum_name]['enum_value'] == 'DEFINE' && $old_enum_value != $enum_value) {
                     die("
 Error module enum({$enum_name}) \t({$enum_value}) already exist {$old_enum_value}\n");
                 }
@@ -380,14 +420,14 @@ Error module enum({$enum_name}) \t({$enum_value}) already exist {$old_enum_value
 
 // @todo   读取列表
 function read_list ($file, $old_brace) {
-    global $line, $brace;
+    global $line, $brace, $SPACE_OR_TAB;
 
     $list_field     = array();
     while (!feof($file)) {
         $content    = get_line_content($file);  // 获取行内容
         set_note($content);     // 设置注释
         // 读取正文定义
-        $list_def   = str_replace(' ', '', trim($content[0]));
+        $list_def   = remove_space_or_tab($content[0]);
         // 空行
         if ($list_def == '') {
             continue;
@@ -450,7 +490,10 @@ function analysis_field_def ($file, $field_def) {
 
     // 判断字段类型是否枚举或列表
     $field_list             = array();
-    if     ($field_type == C_ENUM) {
+    if     ($field_type == C_ENUM.'{}') {
+        $field['field_type']    = C_ENUM;
+    }
+    elseif ($field_type == C_ENUM) {
         read_enum($file, $brace);
     }
     elseif ($field_type == C_LIST && $field_class == '') {
@@ -490,5 +533,13 @@ function get_note () {
     $note       = '';
 
     return $note_tmp;
+}
+
+function remove_space_or_tab ($content) {
+    global $note, $SPACE_OR_TAB;
+
+    $list_def   = str_replace($SPACE_OR_TAB, '', trim($content));
+
+    return $list_def;
 }
 ?>

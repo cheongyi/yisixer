@@ -1,0 +1,34 @@
+{application, game, [
+    {description, "The game server of yisixer."},
+    % 以下只是依赖项，测试过不会自启动，还需要手工启动
+    % {applications, [stdlib, kernel, crypto, public_key, asn1, ssl, eini, inets, jsx, lhttpc, xmerl]},
+    {mod, {game, []}},
+    {modules, []},
+    {env, [
+        {version,   "2017092701"},
+        {server_id, "s0"},               %% 服务器ID
+        {socket_server_max_conn, 50000}, %% 游戏Socket服务器最大连接数
+        {policy_server, false}, %% 策略文件服务器
+        {policy_port,    9000}, %% 策略文件服务器端口
+        {policy_acceptor,   5}, %% 游戏服务器Acceptor进程数量
+        {socket_acceptor,  10}, %% Socket Acceptor进程数量
+
+        {mysql_host, "localhost"},          %% 游戏数据库服务器地址
+        {mysql_port, 3306},                 %% 游戏数据库服务器端口
+        {mysql_username, "root"},           %% 游戏数据库服务器账号
+        {mysql_password, "ybybyb"},         %% 游戏数据库服务器密码
+        {mysql_database, "yisixer"},        %% 游戏数据库名称
+        {mysql_poolsize, 1},                %% 游戏数据库连接池连接数
+        {init_ingot,          0},   %% 是否给测试资源金币
+        {init_yin_dao_client, 0},   %% 初始引导值
+        {robot_number,       10},   %% 机器人数量
+        {cron_time_step,  30000},   %% 定时任务检查时间间隔(毫秒)
+        {is_super_server, false},   %% 是否中心服务器
+
+        {branch, cn},               %% 分支标识:cn国服
+
+        {net_data_agent_node, 'net_data@game.amoyw.com'}    %% 跨服数据代理节点
+    ]},
+    {vsn, "1.0.0"}
+]}.
+

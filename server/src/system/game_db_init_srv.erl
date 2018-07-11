@@ -2,7 +2,7 @@
 
 %%% @doc    游戏数据库初始化进程
 
--copyright  ("Copyright © 2017-2018 YiSiXEr").
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 04, 08}).
 -vsn        ("1.0.0").

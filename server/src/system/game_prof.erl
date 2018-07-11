@@ -2,10 +2,10 @@
 
 %%% @doc    游戏性能分析
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 03, 06}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2018 YiSiXEr").
 
 -behaviour  (gen_server).
 
@@ -105,7 +105,7 @@ handle_cast ({set_info, Key, Runtime, Wallclock}, State) ->
         [TheDate] ->
             TheDate
     end,
-    R = 
+    % R = 
     lib_ets:insert(
         ?TABLE_NAME, 
         Date #game_prof_data{
@@ -116,7 +116,7 @@ handle_cast ({set_info, Key, Runtime, Wallclock}, State) ->
         }, 
         replace
     ),
-    ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {cast, Date, R}]),
+    % ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {cast, Date, R}]),
     {noreply, State};
 handle_cast (Request, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {cast, Request}]),
@@ -185,7 +185,7 @@ write (Mode) ->
     end,
     {perf, List}= gen_server:call(?SERVER, {get_info}),
     SortList    = lists:sort(SortFun, List),
-    FileName    = ?GAME_PROF_DIR ++ lib_time:ymd_tuple_to_cover0str(date(), "_") ++ "." ++ atom_to_list(Mode),
+    FileName    = ?GAME_PROF_DIR ++ lib_misc:ymd_tuple_to_cover0str(date(), "_") ++ "." ++ atom_to_list(Mode),
     {ok, File}  = file:open(FileName, [write, raw]),
     file:write(File, io_lib:format("+--------------------+--------------------+--------------------+--------------------+--------------------+~n",[])),
     file:write(File, io_lib:format("| Module:Function/ArgsNum                                      |                    |                    |~n",[])),

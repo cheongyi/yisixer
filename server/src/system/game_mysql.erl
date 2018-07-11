@@ -1,9 +1,9 @@
 -module (game_mysql).
 
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 03, 13}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2018 YiSiXEr").
 
 -behaviour (gen_server).
 
@@ -36,7 +36,7 @@
 -define (MYSQL_PORT,     ?GET_ENV_INT(mysql_port,     3306)).
 -define (MYSQL_USER,     ?GET_ENV_STR(mysql_user,     "root")).
 -define (MYSQL_PASSWORD, ?GET_ENV_STR(mysql_password, "wlwlwl")).
--define (MYSQL_DATABASE, ?GET_ENV_STR(mysql_database, "yisixer")).
+-define (MYSQL_DATABASE, ?GET_ENV_STR(mysql_database, "farm")).
 -define (MYSQL_POOLSIZE, ?GET_ENV_INT(mysql_poolsize, 1)).
 -define (MYSQL_RECONNECT, false).
 -define (MYSQL_LOG_FUN(),

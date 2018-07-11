@@ -5,7 +5,6 @@
 -author     ("CHEONGYI").
 -date       ({2018, 03, 06}).
 -vsn        ("1.0.0").
--copyright  ("Copyright © 2018 YiSiXEr").
 
 -export([
     create/1, create/2, create/3, create/4,     % 新建表

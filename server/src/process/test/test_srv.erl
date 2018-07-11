@@ -1,6 +1,6 @@
 -module (test_srv).
 
--copyright  ("Copyright © 2017 YiSiXEr").
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("WhoAreYou").
 -date       ({2017, 11, 09}).
 -vsn        ("1.0.0").

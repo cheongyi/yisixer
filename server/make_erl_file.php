@@ -1,47 +1,40 @@
 <?php
     // 判断命令行参数
-    if ($argc < 3) {
+    if ($argc < 2) {
         echo "Argument error!\n";
-        echo "Usage:   php make_erl_file.php [api|mod|sup|srv|app|] directory filename[.erl]\n";
+        echo "Usage:   php make_erl_file.php directory/filename[.erl] [api|mod|sup|srv|app|]\n";
         exit;
     }
 
     // 参数声明赋值
-    $file_type  = $argv[1];
-    $directory  = $argv[2];
-    $filename   = str_replace(".erl", "", $argv[3]);
+    $erl_file   = explode('/', str_replace(".erl", "", $argv[1]));
+    $file_type  = $argv[2];
+    $filename   = end($erl_file);
 
-    if ($file_type == "api") {
-        $filename   = "api_".$filename;
-    } elseif ($file_type == "mod") {
-        $filename   = "mod_".$filename;
-    } elseif ($file_type == "sup") {
-        $filename   = $filename."_sup";
-    } elseif ($file_type == "srv") {
-        $filename   = $filename."_srv";
+    $erl_file   = implode('/', $erl_file).'.erl';
+    if ($file   = @fopen($erl_file, 'x')) {
+        write_module($file, $filename);
+        write_author($file);
+
+        if ($file_type == "api") {
+            write_api($file, $filename);
+        } elseif ($file_type == "mod") {
+            write_general($file);
+        } elseif ($file_type == "sup") {
+            write_sup($file);
+        } elseif ($file_type == "srv") {
+            write_srv($file);
+        } elseif ($file_type == "app") {
+            write_app($file);
+        } else {
+            write_general($file);
+        }
+
+        fclose($file);
     }
-    $erl_file   = $directory.$filename;
-
-    $file       = fopen($erl_file.".erl", 'x');
-
-    write_module($file, $filename);
-    write_author($file);
-
-    if ($file_type == "api") {
-        write_general($file);
-    } elseif ($file_type == "mod") {
-        write_general($file);
-    } elseif ($file_type == "sup") {
-        write_sup($file);
-    } elseif ($file_type == "srv") {
-        write_srv($file);
-    } elseif ($file_type == "app") {
-        write_app($file);
-    } else {
-        write_general($file);
+    else {
+        echo "Error:   file {$erl_file} already exist!\n";
     }
-
-    fclose($file);
 
 
 // =========== ======================================== ====================
@@ -57,8 +50,8 @@ function write_author($file) {
     fwrite($file, "
 %%% @doc    
 
--copyright  (\"Copyright © 2017-".date("Y")." YiSiXEr\").
--author     (\"CHEONGYI\").
+-copyright  (\"Copyright © 2017-".date("Y")." Tools@YiSiXEr\").
+-author     (\"WhoAreYou\").
 -date       ({".date("Y, m, d")."}).
 -vsn        (\"1.0.0\").
 ");
@@ -89,8 +82,9 @@ function write_include($file) {
     fwrite($file, "
 % -include (\"define.hrl\").
 % -include (\"record.hrl\").
+% -include (\"gen/api_enum.hrl\").
+% -include (\"gen/class.hrl\").
 % -include (\"gen/game_db.hrl\").
-% -include (\"api/api_enum.hrl\").
 
 ");
 }
@@ -123,6 +117,33 @@ function write_callback_note($file) {
 %%% ========== ======================================== ====================
 %%% callback
 %%% ========== ======================================== ====================");
+}
+
+
+// =========== ======================================== ====================
+// @todo    写入api
+function write_api($file, $filename) {
+    fwrite($file, "
+-export ([
+    action/1,                   % 
+    action/2                    % 
+]).
+");
+    write_include($file);
+    write_external_api_note($file);
+    fwrite($file, "
+%%% @doc    1
+action (State  = #client_state{player_id = PlayerId}) ->
+    OutBin = {$filename}_out:action({}),
+    {State, OutBin}.
+
+
+%%% @doc    2
+action (Args, State  = #client_state{player_id = PlayerId}) ->
+    OutBin = {$filename}_out:action({}),
+    {State, OutBin}.
+");
+    write_internal_api_note($file);
 }
 
 

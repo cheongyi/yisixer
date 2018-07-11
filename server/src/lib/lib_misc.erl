@@ -1,17 +1,26 @@
 -module (lib_misc).
 
 %%% @doc    公用库函数
+%%% @doc    计时起点时间为 UNIX时间 {{1970, 01, 01}, {00, 00, 00}}
+%%% @doc    62167219200 = calendar:datetime_to_gregorian_seconds({{1970, 01, 01}, {00, 00, 00}})
+%%% @doc    线上版本统一用 格林尼\威治标准时间（Greenwich Mean Time，GMT）
+%%% @doc    开发版本则采用 本地时区如中国时区cn:+0800相差
+%%% @doc    28800 = 62167248000 - 62167219200 = 3600 * 8
 
--author ("CHEONGYI").
+-copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
+-author     ("CHEONGYI").
+-date       ({2018, 07, 11}).
+-vsn        ("1.0.0").
 
--copyright ("Copyright © 2017 YiSiXEr").
-
--compile (export_all).
+-compile(export_all).
 
 -export ([
 ]).
 
--include ("define.hrl").
+-include("define.hrl").
+
+-define (DAY_BEGIN_HMS,             {00, 00, 00}).      % 一天开始的时分秒
+-define (UNIX_FIRST_YEAR_TIMESTAMP, 62167219200).       % 计算机元年时间戳
 
 
 %%% ========== ======================================== ====================
@@ -29,7 +38,166 @@ send_after (Time, Dest, Msg) ->
 
 %%% @doc    定时应用MFA
 apply_after (Time, Module, Function, Arguments) ->
-    timer:apply_after(max(Time, 0), Module, Function, Arguments).
+    Timer   = timer:apply_after(max(Time, 0), Module, Function, Arguments),
+    ?TIMER({self(), {Module, Function}, Time, Arguments}),
+    Timer.
+
+
+
+%%% @doc    TCP发送
+-ifdef (debug).
+tcp_send (Socket, Bin) ->
+    case gen_tcp:send(Socket, Bin) of
+        {error, Reason} ->
+            exit({game_tcp_send_error, Reason});
+        _ ->
+            true
+    end.
+-else.
+tcp_send (Socket, Bin) ->
+    IsCanSend = true,
+    if
+        IsCanSend ->
+            OutBin = if
+                size(Bin) > 64 ->
+                    Mod = binary:part(Bin, 0, 4),
+                    case Mod of
+                        %% admin模块不压缩
+                        <<0, 99, _, _>> ->
+                            Bin;
+                        _ ->
+                            zlib:compress(Bin)
+                    end;
+                true ->
+                    Bin
+            end,
+            case gen_tcp:send(Socket, OutBin) of
+                {error, Reason} ->
+                    exit({game_tcp_send_error, Reason});
+                _ ->
+                    true
+            end;
+        true ->
+            noop
+    end.
+-endif.
+
+
+%%% @doc    获取socket中的Ip和Port
+get_socket_ip_and_port (Socket) ->
+    {ok, {Address, Port}}   = inet:peername(Socket),
+    % put(client_address, Address),
+    IpAddress   = inet_parse:ntoa(Address),
+    ?DEBUG("get_socket_ip_and_port:~p~n", [{IpAddress, Address, Port}]),
+    {IpAddress, Port}.
+
+
+
+
+%%% ========== ======================================== ====================
+%%% 时间相关
+%%% ========== ======================================== ====================
+-ifdef (debug).
+    %%% @spec   get_local_timestamp() -> integer().
+    %%% @doc    获取本地时间戳
+    get_local_timestamp () ->
+        datetime_to_timestamp(erlang:localtime()).
+-else.
+    %%% @spec   get_local_timestamp() -> integer().
+    %%% @doc    获取本地时间戳
+    get_local_timestamp () ->
+        {T1, T2, _} = now(),
+        T1 * 1000000 + T2.
+-endif.
+
+%%% @spec   datetime_to_timestamp({{YYYY, MM, DD}, {HH, MM, SS}}) -> integer().
+%%% @doc    本地时间元组转成时间戳
+datetime_to_timestamp (DateTime) ->
+    UTCTime = erlang:localtime_to_universaltime(DateTime),
+    calendar:datetime_to_gregorian_seconds(UTCTime) - ?UNIX_FIRST_YEAR_TIMESTAMP.
+
+%%% @spec   timestamp_to_datetime(integer()) -> {{YYYY, MM, DD}, {HH, MM, SS}}.
+%%% @doc    本地时间戳转成时间元组
+timestamp_to_datetime (TimeStamp) ->
+    erlang:universaltime_to_localtime(
+        calendar:gregorian_seconds_to_datetime(TimeStamp + ?UNIX_FIRST_YEAR_TIMESTAMP)
+    ).
+
+
+%%% @doc    获取现在整点的时间戳
+get_now_hourly_timestamp () ->
+    {Date, {Hour, _Minute, _Second}} = erlang:localtime(),
+    datetime_to_timestamp({Date, {Hour, 00, 00}}).
+
+%%% @doc    获取今天零点的时间戳
+get_today_zero_timestamp () ->
+    datetime_to_timestamp({date(), ?DAY_BEGIN_HMS}).
+
+%%% @doc    获取本周开始的时间戳
+get_this_week_begin_timestamp () ->
+    Date        = date(),
+    DayOfWeek   = calendar:day_of_the_week(Date),
+    datetime_to_timestamp({Date, ?DAY_BEGIN_HMS}) - (DayOfWeek - 1) * ?DAY_TO_SECOND.
+
+%%% @doc    获取本月开始的时间戳
+get_this_month_begin_timestamp () ->
+    {Year, Month, _Day} = date(),
+    datetime_to_timestamp({{Year, Month, 1}, ?DAY_BEGIN_HMS}).
+
+
+%%% @spec   ymdhms_integer_to_cover0str(integer()) -> string().
+%%% @doc    年、月、日、时、分、秒数字转补零字符串
+ymdhms_integer_to_cover0str (Integer) when Integer < 10->
+    "0" ++ integer_to_list(Integer);
+ymdhms_integer_to_cover0str (Integer) ->
+    integer_to_list(Integer).
+%%% @spec   ymdhms_tuple_to_cover0str ({{Y, M'o, D}, {H, M'i, S}}) -> "YYYY-MM'o-DD HH:MM'i:SS"
+%%% @doc    年月日时分秒元组转补零字符串
+ymdhms_tuple_to_cover0str ({Date, Time}) ->
+    ymd_tuple_to_cover0str(Date) ++ " " ++ hms_tuple_to_cover0str(Time).
+%%% @spec   ymd_tuple_to_cover0str ({Y, M, D},) -> "YYYY-MM-DD"
+%%% @doc    年月日元组转补零字符串
+ymd_tuple_to_cover0str ({YYYYear, MMonth, DDay}) ->
+    integer_to_list(YYYYear)
+        ++ "-" ++ ymdhms_integer_to_cover0str(MMonth)
+        ++ "-" ++ ymdhms_integer_to_cover0str(DDay).
+ymd_tuple_to_cover0str ({YYYYear, MMonth, DDay}, Prefix) ->
+    integer_to_list(YYYYear)
+        ++ Prefix ++ ymdhms_integer_to_cover0str(MMonth)
+        ++ Prefix ++ ymdhms_integer_to_cover0str(DDay).
+%%% @spec   hms_tuple_to_cover0str ({H, M, S},) -> "HH:MM:SS"
+%%% @doc    时分秒元组转补零字符串
+hms_tuple_to_cover0str ({HHour, MMinute, SSecond}) ->
+    ymdhms_integer_to_cover0str(HHour)
+        ++ ":" ++ ymdhms_integer_to_cover0str(MMinute)
+        ++ ":" ++ ymdhms_integer_to_cover0str(SSecond).
+
+
+%%% @doc    是否今天
+is_today (TimeStamp) ->
+    is_today(TimeStamp, ?DAY_BEGIN_HMS).
+%%% @doc    判断是否是今天时间(_Offset为天分割线默认为{00, 00, 00})
+is_today (TimeStamp, {_Hour, _Minute, _Second} = _Offset) ->
+    NowTimeStamp    = get_local_timestamp(),
+    is_today(TimeStamp, _Offset, NowTimeStamp).
+
+%%% @doc    判断是否是今天(注意NowTimeStamp要传入当前时间,_Offset为天分割线默认为{00, 00, 00})
+is_today (TimeStamp, {_Hour, _Minute, _Second} = _Offset, NowTimeStamp) ->
+    if
+        (NowTimeStamp - TimeStamp) >= ?DAY_TO_SECOND ->
+            false;
+        true ->
+            {NowDate, _Time}    = timestamp_to_datetime(NowTimeStamp),
+            _OffsetTimeStamp    = datetime_to_timestamp({NowDate, _Offset}),
+            {StartTime, EndTime}= if
+                (_Offset == ?DAY_BEGIN_HMS) orelse (_Time > _Offset) ->
+                    {_OffsetTimeStamp, _OffsetTimeStamp + ?DAY_TO_SECOND};
+                true ->
+                    {_OffsetTimeStamp - ?DAY_TO_SECOND, _OffsetTimeStamp}
+            end,
+            (TimeStamp >= StartTime) andalso (TimeStamp < EndTime)
+    end.
+
 
 
 %%% ========== ======================================== ====================
@@ -132,6 +300,95 @@ index_of_list_3 (Element, [_ | List], Index) ->
 index_of_list_3 (_Element, [], _Index) ->
     0.
 
+
+%%% @doc    列表打乱
+shuffle (List) -> shuffle(List, []).
+
+shuffle ([], Acc) ->
+    L = lists:keysort(1, Acc),
+    [X || {_, X} <- L];
+
+shuffle ([X | List], Acc) ->
+    Rd = rand:uniform(),
+    shuffle(List, [{Rd, X} | Acc]).
+
+%%% @doc    列表转成字符串
+list_to_string (List) ->
+    list_to_string(List, ",").
+list_to_string (List, Separator) ->
+    string:join(
+        [
+            if
+                is_integer(Element) -> integer_to_list(Element);
+                is_float(Element)   -> float_to_list(Element);
+                is_atom(Element)    -> atom_to_list(Element);
+                true                -> "\"" ++ Element ++ "\""
+            end
+            ||
+            Element <- List
+        ],
+        Separator
+    ).
+
+
+%%% @doc    数据MD5化
+md5 (Code) ->
+   lists:flatten(
+        [
+            io_lib:format("~2.16.0b", [A])
+            ||
+            A <- binary_to_list(
+                erlang:md5(Code)
+            )
+        ]
+    ).
+
+%% 概率
+get_probability (Probability) when Probability =< 0 ->
+    false;
+get_probability (Probability) when Probability >= 100 ->
+    true;
+get_probability (Probability) ->
+    IntegerProbability = get_limit_integer(Probability),
+    if
+        IntegerProbability > 0 ->
+            Rate = erlang:ceil(IntegerProbability / Probability * 100),
+            IntegerProbability >= random_number(Rate);
+        true ->
+            false
+    end.
+
+get_limit_integer (Number) ->
+    UNewNumber = erlang:ceil(Number),
+    if
+        UNewNumber - Number < 0.00000001 ->
+            UNewNumber;
+        true ->
+            get_limit_integer(Number * 10)
+    end.
+
+%% 随机数
+random_number (Range) when Range =< 1 ->
+    Range;
+random_number (Range) ->
+    rand:uniform(Range).
+
+random_number_2 (Min, Max) ->
+    rand:uniform(max(1, Max - Min)) + Min - 1.
+
+list_unique(List) when is_list(List) ->
+    lists:foldl(
+        fun(Item, Sum)->
+            case lists:member(Item, Sum) of
+                false ->
+                    [Item | Sum ];
+                true  ->
+                    Sum
+            end
+        end,
+        [],
+        List
+    ).
 
 %%% ========== ======================================== ====================
 %%% @doc    list_to_binary

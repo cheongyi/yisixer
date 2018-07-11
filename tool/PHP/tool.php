@@ -1,6 +1,10 @@
 <?php
+    // header("Content-type: text/html; charset=utf-8");
+    
     // 设定用于所有日期时间函数的默认时区
     date_default_timezone_set('Asia/Shanghai');
+
+    // echo iconv("GB2312", "UTF-8", '中文');
 
     // 数据库配置
     $db_sign        = 'localhost';
@@ -8,33 +12,9 @@
         $db_sign = $argv[1];
     }
 
-    /*
-     *  常量定义
-     */
-    // 目录路径
-    define(DIR_PROJECT,     '../../');
-    define(DIR_SERVER,      DIR_PROJECT.'server/');
-    define(DIR_PROTOCOL,    DIR_SERVER.'protocol/');
-    define(DIR_INCLUDE_API, DIR_SERVER.'include/api/');
-    define(DIR_INCLUDE_GEN, DIR_SERVER.'include/gen/');
-    define(DIR_API_OUT,     DIR_SERVER.'src/api_out/');
-    define(DIR_SRC_GEN,     DIR_SERVER.'src/gen/');
-    is_dir(DIR_INCLUDE_API) OR mkdir(DIR_INCLUDE_API);
-    is_dir(DIR_INCLUDE_GEN) OR mkdir(DIR_INCLUDE_GEN);
-    is_dir(DIR_API_OUT)     OR mkdir(DIR_API_OUT);
-    is_dir(DIR_SRC_GEN)     OR mkdir(DIR_SRC_GEN);
-    // 进度条显示
-    // define(PF_SHOW_LEN_MAX, 30);
-
-    // 选项打印
-    $option_format  = '
-请选择一个操作：
-  1 - 生成代码(服务端)
-  2 - 编译项目(服务端)
-  3 - 生成代码(客户端)
-  4 - 更新数据库
-  x - 退出
-> ';
+    // 加载配置文件
+    require_once 'constants.php';
+    require_once 'lib_misc.php';
 
 // 请选择一个操作：
 //   1 - 生成代码
@@ -55,28 +35,41 @@
 // 客户端代码生产完毕
 // 客户端数据库映射代码生成完毕
 
+    // 变量初始化
+    $id_read_pt = false;
+    $id_read_db = false;
+
     while (true) {
-        echo $option_format;
+        echo OPTION_FORMAT;
 
         $line = trim(fgets(STDIN));
 
         if ($line == '1') {
-            // shell_exec('erl -noshell -pa ../server/ebin -s tool generate_server_protocol -s init stop');
-            // shell_exec('php tool_db.php '.$db_sign);
-            require 'tool_pt.php';
-            require 'tool_db.php';
-            echo "\n🍺1 - 生成代码(服务端) Done !\n";
-            break;
+            require 'tool_db_read.php';
+            require 'tool_db_write_server.php';
+            require 'tool_db_close.php';
+            require 'tool_pt_read.php';
+            require 'tool_pt_write_server.php';
+            echo DONE_1;
+            // break;
         }
         elseif ($line == '2') {
-            system('cd ../../server && ./build.sh');
-            echo "\n🍺2 - 编译项目(服务端) Done !\n";
+            if ($db_sign == SIGN_WINDOW) {
+                system('cd ../../server && call build.bat');
+            }
+            else {
+                system('cd ../../server && ./build.sh');
+            }
+            echo DONE_2;
         }
         elseif ($line == '3') {
-
+            require 'tool_pt_read.php';
+            require 'tool_pt_write_client.php';
+            echo DONE_3;
         }
         elseif ($line == '4') {
-
+            system('cd ../../database && php main.php update '.$db_sign.' && ./get_template_data.sh');
+            echo DONE_4;
         }
         elseif ($line == 'x') {
             break;
