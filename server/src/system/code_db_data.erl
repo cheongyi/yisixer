@@ -48,7 +48,7 @@ platform_by_sign () ->
     List = lib_ets:tab2list(?ETS_TAB(platform)),
     [
         {
-            {Record #platform.sign},
+            [Record #platform.sign],
             Record
         }
         ||

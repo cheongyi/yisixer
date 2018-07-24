@@ -39,7 +39,7 @@ create () ->
 create_table (TableName) ->
     Table       = ?ETS_TAB(TableName),
     RecordList  = [
-        {element(2, Record), Record}
+        {tuple_to_list(element(2, Record)), Record}
         ||
         Record <- lists:keysort(2, lib_ets:tab2list(Table))
     ],
@@ -153,7 +153,7 @@ get (" ++ StrKey ++ ") when KeyValue " ++ Operate ++ KeyValue ++ " ->
 get_key_str (Key, IsNormal) ->
     if
         IsNormal ->
-            lib_misc:list_to_string(tuple_to_list(Key), ", ");
+            lib_misc:list_to_string(Key, ", ");
         true ->
             lists:foldl(
                 fun(Element, {AllStrKey, _, _}) ->
@@ -176,7 +176,7 @@ get_key_str (Key, IsNormal) ->
                     }
                 end,
                 {"", "", ""},
-                tuple_to_list(Key)
+                Key
             )
     end.
 
