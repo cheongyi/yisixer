@@ -1,5 +1,7 @@
 -module (game_mysql).
 
+%%% @doc    游戏数据库(MySQL)
+
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 03, 13}).

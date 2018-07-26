@@ -1,6 +1,6 @@
 -module (game_timer).
 
-%%% @doc    
+%%% @doc    游戏定时器
 
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
@@ -27,12 +27,14 @@
     from,           % = element(1, Data),
     to,             % = element(2, Data),
     after_time,     % = element(3, Data),
-    message         % = element(4, Data)
+    message,        % = element(4, Data)
+    date_time
 }).
 
 -include ("define.hrl").
 
--define (MYSQL_WAIT_TIMEOUT,   (8 * ?HOUR_TO_SECOND - 60) * 1000).   % 关闭连接最大时限
+-define (MYSQL_WAIT_TIMEOUT,   (8 * ?HOUR_TO_SECOND - 60) * 1000).  % 关闭连接最大时限
+-define (GAME_MYSQL_HOLD_PING_TIMER, game_mysql_hold_ping_timer).   % 游戏数据库保持连接定时器引用
 
 
 %%% ========== ======================================== ====================
@@ -62,7 +64,9 @@ write (Data) ->
 
 %%% @doc    数据库保持连接
 game_mysql_hold_ping () ->
-    lib_misc:apply_after(?MYSQL_WAIT_TIMEOUT, ?MODULE, game_mysql_hold_ping, []).
+    catch timer:cancel(get(?GAME_MYSQL_HOLD_PING_TIMER)),
+    TRef    = lib_misc:apply_after(?MYSQL_WAIT_TIMEOUT, ?MODULE, game_mysql_hold_ping, []),
+    put(?GAME_MYSQL_HOLD_PING_TIMER, TRef).
 
 
 %%% ========== ======================================== ====================
@@ -109,7 +113,8 @@ handle_info ({data, PlayerId, Data}, State = #state{date = Date, file = File}) -
         from        = element(1, Data),
         to          = element(2, Data),
         after_time  = element(3, Data),
-        message     = element(4, Data)
+        message     = element(4, Data),
+        date_time   = erlang:localtime()
     },
     try write_to_file(NewState #state.file, Record)
     catch

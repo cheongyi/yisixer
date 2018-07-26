@@ -1,5 +1,7 @@
 -module (reloader).
 
+%%% @doc    代码文件重载
+
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2017, 11, 09}).
@@ -19,6 +21,7 @@
 -include ("define.hrl").
 -include_lib ("kernel/include/file.hrl").
 
+-define (SERVER, ?MODULE).
 -define (FORMAT_DOT_NUMBER, 43).
 
 -record (state, {last, tref}).
@@ -31,7 +34,7 @@
 %%% @spec   start_link() -> {ok, pid()}.
 %%% @doc    Start the reloader and link gen_server.
 start_link () ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 %%% @spec stop() -> ok.
 %%% @doc Stop the reloader.

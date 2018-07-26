@@ -1,6 +1,6 @@
 -module (socket_client_sup).
 
-%%% @doc    
+%%% @doc    套接字客户端督程
 
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
@@ -42,7 +42,8 @@ start_child () ->
 
 %%% @doc    统计子进程
 count_child () ->
-    supervisor:count_children(?SERVER).
+    [{specs, _}, {active,_}, {supervisors, _}, {workers, Num}] = supervisor:count_children(?SERVER),
+    Num.    
 
 %%% @doc    关闭子进程
 kill_all () ->

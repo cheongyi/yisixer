@@ -22,6 +22,7 @@
 
 -include ("define.hrl").
 
+-define (SERVER, ?MODULE).
 -define (TABLE_NAME, game_worker_data).
 
 -record (state, {count = 0, rate = 0}).
@@ -41,12 +42,12 @@
 %%% @spec   start_link() -> ServerRet
 %%% @doc    Start the process and link gen_server.
 start_link () ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 %%% @spec   stop() -> ok
 %%% @doc    Stop the process.
 stop () ->
-    gen_server:call(?MODULE, stop).
+    gen_server:call(?SERVER, stop).
 
 %%% @doc    同步工作
 do_work (M, F, A) ->
@@ -57,7 +58,7 @@ do_work (M, F, A) ->
         true ->
             apply(M, F, A);
         undefined ->
-            case gen_server:call(?MODULE, {put_work, {From, M, F, A, Time}}) of
+            case gen_server:call(?SERVER, {put_work, {From, M, F, A, Time}}) of
                 {work_done,   Result, M, F, A, Time} -> Result;
                 {work_failed, Reason, M, F, A, Time} -> exit(Reason)
             end
@@ -72,17 +73,17 @@ async_do_work (M, F, A) ->
         true ->
             apply(M, F, A);
         undefined ->
-            gen_server:cast(?MODULE, {async_put_work, {From, M, F, A}})
+            gen_server:cast(?SERVER, {async_put_work, {From, M, F, A}})
     end.
 
 %%% @doc    统计工作消息数
 count_work () ->
-    {message_queue_len, Len} = erlang:process_info(whereis(?MODULE), message_queue_len),
+    {message_queue_len, Len} = erlang:process_info(whereis(?SERVER), message_queue_len),
     Len.
     
 %%% @doc    查看工作消息头
 peek_work () ->
-    {messages, Messages} = erlang:process_info(whereis(?MODULE), messages),
+    {messages, Messages} = erlang:process_info(whereis(?SERVER), messages),
     case Messages of
         [] -> 
             [];
@@ -92,7 +93,7 @@ peek_work () ->
     
 %%% @doc    获取工作状态数据
 get_state () ->
-    gen_server:call(?MODULE, get_state).
+    gen_server:call(?SERVER, get_state).
 
 
 %%% ========== ======================================== ====================

@@ -102,12 +102,14 @@
 -define (LST_TO_BIN(List),  lib_misc:lst_to_bin(List)).
 -define (INT_TO_BIN(Value), lib_misc:int_to_bin(Value)).
 -define (REL_TO_BIN(Value), lib_misc:rel_to_bin(Value)).
+-define (TRAN_LOG_LIST,     tran_log_list).     % 事务日志列表
+-define (TRAN_ACTION_LIST,  tran_action_list).  % 事务动作列表
 
 -define (ETS_TAB(Table),            game_db_table:ets_tab(Table)).          % 数据库表对应的ets table name
 -define (ETS_TAB(Table, FragId),    game_db_table:ets_tab(Table, FragId)).  % 数据库表对应的ets table name
 
 -define (INGOT_OP_REASON,   ingot_op_reason).   % 金币操作原因
--define (GKEY_OP_REASON,    gkey_op_reason).    % 金钥操作原因
+-define (GKEY_OP_REASON,     gkey_op_reason).   % 金钥操作原因
 
 %% 比率参数
 -define (PARAMETER,         10000).
@@ -115,54 +117,14 @@
 
 
 %%% 玩家相关
--define (THE_PLAYER_ID,     the_player_id). % 玩家进程字典Key - 玩家ID
+-define (THE_PLAYER_ID,      the_player_id).    % 玩家进程字典Key - 玩家ID
+-define (PLAYER_NICKNAME_MIN_LENGTH,    04).    % 玩家昵称最小长度，字节：一个汉字相当于2字节
+-define (PLAYER_NICKNAME_MAX_LENGTH,    14).    % 玩家昵称最大长度，字节：一个汉字相当于2字节
 
-
-%%% 四色牌相关
--define (CAN_WIN_CARD_LENGTH,  21).     % 可胡牌的卡牌长度
--define (CAN_WIN_HE_NUMBER_MIN, 9).     % 可胡牌的最小卡牌合数
--define (CRAD_COLOR_NUMBER_MAX, 4).     % 卡牌颜色数量最大数
--define (SAME_STYLE_NUMBER_MAX, 4).     % 相同样式数量最大数
--define (DIFF_STYLE_NUMBER_MAX, 7).     % 不同样式数量最大数
--define (CRAD_HAND_NUMBER_MAX, 20).     % 卡牌手牌数量最大数
--define (CARD_TOTAL_NUMBER,             % 卡牌总数
-    ?CRAD_COLOR_NUMBER_MAX * ?SAME_STYLE_NUMBER_MAX * ?DIFF_STYLE_NUMBER_MAX).
--define (CARD_COLOR_YELLOW, yellow).    % 卡牌颜色-黄
--define (CARD_COLOR_RED,    red).       % 卡牌颜色-红
--define (CARD_COLOR_GREEN,  green).     % 卡牌颜色-青
--define (CARD_COLOR_WHITE,  white).     % 卡牌颜色-白
--define (CARD_COLOR_LIST,
-    [?CARD_COLOR_YELLOW, ?CARD_COLOR_RED, ?CARD_COLOR_GREEN, ?CARD_COLOR_WHITE]
-).
--define (CARD_STYLE_JIANG,  jiang).     % 卡牌样式-将
--define (CARD_STYLE_SHI,    shi).       % 卡牌样式-士
--define (CARD_STYLE_XIANG,  xiang).     % 卡牌样式-相
--define (CARD_STYLE_CHE,    che).       % 卡牌样式-车
--define (CARD_STYLE_MA,     ma).        % 卡牌样式-马
--define (CARD_STYLE_PAO,    pao).       % 卡牌样式-炮
--define (CARD_STYLE_BING,   bing).      % 卡牌样式-兵
--define (CARD_STYLE_LIST,
-    [
-        ?CARD_STYLE_JIANG, ?CARD_STYLE_SHI, ?CARD_STYLE_XIANG,
-        ?CARD_STYLE_CHE,   ?CARD_STYLE_MA,  ?CARD_STYLE_PAO,
-        ?CARD_STYLE_BING
-    ]
-).
- 
--define (FOUR_COLOR_SRV,                   four_color_srv).     % 四色牌进程
--define (FOUR_COLOR_AUTO_SRV,         four_color_auto_srv).     % 四色牌自动进程
--define (FOUR_COLOR_PLAYER_SRV_A, four_color_player_srv_a).     % 四色牌玩家进程A
--define (FOUR_COLOR_PLAYER_SRV_B, four_color_player_srv_b).     % 四色牌玩家进程B
--define (FOUR_COLOR_PLAYER_SRV_C, four_color_player_srv_c).     % 四色牌玩家进程C
--define (FOUR_COLOR_PLAYER_SRV_D, four_color_player_srv_d).     % 四色牌玩家进程D
--define (FOUR_COLOR_PLAYER_SRV_LIST, 
-    [
-        ?FOUR_COLOR_PLAYER_SRV_A, 
-        ?FOUR_COLOR_PLAYER_SRV_B, 
-        ?FOUR_COLOR_PLAYER_SRV_C, 
-        ?FOUR_COLOR_PLAYER_SRV_D
-    ]
-).
+%% 封号类型
+-define (ADMIN_DISLOGIN,         0).    % 后台封号
+-define (ABNORMAL_DISLOGIN,      1).    % 外挂封号
+-define (MOVE_TO_ANOTHER_SERVER, 2).    % 迁服
 
 
 

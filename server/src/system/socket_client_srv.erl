@@ -1,6 +1,6 @@
 -module (socket_client_srv).
 
-%%% @doc    玩家进程
+%%% @doc    套接字客户端进程 | 玩家进程
 
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
@@ -138,7 +138,7 @@ try_apply (State, M, F, A) ->
     case catch apply(M, F, A) of
         {'EXIT', Reason} ->
             ?ERROR(
-                "try_apply: ~n"
+                "try_apply:~n"
                 "    Pid       = ~p~n"
                 "    {M, F, A} = ~p~n"
                 "    Reason    = ~p~n", 
@@ -176,9 +176,9 @@ apply (Pid, M, F, A) ->
         true ->
             Pid ! {apply, self(), M, F, A},
             receive
-                {failed, Reason} -> Reason;
-                {ok,     Result} -> Result
-            after 3000 ->
+                {ok,     Result} -> Result;
+                {failed, Reason} -> Reason
+            after ?GEN_SERVER_TIME_OUT ->
                 apply_time_out
             end
     end.
@@ -210,13 +210,13 @@ apply_after (DelayTime, {M, F, A}) ->
     TimerRef = lib_misc:send_after(DelayTime, self(), {apply_after, M, F, A}),
     {apply_after_ref, TimerRef}.
 
-%%% @doc    游戏关闭杀死玩家进程
-kill_for_game_stop (Pid) ->
-    Pid ! kill_for_game_stop. 
-
 %%% @doc    取消定时应用
 apply_after_cancel ({apply_after_ref, TimerRef}) ->
     erlang:cancel_timer(TimerRef).
+
+%%% @doc    游戏关闭杀死玩家进程
+kill_for_game_stop (Pid) ->
+    Pid ! kill_for_game_stop. 
 
 %% 是否玩家进程
 is_player_proc () ->
@@ -258,7 +258,7 @@ send_flash_policy (Socket, State) ->
 
 %% @todo   等待启动
 wait_for_start (Socket, State) ->
-    inet:setopts(Socket, [{packet, 0}, {active, once}]),
+    inet:setopts(Socket, [{packet, ?PACKET_HEAD}, {active, once}]),
     receive
         {check_client} ->
             State;
@@ -363,6 +363,7 @@ main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = S
     inet:setopts(Socket, [{packet, ?PACKET_HEAD}, {active, once}]),
     % inet:setopts(Socket, [{packet, 4}, {active, once}]),
     receive
+        %%% ========== ======================================== ====================
         {check_client} ->
             if
                 is_number(PlayerId) andalso PlayerId > 0 ->
@@ -370,6 +371,8 @@ main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = S
                 true ->
                     exit({invalid_client, inet:peername(Socket)})
             end;
+
+        %%% ========== ======================================== ====================
         %% 0x2：表示这是一个二进制帧（frame）
         {tcp, Socket, <<1:1, 0:3, 2:4, _Rest/binary>> = Request} ->
             ?DEBUG("~p, ~p~n", [?LINE, Request]),
@@ -382,35 +385,54 @@ main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = S
                     main_loop(NewState)
             end;
         %% 0x8：表示连接断开
-        {tcp, Socket, <<1:1, 0:3, 8:4, _Rest/binary>>} ->
-            clean({tcp_closed, Socket}, State);
+        {tcp, Socket, <<1:1, 0:3, 8:4, _Rest/binary>> = Request} ->
+            ?DEBUG("~p, ~p~n", [?LINE, Request]),
+            clean({client_tcp_closed, Socket}, State);
         {tcp, Socket, Request} ->
             ?DEBUG("~p, ~p~n", [?LINE, {Request, websocket_data(Request)}]),
             main_loop(State);
+
+        %%% ========== ======================================== ====================
         {send, Data} ->
             Sender ! {send, Data},
             main_loop(State);
-        {inet_reply, Socket, ok} ->
+
+        %%% ========== ======================================== ====================
+        {apply, Pid, M, F, A} ->
+            Pid ! try_apply(State, M, F, A),
+            main_loop(State);
+        {async_apply, M, F, A, CallBack} ->
+            do_async_apply(State, M, F, A, CallBack),
+            main_loop(State);
+        {async_apply_call_back, {CallBackM, CallBackF, CallBackA}} ->
+            lib_misc:try_apply(CallBackM, CallBackF, CallBackA),
+            main_loop(State);
+        {apply_after, M, F, A} ->
+            try_apply(State, M, F, A),
             main_loop(State);
 
+        %%% ========== ======================================== ====================
+        {inet_reply, Socket, ok} ->
+            main_loop(State);
         {inet_reply, Socket, _}         = CleanReason ->
             clean(CleanReason, State);
-        sender_down                     = CleanReason ->
-            clean(CleanReason, State);
-        kill_for_game_stop              = CleanReason ->
-            clean(CleanReason, State);
-        {kill, From}                    = CleanReason ->
-            clean(CleanReason, State),
-            From ! ok;
         {tcp_closed, Socket}            = CleanReason ->
             clean(CleanReason, State);
         {tcp_error, Socket, emsgsize}   = CleanReason ->
             clean(CleanReason, State);
         {tcp_error, Socket, etimedout}  = CleanReason ->
             clean(CleanReason, State);
+
+        %%% ========== ======================================== ====================
+        sender_down                     = CleanReason ->
+            clean(CleanReason, State);
         {'DOWN', SenderMon, _, _, _}    = CleanReason -> 
             clean(CleanReason, State);
-
+        kill_for_game_stop              = CleanReason ->
+            clean(CleanReason, State);
+        {kill, From}                    = CleanReason ->
+            clean(CleanReason, State),
+            From ! ok;
         %% 清理不在在线列表的玩家
         kill_for_clean ->
             StartTime      = get(proc_start_time),
@@ -424,10 +446,12 @@ main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = S
                 main_loop(State)
             end;
 
+        %%% ========== ======================================== ====================
         {From, get_sock} ->
             From ! State #client_state.sock,
             main_loop(State);
 
+        %%% ========== ======================================== ====================
         Other ->
             clean(Other, State),
             exit({unknown_info, Other})
@@ -436,8 +460,10 @@ main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = S
 
 
 %% @todo   关掉Socket前的清理工作
-clean (CleanReason, #client_state{sock = Socket} = _State) ->
+clean (CleanReason, #client_state{player_id = PlayerId, sock = Socket} = _State) ->
     ?INFO("socket clean then close because : ~p~n", [CleanReason]),
+    catch mod_player_trace:off_line(PlayerId),
+    catch mod_online:del_online_player(PlayerId),
     gen_tcp:close(Socket).
 
 %%% @doc    处理未完成的消息队列

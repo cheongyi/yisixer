@@ -1,6 +1,6 @@
 -module (code_db_data).
 
-%%% @doc    生成数据到代码文件
+%%% @doc    生成数据到代码文件(配置)
 
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("WhoAreYou").

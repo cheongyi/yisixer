@@ -1,6 +1,6 @@
 -module (socket_client_sender).
 
-%%% @doc    
+%%% @doc    套接字客户端发送者
 
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
@@ -92,7 +92,7 @@ handle_info (Info, State) ->
 %%% @spec   terminate(Reason, State) -> ok.
 %%% @doc    gen_server termination callback.
 terminate (Reason, _ClientState) ->
-    ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {terminate, Reason}]),
+    ?INFO("~p, ~p, ~p~n~n~n~n~n", [?MODULE, ?LINE, {terminate, Reason}]),
     ok.
 
 %%% @spec   code_change(_OldVsn, State, _Extra) -> tuple().

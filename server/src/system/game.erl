@@ -1,5 +1,7 @@
 -module (game).
 
+%%% @doc    游戏入口
+
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2017, 11, 09}).
@@ -11,6 +13,7 @@
 -export ([start/0, stop/0, restart/0]).
 -export ([start/2, stop/1]).
 -export ([init/1]).
+-export ([start_child/2]).
 
 -include("define.hrl").
 
@@ -49,6 +52,7 @@ start (_Type, _Args) ->
     start_child(game_timer,         worker),        % 启动进程 --- 游戏定时器
     start_child(game_log,           worker),        % 启动进程 --- 日志
     start_child(game_prof,          worker),        % 启动进程 --- 性能分析
+    start_child(game_worker,        worker),        % 启动进程 --- 游戏工人
     % start_child(mysql,              worker),        % 启动进程 --- 游戏内mysql
     start_child(game_mysql,         worker),        % 启动进程 --- 游戏内mysql
     timer:sleep(1000),
@@ -87,9 +91,9 @@ init ([]) ->
 %%% @doc    关停服务
 stop (TimeOutOffline, TimeOutSync) ->
     % 中断socket链接
-    % supervisor:terminate_child(?SERVER, socket_server_sup),
+    supervisor:terminate_child(?SERVER, socket_server_sup),
     % 踢掉在线玩家
-    % mod_online:wait_all_online_player_exit(TimeOutOffline),
+    mod_online:wait_all_online_player_exit(TimeOutOffline),
     % 等待数据写入
     game_db_sync_to_file:wait_for_all_data_sync(TimeOutSync),
     game_db_sync_to_db:wait_for_all_data_sync(TimeOutSync),

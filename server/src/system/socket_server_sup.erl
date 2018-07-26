@@ -1,6 +1,6 @@
 -module (socket_server_sup).
 
-%%% @doc    
+%%% @doc    套接字服务器督程
 
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").

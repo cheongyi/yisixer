@@ -1,6 +1,6 @@
 -module (code_db).
 
-%%% @doc    
+%%% @doc    生成数据到代码文件
 
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("WhoAreYou").
@@ -149,7 +149,7 @@ get_body_fun_code (Key, Value, include_when) ->
 get (" ++ StrKey ++ ") when KeyValue " ++ Operate ++ KeyValue ++ " ->
     " ++ lists:flatten(io_lib:write(Value)).
 
-%%% @doc    获取Key组成的字符串
+%%% @doc    获取Key::list()组成的字符串
 get_key_str (Key, IsNormal) ->
     if
         IsNormal ->

@@ -1,6 +1,6 @@
 -module (socket_server_acceptor).
 
-%%% @doc    
+%%% @doc    套接字服务器接收者
 
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").

@@ -1,5 +1,7 @@
 -module (game_log).
 
+%%% @doc    游戏日志
+
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2017, 11, 09}).

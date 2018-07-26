@@ -1,5 +1,7 @@
 -module (game_db_sync_to_file).
 
+%%% @doc    游戏数据库同步到文件
+
 -copyright  ("Copyright © 2017-2018 Tools@YiSiXEr").
 -author     ("CHEONGYI").
 -date       ({2018, 03, 19}).

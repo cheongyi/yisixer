@@ -19,6 +19,7 @@
 
 -include("define.hrl").
 
+-define (DATA_LEN_SIZE, 2).     % 数据长度占字节数
 -define (DAY_BEGIN_HMS,             {00, 00, 00}).      % 一天开始的时分秒
 -define (UNIX_FIRST_YEAR_TIMESTAMP, 62167219200).       % 计算机元年时间戳
 
@@ -38,15 +39,17 @@ send_after (Time, Dest, Msg) ->
 
 %%% @doc    定时应用MFA
 apply_after (Time, Module, Function, Arguments) ->
-    Timer   = timer:apply_after(max(Time, 0), Module, Function, Arguments),
+    {ok, TRef}  = timer:apply_after(max(Time, 0), Module, Function, Arguments),
     ?TIMER({self(), {Module, Function}, Time, Arguments}),
-    Timer.
+    TRef.
 
 
 
 %%% @doc    TCP发送
 -ifdef (debug).
-tcp_send (Socket, Bin) ->
+tcp_send (Socket, OutBin) ->
+    Bin  = build_client_data(OutBin),
+    ?DEBUG("~p~n", [Bin]),
     case gen_tcp:send(Socket, Bin) of
         {error, Reason} ->
             exit({game_tcp_send_error, Reason});
@@ -54,11 +57,12 @@ tcp_send (Socket, Bin) ->
             true
     end.
 -else.
-tcp_send (Socket, Bin) ->
+tcp_send (Socket, OutBin) ->
     IsCanSend = true,
     if
         IsCanSend ->
-            OutBin = if
+            Bin  = build_client_data(OutBin),
+            CompressBin = if
                 size(Bin) > 64 ->
                     Mod = binary:part(Bin, 0, 4),
                     case Mod of
@@ -71,7 +75,7 @@ tcp_send (Socket, Bin) ->
                 true ->
                     Bin
             end,
-            case gen_tcp:send(Socket, OutBin) of
+            case gen_tcp:send(Socket, CompressBin) of
                 {error, Reason} ->
                     exit({game_tcp_send_error, Reason});
                 _ ->
@@ -91,6 +95,21 @@ get_socket_ip_and_port (Socket) ->
     ?DEBUG("get_socket_ip_and_port:~p~n", [{IpAddress, Address, Port}]),
     {IpAddress, Port}.
 
+
+%%% @doc    构建客户端数据|130二进制
+build_client_data (Data) ->
+    DataLen = size(Data) + ?DATA_LEN_SIZE, % 包括自己
+    Body    = <<DataLen:16/little-unsigned, Data/binary>>,
+    BodyLen = size(Body),
+    BinLen  = payload_length_to_binary(BodyLen),
+    << 1:1, 0:3, 2:4, 0:1, BinLen/bits, Body/binary >>.
+
+payload_length_to_binary (Len) ->
+    case Len of
+        Len when Len =< 125                 -> << Len:7         >>;
+        Len when Len =< 16#FFFF             -> << 126:7, Len:16 >>;
+        Len when Len =< 16#7FFFFFFFFFFFFFFF -> << 127:7, Len:64 >>
+    end.
 
 
 
@@ -257,9 +276,10 @@ try_apply (M, F, A) ->
         {'EXIT', Reason} -> 
             ?ERROR(
                 "try_apply:~n"
-                "  {M, F, A} = {~p, ~p, ~p}~n"
+                "  Pid       = ~p~n"
+                "  {M, F, A} = ~p~n"
                 "  Reason    = ~p~n",
-                [M, F, A, Reason]
+                [self(), {M, F, A}, Reason]
             ),
             try_apply_failed;
         Result ->
@@ -304,7 +324,7 @@ index_of_list_3 (_Element, [], _Index) ->
 %%% @doc    列表打乱
 shuffle (List) -> shuffle(List, []).
 
-shuffle ([], Acc) ->
+shuffle ([], Acc) -> 
     L = lists:keysort(1, Acc),
     [X || {_, X} <- L];
 
@@ -320,9 +340,9 @@ list_to_string (List, Separator) ->
         [
             if
                 is_integer(Element) -> integer_to_list(Element);
-                is_float(Element)   -> float_to_list(Element);
-                is_atom(Element)    -> atom_to_list(Element);
-                true                -> "\"" ++ Element ++ "\""
+                is_float(  Element) ->   float_to_list(Element);
+                is_atom(   Element) ->    atom_to_list(Element);
+                true                ->         "\"" ++ Element ++ "\""
             end
             ||
             Element <- List
@@ -330,18 +350,29 @@ list_to_string (List, Separator) ->
         Separator
     ).
 
+%%% @doc    字符串长度
+%%% @baidu  UTF-8用1到6个字节编码Unicode字符
+%%% @baidu  UTF-8编码规则：如果只有一个字节则其最高二进制位为0；如果是多字节，其第一个字节从最高位开始，连续的二进制位值为1的个数决定了其编码的字节数，其余各字节均以10开头
+str_length ([])     -> 0;
+str_length (String) -> str_length_2(String, 0).
+
+str_length_2 ([], Len)  -> Len;
+str_length_2 ([Char1                | String], Len) when Char1 < 16#80 -> str_length_2(String, Len + 1);    % 2#00000000 ~ (2#10000000 - 1)
+str_length_2 ([Char1, _             | String], Len) when Char1 < 16#E0 -> str_length_2(String, Len + 2);    % 2#11000000 ~ (2#11100000 - 1)
+str_length_2 ([Char1, _, _          | String], Len) when Char1 < 16#F0 -> str_length_2(String, Len + 2);    % 2#11100000 ~ (2#11110000 - 1)
+str_length_2 ([Char1, _, _, _       | String], Len) when Char1 < 16#F8 -> str_length_2(String, Len + 2);    % 2#11110000 ~ (2#11111000 - 1)
+str_length_2 ([Char1, _, _, _, _    | String], Len) when Char1 < 16#FC -> str_length_2(String, Len + 2);    % 2#11111000 ~ (2#11111100 - 1)
+str_length_2 ([Char1, _, _, _, _, _ | String], Len) when Char1 < 16#FE -> str_length_2(String, Len + 2).    % 2#11111100 ~ (2#11111110 - 1)
+
 
 %%% @doc    数据MD5化
 md5 (Code) ->
-   lists:flatten(
-        [
-            io_lib:format("~2.16.0b", [A])
-            ||
-            A <- binary_to_list(
-                erlang:md5(Code)
-            )
-        ]
-    ).
+    lists:flatten([
+        io_lib:format("~2.16.0b", [A])
+        ||
+        A <- binary_to_list(erlang:md5(Code))
+    ]).
+
 
 %% 概率
 get_probability (Probability) when Probability =< 0 ->

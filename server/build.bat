@@ -1,1 +1,1 @@
-rebar compile
+rebar.cmd compile
