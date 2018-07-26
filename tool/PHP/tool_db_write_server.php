@@ -13,7 +13,7 @@
 
     // ========== ======================================== ====================
     // 数据库表生成服务端代码
-    show_schedule(PF_DB_WRITE, 'start');
+    show_schedule(PF_DBC_WRITE, 'start');
     db_enum();
     db_record();
     game_db_data();
@@ -21,5 +21,5 @@
     game_db_init();
     game_db_sync();
     game_db_table();
-    show_schedule(PF_PT_READ, 'end');
+    show_schedule(PF_DBC_WRITE, 'end');
 ?>

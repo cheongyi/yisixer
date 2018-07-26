@@ -13,6 +13,9 @@
     require_once 'constants.php';
     require_once 'lib_misc.php';
 
+    require 'tool_db_read.php';
+    require 'tool_db_write_client.php';
+    require 'tool_db_close.php';
     require 'tool_pt_read.php';
     require 'tool_pt_write_client.php';
 ?>

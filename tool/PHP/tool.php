@@ -63,12 +63,16 @@
             echo DONE_2;
         }
         elseif ($line == '3') {
-            require 'tool_pt_read.php';
-            require 'tool_pt_write_client.php';
+            require 'tool_client.php';
             echo DONE_3;
         }
         elseif ($line == '4') {
-            system('cd ../../database && php main.php update '.$db_sign.' && ./get_template_data.sh');
+            if ($db_sign == SIGN_WINDOW) {
+                system('cd ../../database && php main.php update '.$db_sign.' && call get_template_data.bat');
+            }
+            else {
+                system('cd ../../database && php main.php update '.$db_sign.' && ./get_template_data.sh');
+            }
             echo DONE_4;
         }
         elseif ($line == 'x') {

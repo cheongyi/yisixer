@@ -171,7 +171,7 @@ function write_attributes($file) {
 function show_schedule ($show_start, $schedule, $schedule_max = 0, $is_cover = true) {
     global $schedule_i, $show_schedule, $start_time, $PF_ROTATE;
 
-    usleep(1000 * 50);
+    usleep(1000 * 5);
     if (is_array($schedule)) {
         $schedule  = $schedule[$schedule_i];
     }

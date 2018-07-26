@@ -4,7 +4,7 @@
 function game_db_data () {
     global $tables_info, $tables_fields_info, $table_name_len_max, $PF_DB_WRITE_SCH;
 
-    show_schedule(PF_DB_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
+    show_schedule(PF_DBS_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
     $file       = fopen(GAME_DB_DATA_FILE, 'w');
 
     fwrite($file, '-module ('.GAME_DB_DATA.').');
@@ -36,24 +36,23 @@ function game_db_data () {
 %%% External   API
 %%% ========== ======================================== ====================
 do (Tran) ->
-    case get(tran_action_list) of
+    case get(?TRAN_ACTION_LIST) of
         undefined ->
             do_tran_put_init(),
 
             case catch Tran() of
                 {\'EXIT\', {aborted, Reason}} -> 
-                    rollback(get(tran_log)),
+                    rollback(get(?TRAN_LOG_LIST)),
                     do_tran_erase(),
                     exit(Reason);
 
                 {\'EXIT\', Reason} -> 
-                    rollback(get(tran_log)),
+                    rollback(get(?TRAN_LOG_LIST)),
                     do_tran_erase(),
                     exit(Reason);
                     
                 Result ->
-                    erase(tran_log),
-                    TranActionList = erase(tran_action_list),
+                    TranActionList = do_tran_erase(),
                     case TranActionList of
                         [] -> ok;
                         _  -> game_db_sync_srv ! {sync, TranActionList}
@@ -240,6 +239,15 @@ write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
                 OldRecord #player_data.charge_ingot =/= Record #player_data.charge_ingot ->
                     case get(?INGOT_OP_REASON) of
                         undefined -> exit(unknow_ingot_op_reason);
+                        _ -> ok
+                    end;
+                true ->
+                    ok
+            end,
+            if
+                OldRecord #player_data.gkey =/= Record #player_data.gkey ->
+                    case get(?GKEY_OP_REASON) of
+                        undefined -> exit(unknow_gkey_op_reason);
                         _ -> ok
                     end;
                 true ->
@@ -528,28 +536,26 @@ validate_for_write (Record, Type) ->
     // 写入我也不知道怎么注释了
     fwrite($file, '
 ensure_tran () -> 
-    case get(tran_action_list) of 
+    case get(?TRAN_ACTION_LIST) of 
         undefined -> exit(need_gamedb_tran); 
         _         -> ok 
     end.
 
 do_tran_put_init () ->
-    put(tran_log, []),
-    put(tran_action_list, []),
-    put(tran_action_list2, []).
+    put(?TRAN_LOG_LIST, []),
+    put(?TRAN_ACTION_LIST, []).
 
 do_tran_erase () ->
-    erase(tran_log),
-    erase(tran_action_list),
-    erase(tran_action_list2).
+    erase(?TRAN_LOG_LIST),
+    erase(?TRAN_ACTION_LIST).
     
 add_tran_log (TranLog) ->
-    TranLogList = get(tran_log),
-    put(tran_log, [TranLog | TranLogList]).
+    TranLogList = get(?TRAN_LOG_LIST),
+    put(?TRAN_LOG_LIST, [TranLog | TranLogList]).
 
 add_tran_action (TranAction) ->
-    TranActionList = get(tran_action_list),
-    put(tran_action_list, [TranAction | TranActionList]).
+    TranActionList = get(?TRAN_ACTION_LIST),
+    put(?TRAN_ACTION_LIST, [TranAction | TranActionList]).
 
 rollback ([TranLog | List]) ->
     case TranLog of

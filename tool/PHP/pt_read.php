@@ -3,6 +3,8 @@
      *  protocol txt read
      */
 // ========== ======================================== ====================
+$cur_file_name  = '';
+
 // @todo   读取协议文本
 function read_protocol () {
     global $protocol, $module_enum, $pt_file_num, $filename_max;
@@ -13,7 +15,10 @@ function read_protocol () {
         // 读取目录下文件名
         while (false !== ($filename = readdir($dir))) {
             // 过滤不要的文件
-            if ($filename == '.' || $filename == '..' || $filename == '.svn' || $filename == '.git' || $filename == 'README_protocol.txt') {
+            if (!strpos($filename, ".txt")) {
+                continue;
+            }
+            elseif ($filename == 'README_protocol.txt') {
                 continue;
             }
             // elseif ($filename != '100_code.txt' && $filename != '999_test.txt') {
@@ -32,12 +37,12 @@ function read_protocol () {
     foreach ($filename_arr as $filename) {
         // 读取协议文本
         $protocol_module    = read_protocol_txt($filename);
-        $module_id          = $protocol_module['module_id'];
-        if ($module_id == '100') {
+        if ($filename == PROTOCOL_ENUM_FILE_NAME) {
             $protocol[C_ENUM]   = $module_enum;
             continue;
         }
         // 判断是否模块ID冲突
+        $module_id          = $protocol_module['module_id'];
         $module_name          = $protocol_module['module_name'];
         if (@array_key_exists($module_name, $protocol[C_MODULE])) {
             die("\nAlready exists module id({$module_id}) name({$module_name})!!!\n");
@@ -88,8 +93,9 @@ function get_class_field ($module_name, $class) {
 
 // @todo   读取协议文本
 function read_protocol_txt ($filename) {
-    global $line, $pt_file_num;
+    global $line, $pt_file_num, $cur_file_name;
 
+    $cur_file_name  = $filename;
     show_schedule(PF_PT_READ, $filename, $pt_file_num);
     // 打开文件
     $file   = fopen(DIR_PROTOCOL.$filename, 'r');
@@ -186,6 +192,10 @@ function read_module_body ($file, $protocol_module) {
                     $module_class   = array();
                     $class_def      = explode(SYMBOL_CLASEE_EXTEND, substr($class_action[0], C_CLASS_LEN));
                     $class_name     = $class_def[0];
+                    // 判断是否已定义相同类
+                    if ($protocol_module[C_CLASS][$class_name]) {
+                        die("Error '{$class_name}' already exists at {$line}\n");
+                    }
                     $extend_module  = '';
                     $extend_class   = '';
                     // 判断是否有引用和继承
@@ -215,6 +225,10 @@ function read_module_body ($file, $protocol_module) {
                 $module_action                          = array();
                 $action_name                            = $class_action[0];
                 $action_id                              = $class_action[1];
+                // 判断是否已定义相同ID接口
+                if ($protocol_module[C_ACTION][$action_id]) {
+                    die("Error {$action_name} = {$action_id} already exists at {$line}\n");
+                }
                 $module_action['action_name']           = $action_name;
                 $module_action['action_id']             = $action_id;
                 $module_action['action_note']           = get_note();
@@ -357,7 +371,7 @@ function read_action_in_out ($file) {
 
 // @todo   读取枚举
 function read_enum ($file, $old_brace) {
-    global $line, $brace, $module_enum;
+    global $line, $brace, $module_enum, $cur_file_name;
     $brace  = C_ENUM;
     while (!feof($file)) {
         $content    = get_line_content($file);  // 获取行内容
@@ -382,6 +396,10 @@ function read_enum ($file, $old_brace) {
             break;
         }
         elseif ($brace == C_ENUM) {
+            if ($cur_file_name !== PROTOCOL_ENUM_FILE_NAME) {
+                get_note();
+                continue;
+            }
             $enum       = array();
             $enum_def   = explode(SYMBOL_ASSIGN, $enum_def);
             $enum_value = 0;
@@ -457,7 +475,7 @@ function read_list ($file, $old_brace) {
 // ========== ======================================== ====================
 // @todo    解析字段定义
 function analysis_field_def ($file, $field_def) {
-    global $line, $brace, $note, $field_name_max;
+    global $line, $brace, $field_name_max;
 
     $field_def      = explode(SYMBOL_TYPE_DEF,   $field_def);
     $field_name     = $field_def[0];
@@ -522,6 +540,7 @@ function set_note ($content) {
 
     if (count($content) > 1) {
         $note   = $note.trim($content[1]);
+        // $note[] = trim($content[1]);
     }
 }
 
@@ -531,12 +550,13 @@ function get_note () {
 
     $note_tmp   = $note;
     $note       = '';
+    // $note       = array();
 
     return $note_tmp;
 }
 
 function remove_space_or_tab ($content) {
-    global $note, $SPACE_OR_TAB;
+    global $SPACE_OR_TAB;
 
     $list_def   = str_replace($SPACE_OR_TAB, '', trim($content));
 

@@ -19,8 +19,6 @@ function write_game_router () {
 -include ("define.hrl").
 -include ("record.hrl").
 
--define (DATA_LEN_SIZE, 2).     % 数据长度占字节数
-
 
 %%% ========== ======================================== ====================
 %%% External   API
@@ -35,9 +33,7 @@ route_request (_Pack = <<ActionId'.BT_ACTION.', Args/binary>>, State) ->
         <<>> ->
             noop;
         _ ->
-            ClientData  = build_client_data(OutBin),
-            % ?DEBUG("~p~n", [ClientData]),
-            lib_misc:tcp_send(NewState #client_state.sock, ClientData)
+            lib_misc:tcp_send(NewState #client_state.sock, OutBin)
     end,
     game_prof:statistics_end({Module, Fuction, ArgsNum}, TimeRecord),
     NewState.
@@ -186,21 +182,6 @@ string_parser (<< Str:32, 0, Rest/binary >>, Acc) -> {Rest, << Acc/binary, Str:3
 string_parser (<< Str:32,    Rest/binary >>, Acc) -> string_parser(Rest, << Acc/binary, Str:32 >>).
 
 
-%%% ========== ======================================== ====================
-%%% @doc    构建客户端数据|130二进制
-build_client_data (Data) ->
-    DataLen = size(Data) + ?DATA_LEN_SIZE, % 包括自己
-    Body    = <<DataLen'.BT_O_DATA_LEN.', Data/binary>>,
-    BodyLen = size(Body),
-    BinLen  = payload_length_to_binary(BodyLen),
-    << 1:1, 0:3, 2:4, 0:1, BinLen/bits, Body/binary >>.
-
-payload_length_to_binary (Len) ->
-    case Len of
-        Len when Len =< 125                 -> << Len:7         >>;
-        Len when Len =< 16#FFFF             -> << 126:7, Len:16 >>;
-        Len when Len =< 16#7FFFFFFFFFFFFFFF -> << 127:7, Len:64 >>
-    end.
 ');
 
     fclose($file);

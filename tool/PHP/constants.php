@@ -26,7 +26,8 @@
     define(PF_PTC_WRITE,      '  协议生成代码(客户端) ');
 
     define(PF_DB_READ,        '  数据库表读取 ....... ');
-    define(PF_DB_WRITE,       '  数据生成代码(服务端) ');
+    define(PF_DBS_WRITE,      '  数据生成代码(服务端) ');
+    define(PF_DBC_WRITE,      '  数据生成代码(客户端) ');
 
     define(DONE_1,          "\n  1 - 生成代码(服务端) Done !\n\n");
     define(DONE_2,          "\n  2 - 编译项目(服务端) Done !\n\n");
@@ -44,6 +45,9 @@
 
     define(DIR_CLIENT_PACKET,   DIR_PROJECT.'client/Farm/assets/Script/net/');  // 客户端协议包
     define(DIR_CLIENT_ACTION,   DIR_PROJECT.'client/Farm/assets/Script/');      // 客户端接口包
+    define(DIR_CLIENT_TABLES,   DIR_PROJECT.'client/Farm/assets/Script/tables/');// 客户端数据表
+
+    define(PROTOCOL_ENUM_FILE_NAME, '100_enum.txt');
 
     // ==================== 数据库 ====================
     // 文件名称

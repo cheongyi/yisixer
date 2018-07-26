@@ -8,6 +8,7 @@
     $line           = 0;
     $brace          = '';
     $note           = '';
+    // $note           = array();
     $pt_file_num    = 0;
     $field_name_max = 0;
     $filename_max   = 0;

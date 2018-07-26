@@ -4,7 +4,7 @@
 function game_db_table () {
     global $tables_info, $tables_fields_info, $table_name_len_max, $PF_DB_WRITE_SCH;
 
-    show_schedule(PF_DB_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
+    show_schedule(PF_DBS_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
     $tables     = $tables_info['TABLES'];
 
     $file       = fopen(GAME_DB_TABLE_FILE, 'w');

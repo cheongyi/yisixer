@@ -95,6 +95,7 @@ export const RESP_PACKET_LAYOUTS = {');
     // ====== {$module_name} {$cuts}");
         foreach ($module_action as $action) {
             $action_name    = $action['action_name'];
+            $action_note    = $action['action_note'];
             $action_out     = $action['action_out'];
             $field_name_max = $action['field_name_max'];
             $action_name_up = strtoupper($action_name);

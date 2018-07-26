@@ -192,7 +192,7 @@ function write_non_num_field_to_binary ($file, $field_arr) {
         $field_name         = UNDER_LINE.$field_name.UNDER_LINE.$field_line;
         $field_name_bin     = $field_name.'_Bin';
         if ($field_module) {
-            $module_colon   = $field_module.':';
+            $module_colon   = 'api_'.$field_module.'_out:';
         }
         else {
             $module_colon   = '';

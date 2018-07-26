@@ -4,7 +4,7 @@
 function game_db_dump () {
     global $tables_info, $tables_fields_info, $table_name_len_max, $PF_DB_WRITE_SCH;
 
-    show_schedule(PF_DB_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
+    show_schedule(PF_DBS_WRITE, $PF_DB_WRITE_SCH, count($PF_DB_WRITE_SCH), true);
     $file       = fopen(GAME_DB_DUMP_FILE, 'w');
     $tables     = $tables_info['TABLES'];
     fwrite($file, '-module ('.GAME_DB_DUMP.').');
