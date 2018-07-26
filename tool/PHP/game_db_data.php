@@ -243,15 +243,6 @@ write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
                     end;
                 true ->
                     ok
-            end,
-            if
-                OldRecord #player_data.gkey =/= Record #player_data.gkey ->
-                    case get(?GKEY_OP_REASON) of
-                        undefined -> exit(unknow_gkey_op_reason);
-                        _ -> ok
-                    end;
-                true ->
-                    ok
             end,';
         }
         else {

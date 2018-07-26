@@ -49,7 +49,7 @@ create_table (TableName, KetPos) ->
 %%% @doc    gen_server init, opens the server in an initial state.
 init ([]) ->
     do_create_table(player_four_color_card, #player_four_color_card.player_id),
-    do_create_table(system_four_color_card, #system_four_color_card.owner)
+    do_create_table(system_four_color_card, #system_four_color_card.owner),
     do_create_table(player_username_index, ?DEFAULT_KEYPOS),
     do_create_table(player_nickname_index, ?DEFAULT_KEYPOS),
     create_player_index(ets:first(?ETS_TAB(player))),
