@@ -22,6 +22,7 @@
 -include_lib ("kernel/include/file.hrl").
 
 -define (SERVER, ?MODULE).
+-define (RELOAD_INTERVAL,    3).    % 重载间隔(秒)
 -define (FORMAT_DOT_NUMBER, 43).
 
 -record (state, {last, tref}).
@@ -39,7 +40,7 @@ start_link () ->
 %%% @spec stop() -> ok.
 %%% @doc Stop the reloader.
 stop () ->
-    gen_server:call(?MODULE, stop).
+    gen_server:call(?SERVER, stop).
 
 
 %%% ========== ======================================== ====================
@@ -50,7 +51,7 @@ stop () ->
 init ([]) ->
     if
         ?IS_DEBUG ->
-            {ok, TRef} = timer:send_interval(timer:seconds(3), doit),
+            {ok, TRef} = timer:send_interval(timer:seconds(?RELOAD_INTERVAL), doit),
             {ok, #state{last = erlang:localtime(), tref = TRef}};
         true ->
             {ok, #state{last = erlang:localtime()}}
@@ -72,15 +73,15 @@ handle_cast (_Req, State) ->
 %%% @doc    reloader ! Msg callback.
 handle_info (doit, State) ->
     DateTimeTuple = erlang:localtime(),
-    doit(State#state.last, DateTimeTuple),
-    {noreply, State#state{last = DateTimeTuple}};
+    doit(State #state.last, DateTimeTuple),
+    {noreply, State #state{last = DateTimeTuple}};
 handle_info (_Info, State) ->
     {noreply, State}.
 
 %%% @spec   terminate(Reason, State) -> ok.
 %%% @doc    gen_server termination callback.
 terminate (_Reason, State) ->
-    catch timer:cancel(State#state.tref),
+    catch timer:cancel(State #state.tref),
     ok.
 
 %%% @spec   code_change(_OldVsn, State, _Extra) -> {ok, State}.

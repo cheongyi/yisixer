@@ -43,7 +43,10 @@ function game_db_init () {
     ],
     cut_line(),
     cut_line().
-');
+
+
+%%% ========== ======================================== ====================');
+
 
     // 写入init/1函数
     foreach ($tables as $table_name) {
@@ -51,15 +54,14 @@ function game_db_init () {
         $fields         = $fields_info['FIELDS'];
         $frag_field     = $fields_info['FRAG_FIELD'];
         $is_log_table   = $fields_info['IS_LOG_TABLE'];
-        // if ($is_log_table) {
-        //     continue;
-        // }
+        if ($table_name == 'words_log') {
+            continue;
+        }
 
         $dots           = generate_char(50, strlen($table_name), SPACE_ONE);
         fwrite($file, "
 init ({$table_name}) ->
-    ?FORMAT(\"game_db init : {$table_name}{$dots}| start~n\"),
-");
+    ?FORMAT(\"game_db init : {$table_name}{$dots}| start~n\"),");
 
         // 判断是否自增长
         foreach ($fields as $field) {
@@ -71,10 +73,9 @@ init ({$table_name}) ->
         gamedb, 
         [<<\"SELECT IFNULL(MAX(`{$field_name}`), 0) AS `max_id` FROM `{$table_name}`;\">>]
     ),
-    [AutoIncResult] = lib_mysql:get_rows(AutoIncResultId),
-    {max_id, AutoIncStart} = lists:keyfind(max_id, 1, AutoIncResult),
-    true = ets:insert_new(auto_increment, {{{$table_name}, id}, AutoIncStart}),
-");
+    [AutoIncResult]         = lib_mysql:get_rows(AutoIncResultId),
+    {max_id, AutoIncStart}  = lists:keyfind(max_id, 1, AutoIncResult),
+    true = ets:insert_new(auto_increment, {{{$table_name}, id}, AutoIncStart}),");
             }
         }
 
@@ -112,7 +113,8 @@ init ({$table_name}) ->
 init (_) ->
     ok.
 
-');
+
+%%% ========== ======================================== ====================');
 
     // 写入load/0函数
     foreach ($tables as $table_name) {
@@ -124,17 +126,14 @@ init (_) ->
         $keyfind        = '';
         $record         = '';
         $primary        = array();
-        if ($is_log_table) {
+        if ($is_log_table || $table_name == 'words_log') {
             continue;
         }
 
         // 写入load开头
         fwrite($file, "
 load ({$table_name}) ->
-    {data, NumResultId} = game_mysql:fetch(
-        gamedb, 
-        [<<\"SELECT count(1) AS num FROM `{$table_name}`\">>]
-    ),
+    {data, NumResultId} = game_mysql:fetch(gamedb, [<<\"SELECT count(1) AS num FROM `{$table_name}`\">>]),
     {num, RecordNumber} = lists:keyfind(num, 1, hd(lib_mysql:get_rows(NumResultId))),
 
     RowsBin = integer_to_binary(?SELECT_LIMIT_ROWS),
@@ -158,7 +157,7 @@ load ({$table_name}) ->
             }
             $dots           = generate_char($name_len_max, strlen($field_name), SPACE_ONE);
             $keyfind        = $keyfind."
-                    {{$field_name}, {$dots}{$field_name_up}}{$dots} = lists:keyfind({$field_name},{$dots}1, Row),";
+                    {{$field_name}, {$dots}{$field_name_up}}{$dots} = lists:keyfind({$field_name},{$dots} 1, Row),";
             $record         = $record."
                         {$field_name}{$dots} = {$field_name_up},";
         }
@@ -195,9 +194,16 @@ load ({$table_name}) ->
 load (_) ->
     ok.
 
+
+%%% ========== ======================================== ====================
+%%% @doc    切割行
 cut_line () ->
     ?FORMAT(?CUT_LINE).
 
+
+%%% @doc    打印初始化和载入状态
+% format_init_status (TableName, Status) ->
+%     ?FORMAT("game_db init : ~-50.50. w| ~p~n", [TableName, Status]).
 ');
 
     fclose($file);

@@ -33,7 +33,7 @@
 
 -include ("define.hrl").
 
--define (MYSQL_WAIT_TIMEOUT,   (8 * ?HOUR_TO_SECOND - 60) * 1000).  % 关闭连接最大时限
+-define (MYSQL_WAIT_TIMEOUT,   (1 * ?HOUR_TO_SECOND) * 1000).       % 关闭连接最大时限
 -define (GAME_MYSQL_HOLD_PING_TIMER, game_mysql_hold_ping_timer).   % 游戏数据库保持连接定时器引用
 
 
@@ -65,6 +65,11 @@ write (Data) ->
 %%% @doc    数据库保持连接
 game_mysql_hold_ping () ->
     catch timer:cancel(get(?GAME_MYSQL_HOLD_PING_TIMER)),
+    try game_db_data:fetch("SELECT 1 FROM `db_version` LIMIT 1;")
+    catch
+        _ : _Reason ->
+            ?ERROR("try_connect_db:~p at ~w~n", [_Reason, erlang:localtime()])
+    end,
     TRef    = lib_misc:apply_after(?MYSQL_WAIT_TIMEOUT, ?MODULE, game_mysql_hold_ping, []),
     put(?GAME_MYSQL_HOLD_PING_TIMER, TRef).
 
@@ -78,7 +83,7 @@ init ([]) ->
     filelib:ensure_dir(?GAME_TIMER_DIR),
     Date        = date(),
     {ok, File}  = open_log_file(Date),
-    {ok, #state{date = Date, file = File}, 0}.
+    {ok, #state{date = Date, file = File}}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple().
 %%% @doc    gen_server callback.
@@ -92,6 +97,9 @@ handle_call (Request, From, State) ->
 
 %%% @spec   handle_cast(Cast, State) -> tuple().
 %%% @doc    gen_server callback.
+handle_cast (game_mysql_hold_ping, State) ->
+    game_mysql_hold_ping(),
+    {noreply, State};
 handle_cast (Request, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {cast, Request}]),
     {noreply, State}.
@@ -123,7 +131,6 @@ handle_info ({data, PlayerId, Data}, State = #state{date = Date, file = File}) -
     end,
     {noreply, NewState};
 handle_info (timeout, State) ->
-    game_mysql_hold_ping(),
     {noreply, State};
 handle_info (Info, State) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),
@@ -150,7 +157,7 @@ open_log_file (Date) ->
     file:open(FileName, [append, raw, {delayed_write, 1024 * 100, 2000}]).
 
 write_to_file (File, Data) ->
-    DataString  = io_lib:format("~p~n", [Data]),
+    DataString  = io_lib:format("~w~n", [Data]),
     DataBin     = list_to_binary(DataString),
     ok          = file:write(File, DataBin).
 

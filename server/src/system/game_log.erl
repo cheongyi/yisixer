@@ -104,21 +104,21 @@ open_log_file (Date) ->
 %%% @doc    打印log信息或写入日志文件
 write_log ({info, PlayerId, Message, ArgumentList}, _) ->
     io:format("~n==INFO == from player " ++ integer_to_list(PlayerId) ++ " : " ++ Message, ArgumentList);
-write_log ({LogType, PlayerId, Message, ArgumentList}, File) ->
-    write_log_to_file (File, get_log_title(PlayerId), Message, ArgumentList),
+write_log ({_LogType, PlayerId, Message, ArgumentList}, File) ->
+    write_log_to_file(File, get_log_title(PlayerId), Message, ArgumentList),
     ?FORMAT(
         lib_misc:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ " [~p] from player ~p~n" 
             ++ Message ++ "~n~n",
-        [LogType, PlayerId | ArgumentList]
+        [_LogType, PlayerId | ArgumentList]
     );
 write_log ({info, Message, ArgumentList}, _) ->
     io:format("~n==INFO == " ++ Message, ArgumentList);
-write_log ({LogType, Message, ArgumentList}, File) ->
-    write_log_to_file (File, get_log_title(), Message, ArgumentList),
+write_log ({_LogType, Message, ArgumentList}, File) ->
+    write_log_to_file(File, get_log_title(), Message, ArgumentList),
     ?FORMAT(
         lib_misc:ymdhms_tuple_to_cover0str(erlang:localtime()) ++ " [~p]~n" 
             ++ Message ++ "~n~n",
-        [LogType | ArgumentList]
+        [_LogType | ArgumentList]
     ).
 write_log_to_file (File, LogTitle, Message, ArgumentList) ->
     LogContent  = io_lib:format(LogTitle ++ Message ++ "~n~n", ArgumentList),

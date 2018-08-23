@@ -63,7 +63,8 @@ load_new (TableName) ->
 init ([]) ->
     ets:new(auto_increment, [set, named_table, public]),
     game_db_init:init(),
-    ?INFO("=== database init finished =======================================~n~n", []),
+    ?INFO("==== database init finished ======================================~n~n", []),
+    gen_server:cast(game_timer, game_mysql_hold_ping),
     {ok, #state{}}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple().

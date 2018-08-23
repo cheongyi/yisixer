@@ -46,6 +46,7 @@ start (_Type, _Args) ->
     filelib:ensure_dir(?WAR_REPORT_DIR),
 
     % 启动inets服务
+    ssl:start(),
     inets:start(),
 
     % 启动game系统相关进程
@@ -73,7 +74,7 @@ start (_Type, _Args) ->
 
     start_child(reloader,           worker),        % 启动进程 --- 代码自动载入
 
-    ?INFO("========== Game start ==============~n", []),
+    ?INFO("========== Game start ========================================~n", []),
     Result.
 
 %%% @doc    关闭应用

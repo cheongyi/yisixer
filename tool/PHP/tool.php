@@ -45,22 +45,20 @@
         $line = trim(fgets(STDIN));
 
         if ($line == '1') {
-            require 'tool_db_read.php';
-            require 'tool_db_write_server.php';
-            require 'tool_db_close.php';
-            require 'tool_pt_read.php';
-            require 'tool_pt_write_server.php';
+            require 'tool_server.php';
             echo DONE_1;
             // break;
         }
         elseif ($line == '2') {
             if ($db_sign == SIGN_WINDOW) {
-                system('cd ../../server && call build.bat');
+                $last_line  = system('cd ../../server && call build.bat');
             }
             else {
-                system('cd ../../server && ./build.sh');
+                $last_line  = system('cd ../../server && ./build.sh');
             }
-            echo DONE_2;
+            if (strpos($last_line, ':') === FALSE) {
+                echo DONE_2;
+            }
         }
         elseif ($line == '3') {
             require 'tool_client.php';
@@ -68,12 +66,14 @@
         }
         elseif ($line == '4') {
             if ($db_sign == SIGN_WINDOW) {
-                system('cd ../../database && php main.php update '.$db_sign.' && call get_template_data.bat');
+                $last_line  = system('cd ../../database && php main.php update '.$db_sign.' && call get_template_data.bat');
             }
             else {
-                system('cd ../../database && php main.php update '.$db_sign.' && ./get_template_data.sh');
+                $last_line  = system('cd ../../database && php main.php update '.$db_sign.' && ./get_template_data.sh');
             }
-            echo DONE_4;
+            if ($last_line) {
+                echo DONE_4;
+            }
         }
         elseif ($line == 'x') {
             break;

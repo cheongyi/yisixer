@@ -111,7 +111,7 @@ start_link (Id, Host, Port, User, Password, Database, PoolSize, Reconnect, LogFu
     is_list(User)     andalso is_list(Password)    andalso
     is_list(Database) andalso is_integer(PoolSize)
 ->
-    crypto:start(),
+    % crypto:start(),     % 在ssl已经启动过
     Result = gen_server:start_link({local, ?SERVER}, ?MODULE, [Id, Host, Port, User, Password, Database, PoolSize, Reconnect, LogFun], []),
     ?INFO("Mysql: driver started id('~p') on ~s:~p use ~s ==~n", [Id, Host, Port, Database]),
     Result.

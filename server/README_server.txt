@@ -227,6 +227,11 @@ SMP 对称多处理结构
 reduction   归约数
 
 
+%%% ========== ======================================== ====================
+http://erlang.org/doc/apps/erts/erl_ext_dist.html#introduction
+The maximum number of allowed characters in an atom is 255. In the UTF-8 case, each character can need 4 bytes to be encoded.
+
+
 
 
 

@@ -24,8 +24,9 @@
 
 -define (SERVER, ?MODULE).
 -define (TABLE_NAME, game_worker_data).
+-define (COUNT_RATE, 60).   % 计数比率
 
--record (state, {count = 0, rate = 0}).
+-record (state, {count = 0, rate = 0, tref}).
 -record (?TABLE_NAME, {
     from,
     count = 0,
@@ -103,13 +104,17 @@ get_state () ->
 %%% @doc    gen_server init, opens the server in an initial state.
 init ([]) ->
     put(is_game_worker, true),
-    lib_misc:send_after(4000, self(), status),
     ets:new(?TABLE_NAME, [set, named_table, protected, {keypos, #game_worker_data.from}]),
-    {ok, #state{}}.
+    Time        = timer:seconds(?COUNT_RATE),
+    Msg         = status,
+    {ok, TRef}  = timer:send_interval(Time, Msg),
+    Self = Dest = self(),
+    ?TIMER({Self, {?SERVER, Dest}, Time, Msg}),
+    {ok, #state{tref = TRef}}.
 
 %%% @spec   handle_call(Args, From, State) -> tuple()
 %%% @doc    gen_server callback.
-handle_call ({put_work, {From, M, F, A, Time}}, From, State) ->
+handle_call ({put_work, {From, M, F, A, Time}}, _From, State) ->
     put(put_work_caller_info, {put_work, From, M, F, A, Time}),
     Reply = case catch apply(M, F, A) of
         {'EXIT', Reason} -> {work_failed, Reason, M, F, A, Time};
@@ -122,14 +127,15 @@ handle_call (get_state, _From, State) ->
     {reply, State, State};
 handle_call (stop, _From, State) ->
     {stop, shutdown, stopped, State};
-handle_call (Request, From, State) ->
-    ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {call, Request, From}]),
+handle_call (Request, _From, State) ->
+    ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {call, Request, _From}]),
     {reply, {error, badrequest}, State}.
 
 %%% @spec   handle_cast(Cast, State) -> tuple()
 %%% @doc    gen_server callback.
 handle_cast ({async_put_work, {From, M, F, A}}, State) ->
-    put(put_work_caller_info, {async_put_work,From,M,F,A,lib_misc:get_local_timestamp()}),
+    Time = lib_misc:get_local_timestamp(),
+    put(put_work_caller_info, {async_put_work, From, M, F, A, Time}),
     catch apply(M, F, A),
     erase(), 
     put(is_game_worker, true),
@@ -141,16 +147,16 @@ handle_cast (Request, State) ->
 %%% @spec   handle_info(Info, State) -> tuple()
 %%% @doc    gen_server callback.
 handle_info (status, State) ->
-    lib_misc:send_after(4000, self(), status),
-    % {noreply, State #state{count = 0, rate = State #state.count / 4}};
-    {noreply, State #state{count = 0, rate = State #state.count / 4}}.
+    % {noreply, State #state{count = 0, rate = State #state.count / ?COUNT_RATE}};
+    {noreply, State #state{count = 0, rate = State #state.count / ?COUNT_RATE}}.
 % handle_info (Info, State) ->
 %     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {info, Info}]),
 %     {noreply, State}.
 
 %%% @spec   terminate(Reason, State) -> ok
 %%% @doc    gen_server termination callback.
-terminate (Reason, _State) ->
+terminate (Reason, State) ->
+    catch timer:cancel(State #state.tref),
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {terminate, Reason}]),
     ok.
 
@@ -164,8 +170,8 @@ code_change (_Vsn, State, _Extra) ->
 %%% Internal   API
 %%% ========== ======================================== ====================
 %%% @doc    更新游戏工作数据
-update_game_worker_data (M, F, A) ->
-    update_game_worker_data(self(), M, F, A, lib_misc:get_local_timestamp()).
+% update_game_worker_data (M, F, A) ->
+%     update_game_worker_data(self(), M, F, A, lib_misc:get_local_timestamp()).
 update_game_worker_data (From, M, F, A, Time) ->
     Data = case lib_ets:get(?TABLE_NAME, From) of
         [] ->
@@ -173,7 +179,12 @@ update_game_worker_data (From, M, F, A, Time) ->
         [TheData] ->
             TheData
     end,
-    {registered_name, RegisteredName} = erlang:process_info(From, registered_name),
+    RegisteredName = case erlang:process_info(From, registered_name) of
+        {registered_name, TheRegisteredName} ->
+            TheRegisteredName;
+        _ ->
+            undefined
+    end,
     lib_ets:insert(
         ?TABLE_NAME, 
         Data #game_worker_data{

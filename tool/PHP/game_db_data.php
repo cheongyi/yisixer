@@ -239,7 +239,7 @@ write (Record = #{$table_name}{}) -> ?ENSURE_TRAN,
                 OldRecord #player_data.charge_ingot =/= Record #player_data.charge_ingot ->
                     case get(?INGOT_OP_REASON) of
                         undefined -> exit(unknow_ingot_op_reason);
-                        _ -> ok
+                        _         -> ok
                     end;
                 true ->
                     ok
