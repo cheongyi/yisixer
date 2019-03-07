@@ -46,8 +46,8 @@ start (_Type, _Args) ->
     filelib:ensure_dir(?WAR_REPORT_DIR),
 
     % 启动inets服务
-    ssl:start(),
     inets:start(),
+    ssl:start(),
 
     % 启动game系统相关进程
     start_child(game_timer,         worker),        % 启动进程 --- 游戏定时器

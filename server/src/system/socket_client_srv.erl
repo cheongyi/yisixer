@@ -14,6 +14,7 @@
 -export ([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export ([
     set_socket/2,               % 设置套接字，一些选项和控制进程
+    set_socket_ssl/2,           % 设置套接字，一些选项和控制进程
     apply/4, 
     async_apply/4,
     async_apply/5,
@@ -98,6 +99,16 @@ handle_cast ({go, Socket}, _ClientState) ->
     [{messages, MessageList}] = process_info(self(), [messages]),
     proc_message_queue(MessageList),
     {stop, normal, ClientState};
+handle_cast ({go_ssl, SocketSsl}, _ClientState) ->
+    ClientState = start_connection_ssl(SocketSsl),
+    % lib_misc:get_socket_ip_and_port(SocketSsl),
+    case catch main_loop(ClientState) of
+        {'EXIT', R} -> ?ERROR("main_loop: ~p~n", [R]);
+        _           -> ok
+    end,
+    [{messages, MessageList}] = process_info(self(), [messages]),
+    proc_message_queue(MessageList),
+    {stop, normal, ClientState};
 handle_cast (Request, ClientState) ->
     ?INFO("~p, ~p, ~p~n", [?MODULE, ?LINE, {cast, Request}]),
     {noreply, ClientState}.
@@ -132,6 +143,17 @@ set_socket (Pid, Socket) ->
     ]),
     ok = gen_tcp:controlling_process(Socket, Pid),
     gen_server:cast(Pid, {go, Socket}).
+
+%% @todo   设置套接字，一些选项和控制进程
+set_socket_ssl (Pid, SocketSsl) ->
+    ssl:setopts(SocketSsl, [
+        {active, false},
+        {delay_send, true},
+        {packet_size, 1024 * 1024}
+    ]),
+    ok = ssl:controlling_process(SocketSsl, Pid),
+    ?DEBUG("set_socket_ssl:~p~n", [{Pid, SocketSsl}]),
+    gen_server:cast(Pid, {go_ssl, SocketSsl}).
 
 %%% @doc    尝试应用
 try_apply (State, M, F, A) ->
@@ -241,6 +263,17 @@ start_connection (Socket) ->
     % erlang:send_after(?CHECK_CLIENT_TIME, self(), {check_client}),
     NewState.
 
+%%% @doc    开始连接SSL
+start_connection_ssl (SocketSsl) ->
+    {ok, Sender}    = socket_client_sender:start_link(SocketSsl, self()),
+    SenderMonitor   = erlang:monitor(process, Sender),
+    set_process_dict(start_conn_time),
+    % erlang:send_after(?CHECK_CLIENT_TIME, self(), {check_client}),
+    InitState       = #client_state{sock_ssl = SocketSsl, sender = Sender, sender_monitor = SenderMonitor},
+    NewState        = send_flash_policy_ssl(SocketSsl, InitState),
+    % erlang:send_after(?CHECK_CLIENT_TIME, self(), {check_client}),
+    NewState.
+
 %% @todo   发送Flash策略
 send_flash_policy (Socket, State) ->
     case inet:peername(Socket) of
@@ -251,6 +284,21 @@ send_flash_policy (Socket, State) ->
                     % State;
                 true ->
                     wait_for_start(Socket, State)
+            end;
+        _ ->
+            State
+    end.
+
+%% @todo   发送Flash策略
+send_flash_policy_ssl (SocketSsl, State) ->
+    case ssl:peername(SocketSsl) of
+        {ok, {Address, _Port}} ->
+            if
+                Address == {127, 0, 0, 1} ->
+                    wait_for_start_ssl(SocketSsl, State);
+                    % State;
+                true ->
+                    wait_for_start_ssl(SocketSsl, State)
             end;
         _ ->
             State
@@ -280,6 +328,31 @@ wait_for_start (Socket, State) ->
             wait_for_start(Socket, State)
     end.
 
+%% @todo   等待启动
+wait_for_start_ssl (SocketSsl, State) ->
+    ssl:setopts(SocketSsl, [{packet, ?PACKET_HEAD}, {active, once}]),
+    receive
+        {check_client} ->
+            State;
+        {ssl, SocketSsl, Request} ->
+            ?DEBUG("~p, ~p, ~p~n", [?LINE, self(), Request]),
+            case Request of
+                <<1:8>> ->
+                    ssl:send(SocketSsl, Request),
+                    State;
+                % <<"<policy-file-request/>", 0>>
+                % <<$<, $p, $o, $l, $i, $c, $y, $-, $f, $i, $l, $e, $-, $r, $e, $q, $u, $e, $s, $t, $/, $>, 0>>
+                <<60,112,111,108,105,99,121,45,102,105,108,101,45,114,101,113,117,101,115,116,47,62,0>> ->
+                    ssl:send(SocketSsl, <<"<cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\" /></cross-domain-policy>\0">>),
+                    State;
+                _ ->
+                    handshake_or_request_ssl(SocketSsl, Request, State)
+            end;
+        _Request ->
+            ?DEBUG("~p, ~p, ~p~n", [?LINE, self(), _Request]),
+            wait_for_start_ssl(SocketSsl, State)
+    end.
+
 %% @todo   握手或者请求
 handshake_or_request (Socket, RequestBin, State) ->
     RequestStr = binary_to_list(RequestBin),
@@ -304,6 +377,33 @@ handshake_or_request (Socket, RequestBin, State) ->
             ],
             % ?DEBUG("~p, ~p~n", [?LINE, HandshakeReturn]),
             gen_tcp:send(Socket, list_to_binary(HandshakeReturn)),
+            State
+    end.
+
+%% @todo   握手或者请求
+handshake_or_request_ssl (Socket, RequestBin, State) ->
+    RequestStr = binary_to_list(RequestBin),
+    case string:str(RequestStr, "Upgrade: websocket") of
+        0 ->
+            ?DEBUG("~p, ~p~n", [?LINE, RequestStr]),
+            ssl:setopts(Socket, [{packet, ?PACKET_HEAD}]),
+            <<_PackSize:4/binary, Pack/binary>> = RequestBin,
+            case try_route_request(Pack, State) of
+                error    -> clean(try_route_request_error_1, State), State;
+                NewState -> NewState
+            end;
+        _ ->
+            % ?DEBUG("~p, ~p~n", [?LINE, RequestStr]),
+            Accept          = get_handshake_accept(RequestStr),
+            HandshakeReturn = [
+                "HTTP/1.1 101 Switching Protocols\r\n",
+                "Connection: Upgrade\r\n",
+                "Upgrade: WebSocket\r\n",
+                "Sec-WebSocket-Accept: ", Accept, "\r\n",
+                "\r\n"
+            ],
+            % ?DEBUG("~p, ~p~n", [?LINE, HandshakeReturn]),
+            ssl:send(Socket, list_to_binary(HandshakeReturn)),
             State
     end.
 
@@ -358,10 +458,17 @@ handle_request_error (Request, Reason, State) ->
             error
     end.
 
-main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = Sender, sender_monitor = SenderMon}) ->
+%%% @doc    进程主循环接收消息
+main_loop (State = #client_state{sock = Socket,    sock_ssl = undefined}) ->
     put(state, State),
     inet:setopts(Socket, [{packet, ?PACKET_HEAD}, {active, once}]),
+    do_receive(State);
+main_loop (State = #client_state{sock = undefined, sock_ssl = SocketSsl}) ->
+    put(state, State),
+    ssl:setopts(SocketSsl, [{packet, ?PACKET_HEAD}, {active, once}]),
+    do_receive(State).
     % inet:setopts(Socket, [{packet, 4}, {active, once}]),
+do_receive (State = #client_state{player_id = PlayerId, sock = Socket, sock_ssl = SocketSsl, sender = Sender, sender_monitor = SenderMon}) ->
     receive
         %%% ========== ======================================== ====================
         {check_client} ->
@@ -460,11 +567,16 @@ main_loop (State = #client_state{player_id = PlayerId, sock = Socket, sender = S
 
 
 %% @todo   关掉Socket前的清理工作
-clean (CleanReason, #client_state{player_id = PlayerId, sock = Socket} = _State) ->
+clean (CleanReason, #client_state{player_id = PlayerId, sock = Socket,    sock_ssl = undefined} = _State) ->
     ?INFO("socket clean then close because : ~p~n", [CleanReason]),
     catch mod_player_trace:off_line(PlayerId),
     catch mod_online:del_online_player(PlayerId),
-    gen_tcp:close(Socket).
+    gen_tcp:close(Socket);
+clean (CleanReason, #client_state{player_id = PlayerId, sock = undefined, sock_ssl = SocketSsl} = _State) ->
+    ?INFO("socket clean then close because : ~p~n", [CleanReason]),
+    catch mod_player_trace:off_line(PlayerId),
+    catch mod_online:del_online_player(PlayerId),
+    ssl:close(SocketSsl).
 
 %%% @doc    处理未完成的消息队列
 proc_message_queue ([Message | Lits]) ->

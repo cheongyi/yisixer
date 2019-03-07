@@ -1,0 +1,97 @@
+###########################
+#
+#   项目使用方法步骤
+#
+###########################
+
+# 环境:   PHP(5以上) || erlang(R14B04以上) || MySQL(5.6以上) || Lua(5以上) || 项目工具为C#(非Windows还需要mono)
+# 先把本地目录更新到最新，如git或svn
+client/     # 客户端
+database/   # 数据库
+protocol/   # 协议
+server-new/ # 服务端
+tool/       # 项目工具
+
+##########################################
+1. 数据库
+    changes/            # 数据库结构变更脚本目录 <?php execute("变更语句"); ?>
+    changes-log/        # 变更脚本历史目录(每隔一段时间可以把上一目录文件迁移到这)
+    update/             # 修复数据目录
+    conf.php            # 配置文件
+    main.php            # 数据库逻辑处理主文件
+    get_template_data.* # 拉取主干模版数据脚本
+
+    1.1 进入数据库脚本目录
+cd database/
+
+    1.2 执行数据库脚本(localhost为本地数据库参数key,详见conf.php)
+# 更新数据库结构
+php main.php update  localhost
+
+# 导出数据库模版
+php main.php export  localhost
+
+# 修复数据库数据
+php main.php run     localhost fixFileName
+
+# 备份数据库
+php main.php backup  localhost
+
+# 还原数据库
+php main.php restore localhost
+
+# 清空数据库玩家数据(比如玩家小于30个,详见main.php)
+php main.php clean   localhost
+
+
+##########################################
+2.项目工具
+    tool/client_templete_data/  # 生成客户端模版相关代码和配置
+    tool/ProjectHelper_New/     # 项目工具源代码(服务端生成配置也在此修改)
+    tool.config                 # 项目工具配置文件(主要修改:程序客户端名称 | 数据库)
+
+    2.1 执行  ./tool.sh
+请选择一个操作：
+  1 - 生成代码(服务端)     # 根据数据库和协议生成 服务端 代码
+  2 - 编译项目(服务端)     # 详见步骤3
+  3 - 生成代码(客户端)     # 根据数据库和协议生成 客户端 代码
+  4 - 更新数据库          # 详见步骤1
+  x - 退出
+> 
+
+##########################################
+3.服务端
+    data/               # 游戏数据存放目录
+    data/2014_02_14/*.sql   # 游戏数据执行日志
+    data/war_report/    # 游戏战报文件
+    deps/               # 第三方依赖(如git源)
+    ebin/               # *.beam(编译后的项目代码)|game.app(可根据应用配置源game.app.src生成)|db_*.erl,logic_*.erl(code_db生成)目录
+    include/            # *.hrl头文件目录
+    include/gen/        # 协议和数据库生成的头文件
+    log/                # 游戏日志文件目录
+    src/                # 源代码目录
+    src/api/            # 对应协议,客户端请求过来逻辑处理代码
+    src/mod/            # 对应api,模块逻辑处理
+    src/lib/            # 公共逻辑库
+    src/gen/            # 协议和数据库生成的源文件(客户端请求game_router.erl路由转发api_*.erl|api_*_out.erl协议返回|game_db_*.erl游戏数据逻辑处理)
+    src/worker/         # 进程逻辑
+    src/worker/system/  # 系统各个相关进程
+    rebar | rebar3      # 第三方erlang项目工具
+    rebar.config        # 上面工具的相关配置
+    KeyWords.txt        # 屏蔽词
+    enum_table.txt      # 数据库表生成对应头文件配置
+
+
+    3.1 编译源文件
+./build.sh                      # 全部编译
+./build.sh api/api_player.erl   # 指定编译
+
+    3.2 启动游戏服(相关参数在start.sh和src/game.app.src)
+./start.sh
+
+
+
+
+
+
+

@@ -9,7 +9,6 @@ erl \
 -setcookie the_14x2_cookie \
 -env ERL_MAX_ETS_TABLES 65535 \
 -game \
-    gateway_node            'gw@127.0.0.1' \
     policy_server           'false' \
     server_port             '1428' \
     mysql_host              '"127.0.0.1"' \
@@ -29,7 +28,6 @@ erl \
 -setcookie the_14x2_cookie \
 -env ERL_MAX_ETS_TABLES 65535 \
 -game \
-    gateway_node            'gw@127.0.0.1' \
     policy_server           'false' \
     server_port             '1428' \
     mysql_host              '"127.0.0.1"' \

@@ -10,8 +10,11 @@ gkey                    金钥
 star                    星星
 pack_max_num            仓库上限
 
-%%% ========== ======================================== ====================
-%%% 文件命名规范
+SMP 对称多处理结构
+reduction   归约数
+
+
+=== 文件命名规范 ========================
 *.beam          =>  Erlang compile 后的十六进制文件
 *.hrl           =>  Erlang的头文件
 *.erl           =>  Erlang的源码文件
@@ -28,6 +31,8 @@ start.sh        =>  启动文件
 build.sh        =>  编译文件
 enum_table.txt  =>  数据库表数据转换成Erlang宏定义的配置文件
 
+
+=== 注释 ========================
 %%% @doc    函数注释
 %% 行注释
 % 代码后注释
@@ -36,16 +41,20 @@ enum_table.txt  =>  数据库表数据转换成Erlang宏定义的配置文件
 %%% ========== ======================================== ====================
 
 
-%%% ========== ======================================== ====================
+=== 附加参数 ========================
 erlc +"'S'" lib_time.erl
 
 
-%%% ========== ======================================== ====================
-%% @todo   浮点数
+=== 注意事项 ========================
+%%% @todo   浮点数
 100000.01 - 50000.01.  
 49999.99999999999
-%%% ========== ======================================== ====================
-%% @todo   Eshell 函数帮助
+
+超时毫秒不超过 4294967296 = 2的32次方
+原子字符长度不超过 255
+
+
+=== Eshell 函数帮助 ========================
 Eshell V5.8.5  (abort with ^G)
 1> help().
 
@@ -88,7 +97,8 @@ rr(F,R)             -- read selected record information from file(s)
 %% 从文件中读取指定选项的选定的记录(record)信息
 rr(F,R,O)           -- read selected record information with options
 
-%% @doc    ** c 模块命令 **
+
+=== ** c 模块命令 ** ========================
 ** commands in module c **
 %% 显示一个进程的栈回溯
 bt(Pid)             -- stack backtrace for a process
@@ -142,14 +152,14 @@ xm(M)               -- cross reference check a module
 y(File)             -- generate a Yecc parser
 
 
-%% @doc    ** i 模块命令  **
+=== ** i 模块命令 ** ========================
 ** commands in module i (interpreter interface) **
 %% 显示 i 模块的帮助信息
 ih()                -- print help for the i module
 
 
 
-%%% ========== ======================================== ====================
+=== 二进制运算 ========================
 {
 2#0 band 2#0,
 2#0 band 2#1,
@@ -169,6 +179,7 @@ bnot 2#1,
 }.
 
 
+=== ETerm存储规则 ========================
 %%% ========== ======================================== ====================
 46> erlang:term_to_binary('').
 <<131,100,0,0>>
@@ -203,8 +214,9 @@ bnot 2#1,
   
 47> erlang:term_to_binary(fun a:b/0).
 <<131,113,100,0,1,97,100,0,1,98,97,0>>
-%%% ========== ======================================== ====================
-%%% 数据类型的大小比较
+
+
+=== 数据类型的大小比较 ========================
 Atom    = atom.
 Binary  = <<>>.
 Fun     = fun() -> ok end.
@@ -222,14 +234,15 @@ lists:sort([Atom, Binary, Fun, List, Number, Pid, Port, Ref, String, Tuple]).
 数值 < 原子 < 引用 < 匿名函数 < 端口 < 进程 < 元组 < 列表 < 二进制串
 
 
-%%% ========== ======================================== ====================
-SMP 对称多处理结构
-reduction   归约数
 
-
-%%% ========== ======================================== ====================
+=== 参考文档 ========================
 http://erlang.org/doc/apps/erts/erl_ext_dist.html#introduction
 The maximum number of allowed characters in an atom is 255. In the UTF-8 case, each character can need 4 bytes to be encoded.
+
+2018年 9月12日 星期三 16时19分37秒 CST
+gen_fsm.erl line:99 => handle__sunc_event错误
+Erlang趣学指南 15.2.2 {next_state, StateName, hibernate} 错误
+    15.2.4 handle_syn_event 错误
 
 
 
