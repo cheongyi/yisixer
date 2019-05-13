@@ -72,7 +72,7 @@ do_bubble_sort ([A, B | List]) ->
         false -> [B | do_bubble_sort([A | List])]
     end.
 
-%%% @TEST
+%%% @TEST   测试冒泡
 test_bubble () -> test_bubble(bad, 1000).
 test_bubble (Type, Base) ->
     Time1        = test(Type, sort,        1 * Base),
@@ -100,7 +100,128 @@ test_bubble (Type, Base) ->
     % {'5/3',  2.7617786641261772,  2.9464523963687714},
     % {'5/1', 23.601375808953726,  24.290306296013085}
 
-%%% @doc 测试最坏耗时    
+
+%   希尔排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
+%   选择排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
+%   堆排序      O(n^2)             O(n^2)            O(n)              O(1)       稳定
+%   归并排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
+%   计数排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
+%   捅排序      O(n^2)             O(n^2)            O(n)              O(1)       稳定
+%   基数排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
+
+
+%%% ========== ======================================== ====================
+%   快速排序    O(nlog2n)          O(n^2)            O(nlog2n)         O(nlog2n)  不稳定
+%%% @doc    02、快速排序（Quick     Sort）
+%%% 通过一趟排序将待排记录分隔成独立的两部分，
+%%% 其中一部分记录的关键字均比另一部分的关键字小，
+%%% 则可分别对这两部分记录继续进行排序，以达到整个序列有序。
+%%% @end
+quick ([Head | List]) ->
+    quick([Little || Little <- List, Little  < Head]) ++
+    [Head] ++
+    quick([Bigger || Bigger <- List, Bigger >= Head]);
+quick ([]) ->
+    [].
+
+%%% @TEST   测试快排
+test_quick () -> test_quick(1000).
+test_quick (Base) ->
+    Time1        = test(bad, sort,        1 * Base),
+    Time3        = test(bad, sort,        3 * Base),
+    Time5        = test(bad, sort,        5 * Base),
+    Time9        = test(bad, sort,        9 * Base),
+    Best1   = test(best, quick, 1 * Base), % Time(microseconds) :: 1166016
+    Best3   = test(best, quick, 3 * Base), % Time(microseconds) :: 10804463
+    Best5   = test(best, quick, 5 * Base), % Time(microseconds) :: 32434323
+    Best9   = test(best, quick, 9 * Base), % Time(microseconds) :: 32434323
+    Bad1    = test(bad,  quick, 1 * Base), % Time(microseconds) :: 1166016
+    Bad3    = test(bad,  quick, 3 * Base), % Time(microseconds) :: 10804463
+    Bad5    = test(bad,  quick, 5 * Base), % Time(microseconds) :: 32434323
+    Bad9    = test(bad,  quick, 9 * Base), % Time(microseconds) :: 32434323
+    [
+        {lists, Time1, Time3, Time5, Time9},
+        {1 * Base, Best1, Bad1, Bad1 / Best1},
+        {3 * Base, Best3, Bad3, Bad3 / Best3},
+        {5 * Base, Best5, Bad5, Bad5 / Best5},
+        {9 * Base, Best9, Bad9, Bad9 / Best9},
+        {'3/1', Best3 / Best1, Bad3 / Bad1},
+        {'5/3', Best5 / Best3, Bad5 / Bad3},
+        {'5/1', Best5 / Best1, Bad5 / Bad1},
+        {'9/5', Best9 / Best5, Bad9 / Bad5},
+        {'9/3', Best9 / Best3, Bad9 / Bad3},
+        {'9/1', Best9 / Best1, Bad9 / Bad1}
+    ].
+
+
+%%% ========== ======================================== ====================
+%   插入排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
+%%% @doc    03、插入排序（Insertion Sort）
+%%% 通过构建有序序列，对于未排序数据，在已排序序列中从后向前扫描，找到相应位置并插入。
+%%% end
+insertion (List) ->
+    do_insertion([], List, []).
+
+do_insertion ([Sort | SortList], [Rest | RestList], TempL) when Sort > Rest ->
+    do_insertion(SortList, [Rest | RestList], [Sort | TempL]);
+do_insertion (        SortList,  [Rest | RestList], TempL) ->
+    do_insertion(lists:reverse(TempL) ++ [Rest | SortList], RestList, []);
+do_insertion (        SortList,                 [],    []) ->
+    lists:reverse(SortList).
+
+%%% @TEST   测试插入
+test_insertion () -> test_insertion(1000).
+test_insertion (Base) ->
+    Time1        = test(bad, sort,        1 * Base),
+    Time3        = test(bad, sort,        3 * Base),
+    Time5        = test(bad, sort,        5 * Base),
+    Time9        = test(bad, sort,        9 * Base),
+    Best1   = test(best, insertion, 1 * Base), % Time(microseconds) :: 1166016
+    Best3   = test(best, insertion, 3 * Base), % Time(microseconds) :: 10804463
+    Best5   = test(best, insertion, 5 * Base), % Time(microseconds) :: 32434323
+    Best9   = test(best, insertion, 9 * Base), % Time(microseconds) :: 32434323
+    Bad1    = test(bad,  insertion, 1 * Base), % Time(microseconds) :: 1166016
+    Bad3    = test(bad,  insertion, 3 * Base), % Time(microseconds) :: 10804463
+    Bad5    = test(bad,  insertion, 5 * Base), % Time(microseconds) :: 32434323
+    Bad9    = test(bad,  insertion, 9 * Base), % Time(microseconds) :: 32434323
+    [
+        {lists, Time1, Time3, Time5, Time9},
+        {1 * Base, Best1, Bad1, Bad1 / Best1},
+        {3 * Base, Best3, Bad3, Bad3 / Best3},
+        {5 * Base, Best5, Bad5, Bad5 / Best5},
+        {9 * Base, Best9, Bad9, Bad9 / Best9},
+        {'3/1', Best3 / Best1, Bad3 / Bad1},
+        {'5/3', Best5 / Best3, Bad5 / Bad3},
+        {'5/1', Best5 / Best1, Bad5 / Bad1},
+        {'9/5', Best9 / Best5, Bad9 / Bad5},
+        {'9/3', Best9 / Best3, Bad9 / Bad3},
+        {'9/1', Best9 / Best1, Bad9 / Bad1}
+    ].
+% 很好的阐述了最好情况线性O(n)最坏情况平方O(n^2)
+% [{lists,90,307,364,593},
+%  {2000,180,88120,489.55555555555554},
+%  {6000,732,823970,1125.6420765027322},
+%  {10000,787,2348787,2984.4815756035578},
+%  {18000,1324,7697249,5813.632175226586},
+%  {'3/1',4.066666666666666,9.350544711756696},
+%  {'5/3',1.075136612021858,2.850573443207884},
+%  {'5/1',4.372222222222222,26.654414434861554},
+%  {'9/5',1.682337992376112,3.277116656384764},
+%  {'9/3',1.8087431693989071,9.341661710984623},
+%  {'9/1',7.355555555555555,87.34962551066727}]
+
+%%% @doc    04、希尔排序（Shell     Sort）
+%%% @doc    05、选择排序（Selection Sort）
+%%% @doc    06、堆排序  （Heap      Sort）
+%%% @doc    07、归并排序（Merge     Sort）
+%%% @doc    08、计数排序（Counting  Sort）
+%%% @doc    09、桶排序  （Bucket    Sort）
+%%% @doc    10、基数排序（Radix     Sort）
+
+
+
+%%% ========== ======================================== ====================
+%%% @doc 测试最好最坏耗时
 test (best, sort, Count) ->
     List      = lists:seq(1, Count),
     test(lists, sort, List);
@@ -116,36 +237,6 @@ test (bad, Function, Count) ->
 test (Module, Function, List) ->
     {Time, _} = timer:tc(Module, Function, [List]),
     Time.
-
-
-%   希尔排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
-%   选择排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
-%   堆排序      O(n^2)             O(n^2)            O(n)              O(1)       稳定
-%   归并排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
-%   计数排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
-%   捅排序      O(n^2)             O(n^2)            O(n)              O(1)       稳定
-%   基数排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
-
-%%% ========== ======================================== ====================
-%   快速排序    O(nlog2n)          O(n^2)            O(nlog2n)         O(nlog2n)  不稳定
-%%% @doc    02、快速排序（Quick     Sort）
-quick ([Head | List]) ->
-    quick([Little || Little <- List, Little  < Head]) ++
-    [Head] ++
-    quick([Bigger || Bigger <- List, Bigger >= Head]);
-quick ([]) ->
-    [].
-
-
-%   插入排序    O(n^2)             O(n^2)            O(n)              O(1)       稳定
-%%% @doc    03、插入排序（Insertion Sort）
-%%% @doc    04、希尔排序（Shell     Sort）
-%%% @doc    05、选择排序（Selection Sort）
-%%% @doc    06、堆排序  （Heap      Sort）
-%%% @doc    07、归并排序（Merge     Sort）
-%%% @doc    08、计数排序（Counting  Sort）
-%%% @doc    09、桶排序  （Bucket    Sort）
-%%% @doc    10、基数排序（Radix     Sort）
 
 
 
