@@ -183,7 +183,8 @@ load ({$table_name}) ->
                 Rows
             )
         end,
-        lists:seq(1, ceil(RecordNumber / ?SELECT_LIMIT_ROWS))
+        % lists:seq(1, ceil(RecordNumber / ?SELECT_LIMIT_ROWS))
+        lists:seq(1, trunc(RecordNumber / ?SELECT_LIMIT_ROWS))
     ),
     ?FORMAT(\"game_db init : {$table_name}{$dots}| finished~n\");
 ");
