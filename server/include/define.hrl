@@ -33,6 +33,10 @@
     {Module, {Module, start_link, []}, transient, ?SHUTDOWN_WORKER, worker, [Module]}
 ).
 
+%%% ========== ======================================== ====================
+%% ternary operator
+-define(IIF(Case, A, B), begin (case (Case) of true -> (A); _ -> (B) end) end).
+-define(IIF(Case, Equal, A, B), begin (case (Case) of Equal -> (A); _ -> (B) end) end).
 
 %%% ========== ======================================== ====================
 %% 日志写入

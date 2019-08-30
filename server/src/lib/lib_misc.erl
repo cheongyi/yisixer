@@ -383,19 +383,28 @@ get_probability (Probability) ->
     IntegerProbability = get_limit_integer(Probability),
     if
         IntegerProbability > 0 ->
-            Rate = erlang:ceil(IntegerProbability / Probability * 100),
+            % Rate = erlang:ceil(IntegerProbability / Probability * 100),
+            Rate = ceil(IntegerProbability / Probability * 100),
             IntegerProbability >= random_number(Rate);
         true ->
             false
     end.
 
 get_limit_integer (Number) ->
-    UNewNumber = erlang:ceil(Number),
+    % UNewNumber = erlang:ceil(Number),
+    UNewNumber = ceil(Number),
     if
         UNewNumber - Number < 0.00000001 ->
             UNewNumber;
         true ->
             get_limit_integer(Number * 10)
+    end.
+
+ceil(X) ->
+    T = erlang:trunc(X),
+    case X > T of
+        true -> T + 1;
+        _ -> T
     end.
 
 %% 随机数
